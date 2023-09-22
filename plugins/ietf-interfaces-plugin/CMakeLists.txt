@@ -15,8 +15,6 @@ project(sysrepo-interfaces-plugins)
 
 set(CMAKE_CXX_STANDARD 20)
 
-include(CompileOptions.cmake)
-
 set(PLUGIN 0 CACHE BOOL "Build a plugin")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")

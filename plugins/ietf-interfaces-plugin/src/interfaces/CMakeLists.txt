@@ -33,7 +33,7 @@ include_directories(
     ${LIBYANGCPP_INCLUDE_DIRS}
     ${SRPCPP_INCLUDE_DIRS}
     ${NL_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/src/interfaces/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 set(
