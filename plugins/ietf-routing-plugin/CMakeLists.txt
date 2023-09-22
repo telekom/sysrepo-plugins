@@ -1,5 +1,4 @@
-#
-# telekom / sysrepo-plugin-interfaces
+# telekom / sysrepo-plugins
 #
 # This program is made available under the terms of the
 # BSD 3-Clause license which is available at
@@ -11,14 +10,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 cmake_minimum_required(VERSION 3.0)
-project(ietf-interfaces-plugin)
+project(ietf-routing-plugin)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
-set(PLUGIN_LIRBARY_NAME srplg-ietf-interfaces)
-set(PLUGIN_EXECUTABLE_NAME ietf-interfaces-plugin)
-set(PLUGIN_CORE_LIBRARY_NAME ietf-interfaces-plugin-core)
+set(PLUGIN_LIRBARY_NAME srplg-ietf-routing)
+set(PLUGIN_EXECUTABLE_NAME ietf-routing-plugin)
+set(PLUGIN_CORE_LIBRARY_NAME ietf-routing-plugin-core)
 
 find_package(PkgConfig REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
@@ -33,7 +32,7 @@ include_directories(
     ${LIBYANGCPP_INCLUDE_DIRS}
     ${SRPCPP_INCLUDE_DIRS}
     ${NL_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 set(
@@ -45,15 +44,10 @@ set(
 set(
     MODULE_SOURCES
 
-    src/modules/interfaces.cpp
-    src/modules/interfaces/oper.cpp
-    src/modules/interfaces/change.cpp
-    src/modules/interfaces/context.cpp
-    src/modules/interfaces/common.cpp
-    src/modules/interfaces/api/nl.cpp
-    src/modules/interfaces/api/interface.cpp
-    src/modules/interfaces/api/address.cpp
-    src/modules/interfaces/api/neighbor.cpp
+    src/modules/routing.cpp
+    src/modules/routing/common.cpp
+    src/modules/routing/change.cpp
+    src/modules/routing/oper.cpp
 )
 
 set(

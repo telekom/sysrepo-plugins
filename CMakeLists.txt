@@ -26,3 +26,7 @@ endif()
 if(BUILD_INTERFACES_PLUGIN)
     add_subdirectory(plugins/ietf-interfaces-plugin)
 endif()
+
+if(BUILD_ROUTING_PLUGIN)
+    add_subdirectory(plugins/ietf-routing-plugin)
+endif()
