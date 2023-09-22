@@ -1,0 +1,94 @@
+<interfaces
+    xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces"
+    xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type"
+    xmlns:dot1q-types="urn:ieee:std:802.1Q:yang:ieee802-dot1q-types"
+    xmlns:if-ext="urn:ietf:params:xml:ns:yang:ietf-if-extensions">
+
+    <interface>
+        <name>test_interface</name>
+        <description>this is a test interface</description>
+        <type>ianaift:other</type>
+        <enabled>true</enabled>
+
+        <ipv4 xmlns="urn:ietf:params:xml:ns:yang:ietf-ip">
+            <forwarding>true</forwarding>
+            <mtu>1500</mtu>
+            <address>
+                <ip>192.0.2.1</ip>
+                <prefix-length>24</prefix-length>
+            </address>
+
+            <neighbor>
+               <ip>192.0.2.2</ip>
+               <link-layer-address>00:00:5E:00:53:AB</link-layer-address>
+            </neighbor>
+        </ipv4>
+
+        <ipv6 xmlns="urn:ietf:params:xml:ns:yang:ietf-ip">
+            <enabled>true</enabled>
+            <forwarding>false</forwarding>
+            <mtu>1280</mtu>
+            <address>
+                <ip>2001:db8::10</ip>
+                <prefix-length>32</prefix-length>
+            </address>
+
+            <neighbor>
+               <ip>2001:db8::11</ip>
+               <link-layer-address>FF:00:FE:00:53:AB</link-layer-address>
+            </neighbor>
+        </ipv6>
+    </interface>
+
+    <interface>
+        <name>eth0.1</name>
+        <type>ianaift:l2vlan</type>
+        <if-ext:parent-interface>eth0</if-ext:parent-interface>
+
+        <if-ext:encapsulation>
+            <dot1q-vlan
+                xmlns="urn:ietf:params:xml:ns:yang:ietf-if-vlan-encapsulation">
+                <outer-tag>
+                    <tag-type>dot1q-types:s-vlan</tag-type>
+                    <vlan-id>10</vlan-id>
+                </outer-tag>
+                <second-tag>
+                    <tag-type>dot1q-types:c-vlan</tag-type>
+                    <vlan-id>20</vlan-id>
+                </second-tag>
+            </dot1q-vlan>
+        </if-ext:encapsulation>
+
+        <ipv6 xmlns="urn:ietf:params:xml:ns:yang:ietf-ip">
+            <address>
+                <ip>2001:db8:10::1</ip>
+                <prefix-length>48</prefix-length>
+            </address>
+            <dup-addr-detect-transmits>0</dup-addr-detect-transmits>
+        </ipv6>
+    </interface>
+
+    <interface>
+        <name>eth0.2</name>
+        <type>ianaift:l2vlan</type>
+        <if-ext:parent-interface>eth0</if-ext:parent-interface>
+
+        <if-ext:encapsulation>
+        <dot1q-vlan
+            xmlns="urn:ietf:params:xml:ns:yang:ietf-if-vlan-encapsulation">
+            <outer-tag>
+                <tag-type>dot1q-types:s-vlan</tag-type>
+                <vlan-id>11</vlan-id>
+            </outer-tag>
+        </dot1q-vlan>
+        </if-ext:encapsulation>
+
+        <ipv6 xmlns="urn:ietf:params:xml:ns:yang:ietf-ip">
+           <forwarding>true</forwarding>
+           <address>
+                <ip>2001:db8:11::1</ip>
+                 <prefix-length>48</prefix-length>
+           </address>
+         </ipv6>
+    </interface>
+</interfaces>

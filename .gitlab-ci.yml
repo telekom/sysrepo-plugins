@@ -1,0 +1,90 @@
+image: ${SYSREPO_CICD_IMAGE}
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+  - test
+
+build:default:
+  stage: build
+
+  script:
+    - mkdir build
+    - cmake -DCMAKE_C_COMPILER=clang -DENABLE_BUILD_TESTS=ON -DINTERFACES_PLUGIN=ON -S . -B build/
+    - cmake --build build/
+  
+  artifacts:
+    paths:
+      - build/
+
+build:sanitized:
+  stage: build
+
+  script:
+    - mkdir build-sanitized
+    - cmake -S . -B build-sanitized/ -DCMAKE_C_COMPILER=clang -DENABLE_BUILD_TESTS=ON -DINTERFACES_PLUGIN=ON -DCMAKE_C_FLAGS=\"-fsanitize=address,undefined\"
+    - cmake --build build-sanitized/
+  artifacts:
+    paths:
+      - build-sanitized/
+
+build:sanitized_memory:
+  stage: build
+
+  script:
+    - mkdir build-sanitized-memory
+    - cmake -S . -B build-sanitized-memory/ -DCMAKE_C_COMPILER=clang -DENABLE_BUILD_TESTS=ON -DINTERFACES_PLUGIN=ON -DCMAKE_C_FLAGS=\"-fsanitize=memory\"
+    - cmake --build build-sanitized-memory/
+  artifacts:
+    paths:
+      - build-sanitized-memory/
+
+test:default:
+  stage: test
+
+  needs: ["build:default"]
+
+  script:
+    - cd build
+    - ctest -V
+  artifacts:
+    paths:
+      - build/
+
+test:sanitized:
+  stage: test
+
+  needs: ["build:sanitized"]
+
+  script:
+    - cd build-sanitized
+    - ctest -V
+  artifacts:
+    paths:
+      - build-sanitized/
+
+test:sanitized_memory:
+  stage: test
+
+  needs: ["build:sanitized_memory"]
+
+  script:
+    - cd build-sanitized-memory
+    - ctest -V
+  artifacts:
+    paths:
+      - build-sanitized-memory/
+
+test:valgrind:
+  stage: test
+
+  needs: ["build:default"]
+  
+  script:
+    - cd build
+    - ctest -T memcheck -V
+  artifacts:
+    paths:
+      - build/
