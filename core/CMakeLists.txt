@@ -13,59 +13,44 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 cmake_minimum_required(VERSION 3.0.0)
-project(srpcpp VERSION 0.1.0)
+project(sysrepo-plugins-core VERSION 0.1.0)
 
-include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 20)
+set(CORE_LIBRARY_NAME ${PROJECT_NAME})
+set(CORE_LIBRARY_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 SET(
-    SRPCPP_SOURCES
+    CORE_SOURCES
 
     src/srpcpp/common.cpp
     src/srpcpp/context.cpp
 )
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../CMakeModules")
 find_package(LIBYANG REQUIRED)
 find_package(SYSREPO REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 
-include_directories(src)
-include_directories(${LIBYANG_INCLUDE_DIRS})
-include_directories(${SYSREPO_INCLUDE_DIRS})
-include_directories(${LIBYANGCPP_INCLUDE_DIRS})
-include_directories(${SYSREPOCPP_INCLUDE_DIRS})
+add_library(${CORE_LIBRARY_NAME} STATIC ${CORE_SOURCES})
+target_compile_options(
+    ${CORE_LIBRARY_NAME}
+    PRIVATE
+    -fPIC
+)
 
-add_library(${PROJECT_NAME} SHARED ${SRPCPP_SOURCES})
+target_include_directories(
+    ${CORE_LIBRARY_NAME}
+
+    PRIVATE ${LIBYANG_INCLUDE_DIRS}
+    PRIVATE ${SYSREPO_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+)
 
 # project version
 set_target_properties(
-    ${PROJECT_NAME}
+    ${CORE_LIBRARY_NAME}
     PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
-
-install(
-    TARGETS ${PROJECT_NAME}
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(
-    FILES ${PROJECT_SOURCE_DIR}/src/srpcpp.hpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
-install(
-    FILES
-    ${PROJECT_SOURCE_DIR}/src/srpcpp/common.hpp
-    ${PROJECT_SOURCE_DIR}/src/srpcpp/context.hpp
-    ${PROJECT_SOURCE_DIR}/src/srpcpp/callbacks.hpp
-    ${PROJECT_SOURCE_DIR}/src/srpcpp/module.hpp
-    ${PROJECT_SOURCE_DIR}/src/srpcpp/module-registry.hpp
-    ${PROJECT_SOURCE_DIR}/src/srpcpp/datastore.hpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/srpcpp
-)
-
-add_custom_target(uninstall COMMAND xargs rm < ${PROJECT_SOURCE_DIR}/build/install_manifest.txt)

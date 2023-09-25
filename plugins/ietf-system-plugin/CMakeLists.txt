@@ -14,7 +14,6 @@ cmake_minimum_required(VERSION 3.0)
 project(ietf-system-plugin)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 set(PLUGIN_LIRBARY_NAME srplg-ietf-system)
 set(PLUGIN_EXECUTABLE_NAME ietf-system-plugin)
@@ -36,16 +35,6 @@ find_package(LIBYANG REQUIRED)
 find_package(UMGMT REQUIRED)
 find_package(LIBSYSTEMD REQUIRED)
 find_package(LIBSDBUSCPP REQUIRED)
-find_package(SRPCPP REQUIRED)
-
-include_directories(
-    ${SYSREPOCPP_INCLUDE_DIRS}
-    ${LIBYANGCPP_INCLUDE_DIRS}
-    ${UMGMT_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${SDBUS_CPP_INCLUDE_DIRS}
-    ${SRPCPP_INCLUDE_DIRS}
-)
 
 set(
     MODULE_SOURCES
@@ -133,6 +122,17 @@ add_library(
     ${CORE_SOURCES}
 )
 
+target_include_directories(
+    ${PLUGIN_CORE_LIBRARY_NAME}
+
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${UMGMT_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+    PRIVATE ${SDBUS_CPP_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+)
+
 target_compile_options(
     ${PLUGIN_CORE_LIBRARY_NAME}
     PRIVATE
@@ -143,6 +143,17 @@ target_compile_options(
 add_executable(
     ${PLUGIN_EXECUTABLE_NAME}
     ${EXECUTABLE_SOURCES}
+)
+
+target_include_directories(
+    ${PLUGIN_EXECUTABLE_NAME}
+
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${UMGMT_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+    PRIVATE ${SDBUS_CPP_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -156,7 +167,7 @@ target_link_libraries(
     ${LIBYANGCPP_LIBRARIES}
     ${UMGMT_LIBRARIES}
     ${SDBUSCPP_LIBRARIES}
-    ${SRPCPP_LIBRARIES}
+    ${CORE_LIBRARY_NAME}
 )
 
 # plugin as a library
@@ -164,6 +175,17 @@ add_library(
     ${PLUGIN_LIRBARY_NAME}
     MODULE
     ${PLUGIN_SOURCES}
+)
+
+target_include_directories(
+    ${PLUGIN_LIRBARY_NAME}
+
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${UMGMT_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+    PRIVATE ${SDBUS_CPP_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -175,5 +197,5 @@ target_link_libraries(
     ${SYSREPOCPP_LIBRARIES}
     ${LIBYANGCPP_LIBRARIES}
     ${UMGMT_LIBRARIES}
-    ${SRPCPP_LIBRARIES}
+    ${CORE_LIBRARY_NAME}
 )
