@@ -64,6 +64,7 @@ add_library(
     ${CORE_SOURCES}
     ${MODULE_SOURCES}
 )
+
 target_include_directories(
     ${PLUGIN_CORE_LIBRARY_NAME}
 
@@ -75,6 +76,7 @@ target_include_directories(
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
+
 target_compile_options(
     ${PLUGIN_CORE_LIBRARY_NAME}
     PRIVATE
@@ -86,6 +88,7 @@ add_executable(
     ${PLUGIN_EXECUTABLE_NAME}
     ${EXECUTABLE_SOURCES}
 )
+
 target_include_directories(
     ${PLUGIN_EXECUTABLE_NAME}
 
@@ -97,6 +100,7 @@ target_include_directories(
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
+
 target_link_libraries(
     ${PLUGIN_EXECUTABLE_NAME}
 
@@ -116,6 +120,7 @@ add_library(
     MODULE
     ${PLUGIN_SOURCES}
 )
+
 target_include_directories(
     ${PLUGIN_LIRBARY_NAME}
 
@@ -127,6 +132,7 @@ target_include_directories(
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
+
 target_link_libraries(
     ${PLUGIN_LIRBARY_NAME}
 
