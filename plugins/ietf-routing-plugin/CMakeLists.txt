@@ -12,28 +12,17 @@
 cmake_minimum_required(VERSION 3.0)
 project(ietf-routing-plugin)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
-
 set(PLUGIN_LIRBARY_NAME srplg-ietf-routing)
 set(PLUGIN_EXECUTABLE_NAME ietf-routing-plugin)
 set(PLUGIN_CORE_LIBRARY_NAME ietf-routing-plugin-core)
 
 find_package(PkgConfig REQUIRED)
-find_package(SYSREPOCPP REQUIRED)
-find_package(LIBYANGCPP REQUIRED)
-find_package(SYSREPO REQUIRED)
 find_package(LIBYANG REQUIRED)
+find_package(SYSREPO REQUIRED)
+find_package(LIBYANGCPP REQUIRED)
+find_package(SYSREPOCPP REQUIRED)
 find_package(SRPCPP REQUIRED)
 find_package(NL REQUIRED)
-
-include_directories(
-    ${SYSREPOCPP_INCLUDE_DIRS}
-    ${LIBYANGCPP_INCLUDE_DIRS}
-    ${SRPCPP_INCLUDE_DIRS}
-    ${NL_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
 
 set(
     CORE_SOURCES
@@ -71,6 +60,18 @@ add_library(
     ${MODULE_SOURCES}
 )
 
+target_include_directories(
+    ${PLUGIN_CORE_LIBRARY_NAME}
+
+    PRIVATE ${LIBYANG_INCLUDE_DIRS}
+    PRIVATE ${SYSREPO_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${NL_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
 target_compile_options(
     ${PLUGIN_CORE_LIBRARY_NAME}
     PRIVATE
@@ -83,6 +84,18 @@ add_executable(
     ${EXECUTABLE_SOURCES}
 )
 
+target_include_directories(
+    ${PLUGIN_EXECUTABLE_NAME}
+
+    PRIVATE ${LIBYANG_INCLUDE_DIRS}
+    PRIVATE ${SYSREPO_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${NL_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
 target_link_libraries(
     ${PLUGIN_EXECUTABLE_NAME}
 
@@ -92,7 +105,7 @@ target_link_libraries(
     ${LIBYANG_LIBRARIES}
     ${SYSREPOCPP_LIBRARIES}
     ${LIBYANGCPP_LIBRARIES}
-    ${SRPCPP_LIBRARIES}
+    ${CORE_LIBRARY_NAME}
     ${NL_LIBRARIES}
 )
 
@@ -103,6 +116,18 @@ add_library(
     ${PLUGIN_SOURCES}
 )
 
+target_include_directories(
+    ${PLUGIN_LIRBARY_NAME}
+
+    PRIVATE ${LIBYANG_INCLUDE_DIRS}
+    PRIVATE ${SYSREPO_INCLUDE_DIRS}
+    PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
+    PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${NL_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
 target_link_libraries(
     ${PLUGIN_LIRBARY_NAME}
 
@@ -111,6 +136,6 @@ target_link_libraries(
     ${LIBYANG_LIBRARIES}
     ${SYSREPOCPP_LIBRARIES}
     ${LIBYANGCPP_LIBRARIES}
-    ${SRPCPP_LIBRARIES}
+    ${CORE_LIBRARY_NAME}
     ${NL_LIBRARIES}
 )
