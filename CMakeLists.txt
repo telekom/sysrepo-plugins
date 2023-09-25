@@ -19,6 +19,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 option(BUILD_SYSTEM_PLUGIN "Build the ietf-system-plugin" ON)
 option(BUILD_INTERFACES_PLUGIN "Build the ietf-interfaces-plugin" ON)
 
+# build core first
+add_subdirectory(core)
+
 if(BUILD_SYSTEM_PLUGIN)
     add_subdirectory(plugins/ietf-system-plugin)
 endif()
