@@ -21,7 +21,6 @@ find_package(LIBYANG REQUIRED)
 find_package(SYSREPO REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
-find_package(SRPCPP REQUIRED)
 find_package(NL REQUIRED)
 
 set(
