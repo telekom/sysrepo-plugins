@@ -13,12 +13,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 cmake_minimum_required(VERSION 3.0.0)
-project(srpcpp VERSION 0.1.0)
+project(sysrepo-plugins-core VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CORE_LIBRARY_NAME ${PROJECT_NAME})
+set(CORE_LIBRARY_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 SET(
-    SRPCPP_SOURCES
+    CORE_SOURCES
 
     src/srpcpp/common.cpp
     src/srpcpp/context.cpp
@@ -29,10 +31,15 @@ find_package(SYSREPO REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 
-add_library(${PROJECT_NAME} STATIC ${SRPCPP_SOURCES})
+add_library(${CORE_LIBRARY_NAME} STATIC ${CORE_SOURCES})
+target_compile_options(
+    ${CORE_LIBRARY_NAME}
+    PRIVATE
+    -fPIC
+)
 
 target_include_directories(
-    ${PROJECT_NAME}
+    ${CORE_LIBRARY_NAME}
 
     PRIVATE ${LIBYANG_INCLUDE_DIRS}
     PRIVATE ${SYSREPO_INCLUDE_DIRS}
@@ -42,7 +49,7 @@ target_include_directories(
 
 # project version
 set_target_properties(
-    ${PROJECT_NAME}
+    ${CORE_LIBRARY_NAME}
     PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}

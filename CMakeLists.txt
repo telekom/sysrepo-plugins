@@ -22,6 +22,20 @@ option(BUILD_INTERFACES_PLUGIN "Build the ietf-interfaces-plugin" ON)
 # build core first
 add_subdirectory(core)
 
+# get name of the core library
+get_directory_property(
+    CORE_LIBRARY_NAME 
+    DIRECTORY core 
+    DEFINITION CORE_LIBRARY_NAME
+)
+
+# get include dir for the core library
+get_directory_property(
+    CORE_LIBRARY_INCLUDE_DIRS
+    DIRECTORY core
+    DEFINITION CORE_LIBRARY_INCLUDE_DIRS
+)
+
 if(BUILD_SYSTEM_PLUGIN)
     add_subdirectory(plugins/ietf-system-plugin)
 endif()
