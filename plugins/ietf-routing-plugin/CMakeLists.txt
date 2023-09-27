@@ -24,18 +24,18 @@ find_package(SYSREPOCPP REQUIRED)
 find_package(NL REQUIRED)
 
 set(
-    CORE_SOURCES
+    PLUGIN_CORE_SOURCES
 
-    src/core/context.cpp
+    src/plugin/context.cpp
 )
 
 set(
     MODULE_SOURCES
 
-    src/modules/routing.cpp
-    src/modules/routing/common.cpp
-    src/modules/routing/change.cpp
-    src/modules/routing/oper.cpp
+    src/plugin/modules/routing.cpp
+    src/plugin/modules/routing/common.cpp
+    src/plugin/modules/routing/change.cpp
+    src/plugin/modules/routing/oper.cpp
 )
 
 set(
@@ -55,7 +55,7 @@ set(
 add_library(
     ${PLUGIN_CORE_LIBRARY_NAME}
     STATIC
-    ${CORE_SOURCES}
+    ${PLUGIN_CORE_SOURCES}
     ${MODULE_SOURCES}
 )
 
