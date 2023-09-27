@@ -1,7 +1,6 @@
 #pragma once
 
-#include "api/nl.hpp"
-
+#include <srpcpp/netlink.hpp>
 #include <srpcpp.hpp>
 
 /**

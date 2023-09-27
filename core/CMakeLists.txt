@@ -24,19 +24,22 @@ SET(
 
     src/srpcpp/common.cpp
     src/srpcpp/context.cpp
+
+    # netlink wrapper
+    src/srpcpp/netlink/nl.cpp
+    src/srpcpp/netlink/cache.cpp
+    src/srpcpp/netlink/address.cpp
+    src/srpcpp/netlink/neighbor.cpp
+    src/srpcpp/netlink/interface.cpp
 )
 
 find_package(LIBYANG REQUIRED)
 find_package(SYSREPO REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
+find_package(NL REQUIRED)
 
 add_library(${CORE_LIBRARY_NAME} STATIC ${CORE_SOURCES})
-target_compile_options(
-    ${CORE_LIBRARY_NAME}
-    PRIVATE
-    -fPIC
-)
 
 target_include_directories(
     ${CORE_LIBRARY_NAME}
@@ -45,6 +48,14 @@ target_include_directories(
     PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
+    PRIVATE ${NL_INCLUDE_DIRS}
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+)
+
+target_compile_options(
+    ${CORE_LIBRARY_NAME}
+    PRIVATE
+    -fPIC
 )
 
 # project version

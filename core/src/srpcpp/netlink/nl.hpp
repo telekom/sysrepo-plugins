@@ -6,10 +6,12 @@
 #include <stdexcept>
 
 ///< Type used for deleting libnl allocated structs
-template <typename T> using NlDeleter = std::function<void(T*)>;
+template <typename T>
+using NlDeleter = std::function<void(T*)>;
 
 ///< Empty deleter which does nothing with the type. Used for storing shared pointers.
-template <typename T> void NlEmptyDeleter(T*) { }
+template <typename T>
+void NlEmptyDeleter(T*) { }
 
 // Predefined classes
 class InterfaceRef;
@@ -17,7 +19,8 @@ class AddressRef;
 class RouteAddressRef;
 class NeighborRef;
 enum class AddressFamily;
-template <typename T> class CacheRef;
+template <typename T>
+class CacheRef;
 
 enum class NeighborOperations {
     Create,
@@ -81,7 +84,6 @@ public:
      * @brief Create Neighbor
      */
     void neighbor(std::string interface_name, std::string address, std::string ll_addr, AddressFamily fam, NeighborOperations oper);
-
 
     /**
      * @brief Get the links cache.

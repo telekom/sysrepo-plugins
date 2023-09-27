@@ -38,10 +38,6 @@ set(
     src/plugin/modules/interfaces/change.cpp
     src/plugin/modules/interfaces/context.cpp
     src/plugin/modules/interfaces/common.cpp
-    src/plugin/modules/interfaces/api/nl.cpp
-    src/plugin/modules/interfaces/api/interface.cpp
-    src/plugin/modules/interfaces/api/address.cpp
-    src/plugin/modules/interfaces/api/neighbor.cpp
 )
 
 set(

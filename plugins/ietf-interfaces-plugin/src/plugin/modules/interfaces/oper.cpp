@@ -5,11 +5,7 @@
 
 #include <sysrepo.h>
 
-#include "api/nl.hpp"
-#include "api/interface.hpp"
-#include "api/address.hpp"
-#include "api/neighbor.hpp"
-#include "api/cache.hpp"
+#include <srpcpp/netlink.hpp>
 
 // [TODO]: Discuss libnl direct dependency - used for example in oper-status
 #include <linux/if.h>
