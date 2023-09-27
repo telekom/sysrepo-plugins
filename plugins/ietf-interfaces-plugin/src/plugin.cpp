@@ -1,12 +1,12 @@
 #include "plugin.hpp"
-#include "core/context.hpp"
+#include "plugin/context.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
 
 #include <srpcpp.hpp>
 
-#include "modules/interfaces.hpp"
+#include "plugin/modules/interfaces.hpp"
 
 #include "sysrepo.h"
 

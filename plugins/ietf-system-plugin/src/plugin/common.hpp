@@ -1,8 +1,6 @@
 #pragma once
 
-#include "libyang-cpp/DataNode.hpp"
 #include <string>
-#include <map>
 
 #include <libyang-cpp/Context.hpp>
 
@@ -18,6 +16,6 @@ namespace auth {
     constexpr auto SKEL_DIR = "/etc/skel";
     constexpr auto PASSWD_PATH = "/etc/passwd";
     constexpr auto DEFAULT_SHELL = "/bin/bash";
-}
+} // namespace auth
 
-}
+} // namespace ietf::sys

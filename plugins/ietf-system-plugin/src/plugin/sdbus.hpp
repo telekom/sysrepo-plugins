@@ -9,7 +9,8 @@
 namespace ietf::sys {
 
 // [TODO]: Document this class
-template <class GET, class... SET> class SdBus {
+template <class GET, class... SET>
+class SdBus {
 public:
     SdBus(std::string destination, std::string objectPath, std::string interface, std::string set_method, std::string property)
         : m_dest(destination)
