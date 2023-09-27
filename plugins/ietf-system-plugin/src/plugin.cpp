@@ -1,6 +1,6 @@
 #include "plugin.hpp"
-#include "core/common.hpp"
-#include "core/context.hpp"
+#include "plugin/common.hpp"
+#include "plugin/context.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
@@ -8,27 +8,27 @@
 #include <srpcpp.hpp>
 
 #ifdef SYSTEM_MODULE
-#include "modules/system.hpp"
+#include "plugin/modules/system.hpp"
 #endif
 
 #ifdef HOSTNAME_MODULE
-#include "modules/hostname.hpp"
+#include "plugin/modules/hostname.hpp"
 #endif
 
 #ifdef TIMEZONE_MODULE
-#include "modules/timezone-name.hpp"
+#include "plugin/modules/timezone-name.hpp"
 #endif
 
 #ifdef DNS_MODULE
-#include "modules/dns.hpp"
+#include "plugin/modules/dns.hpp"
 #endif
 
 #ifdef NTP_MODULE
-#include "modules/ntp.hpp"
+#include "plugin/modules/ntp.hpp"
 #endif
 
 #ifdef AUTH_MODULE
-#include "modules/auth.hpp"
+#include "plugin/modules/auth.hpp"
 #endif
 
 #include "sysrepo.h"
@@ -83,15 +83,19 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     auto& modules = registry.getRegisteredModules();
 
     // for all registered modules - apply startup datastore values
-    // startup datastore values are coppied into the running datastore when the first connection with sysrepo is made
+    // startup datastore values are coppied into the running datastore when the
+    // first connection with sysrepo is made
     sess.switchDatastore(sr::Datastore::Startup);
     for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Applying startup values for module %s", mod->getName());
+        SRPLG_LOG_INF(ctx->getPluginName(), "Applying startup values for module %s",
+            mod->getName());
         for (auto& applier : mod->getValueAppliers()) {
             try {
                 applier->applyDatastoreValues(sess);
             } catch (const std::runtime_error& err) {
-                SRPLG_LOG_ERR(ctx->getPluginName(), "Failed to apply datastore values for the following paths:");
+                SRPLG_LOG_ERR(
+                    ctx->getPluginName(),
+                    "Failed to apply datastore values for the following paths:");
                 for (const auto& path : applier->getPaths()) {
                     SRPLG_LOG_ERR(ctx->getPluginName(), "\t%s", path.c_str());
                 }
@@ -102,11 +106,16 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 
     // get registered modules and create subscriptions
     for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registering operational callbacks for module %s", mod->getName());
+        SRPLG_LOG_INF(ctx->getPluginName(),
+            "Registering operational callbacks for module %s",
+            mod->getName());
         srpc::registerOperationalSubscriptions(sess, *ctx, mod);
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registering module change callbacks for module %s", mod->getName());
+        SRPLG_LOG_INF(ctx->getPluginName(),
+            "Registering module change callbacks for module %s",
+            mod->getName());
         srpc::registerModuleChangeSubscriptions(sess, *ctx, mod);
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registering RPC callbacks for module %s", mod->getName());
+        SRPLG_LOG_INF(ctx->getPluginName(),
+            "Registering RPC callbacks for module %s", mod->getName());
         srpc::registerRpcSubscriptions(sess, *ctx, mod);
         SRPLG_LOG_INF(ctx->getPluginName(), "Registered module %s", mod->getName());
     }
@@ -133,7 +142,8 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
 
     auto& modules = registry.getRegisteredModules();
     for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Cleaning up module: %s", mod->getName());
+        SRPLG_LOG_INF(ctx->getPluginName(), "Cleaning up module: %s",
+            mod->getName());
     }
 
     // cleanup context manually

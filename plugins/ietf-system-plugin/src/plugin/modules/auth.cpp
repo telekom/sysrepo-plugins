@@ -1,20 +1,15 @@
 #include "auth.hpp"
 
-#include <srpcpp.hpp>
-
-#include "core/common.hpp"
-#include "core/context.hpp"
-#include "srpcpp/common.hpp"
 #include "umgmt/db.h"
 #include "umgmt/group.h"
 #include "umgmt/user.h"
 
+#include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <filesystem>
-#include <fstream>
-#include <cstring>
 
 // use sysrepo logging api
 #include <sysrepo.h>
@@ -22,7 +17,10 @@
 /**
  * @brief Return the logging prefix of the current module.
  */
-static constexpr const char* getModuleLogPrefix() { return "module(ietf-system/authentication)"; }
+static constexpr const char* getModuleLogPrefix()
+{
+    return "module(ietf-system/authentication)";
+}
 
 namespace ietf::sys::auth {
 
@@ -59,7 +57,9 @@ void AuthorizedKeyList::loadFromSystem(const std::string& username)
             if (file.is_open()) {
                 // read algorithm and key-data
                 file >> algorithm >> data;
-                keys.push_back(AuthorizedKey { .Name = entry.path().filename(), .Algorithm = algorithm, .Data = data });
+                keys.push_back(AuthorizedKey { .Name = entry.path().filename(),
+                    .Algorithm = algorithm,
+                    .Data = data });
             } else {
                 throw std::runtime_error("Failed to open authorized key file.");
             }
@@ -203,7 +203,9 @@ void LocalUserList::storeToSystem()
         }
 
         if (user.Password.has_value()) {
-            if (rc = um_user_set_password_hash(new_user, user.Password.value_or("").c_str()); rc != 0) {
+            if (rc = um_user_set_password_hash(new_user,
+                    user.Password.value_or("").c_str());
+                rc != 0) {
                 throw std::runtime_error("Failed to set user password hash.");
             }
         }
@@ -228,7 +230,8 @@ void LocalUserList::storeToSystem()
  * @param name User name.
  * @param password User password.
  */
-void LocalUserList::addUser(const std::string& name, std::optional<std::string> password)
+void LocalUserList::addUser(const std::string& name,
+    std::optional<std::string> password)
 {
     LocalUser user;
 
@@ -244,7 +247,8 @@ void LocalUserList::addUser(const std::string& name, std::optional<std::string> 
  * @param name User name.
  * @param password Password to set.
  */
-void LocalUserList::changeUserPassword(const std::string& name, std::string password)
+void LocalUserList::changeUserPassword(const std::string& name,
+    std::string password)
 {
     for (auto& user : m_users) {
         if (user.Name == name) {
@@ -268,7 +272,8 @@ void DatabaseContext::loadFromSystem(void)
     int rc = 0;
 
     if (!m_db) {
-        throw std::runtime_error("Unable to allocate space for the database context");
+        throw std::runtime_error(
+            "Unable to allocate space for the database context");
     }
 
     if (rc = um_db_load(m_db); rc != 0) {
@@ -314,13 +319,16 @@ void DatabaseContext::createUser(const std::string& name)
     }
 
     // setup user properties like shell, gecos and skel
-    if (rc = um_user_set_shell_path(new_user, ietf::sys::auth::DEFAULT_SHELL); rc != 0) {
+    if (rc = um_user_set_shell_path(new_user, ietf::sys::auth::DEFAULT_SHELL);
+        rc != 0) {
         throw std::runtime_error("Unable to set user shell");
     }
-    if (rc = um_user_set_gecos(new_user, ietf::sys::auth::DEFAULT_GECOS); rc != 0) {
+    if (rc = um_user_set_gecos(new_user, ietf::sys::auth::DEFAULT_GECOS);
+        rc != 0) {
         throw std::runtime_error("Unable to set user gecos field");
     }
-    if (rc = um_user_set_home_path(new_user, ("/home/" + name).c_str()); rc != 0) {
+    if (rc = um_user_set_home_path(new_user, ("/home/" + name).c_str());
+        rc != 0) {
         throw std::runtime_error("Unable to set user home path");
     }
 
@@ -357,7 +365,8 @@ void DatabaseContext::createUser(const std::string& name)
 }
 
 /**
- * @brief Delete user with the given name from the database. Adds the user to the list of users to be deleted.
+ * @brief Delete user with the given name from the database. Adds the user to
+ * the list of users to be deleted.
  *
  * @param name User name of the user to remove.
  */
@@ -381,7 +390,8 @@ void DatabaseContext::deleteUser(const std::string& name)
  * @param name User name.
  * @param password_hash Password hash to set.
  */
-void DatabaseContext::modifyUserPasswordHash(const std::string& name, const std::string& password_hash)
+void DatabaseContext::modifyUserPasswordHash(const std::string& name,
+    const std::string& password_hash)
 {
     // set password to "x" and set password hash for the user
     // also set the hash for the group
@@ -420,7 +430,8 @@ void DatabaseContext::modifyUserPasswordHash(const std::string& name, const std:
  */
 void DatabaseContext::deleteUserPasswordHash(const std::string& name)
 {
-    // set password to "x" and set password hash to "*" for user and group password hash to !
+    // set password to "x" and set password hash to "*" for user and group
+    // password hash to !
     um_user_t* user = nullptr;
     um_group_t* group = nullptr;
     int rc = 0;
@@ -452,7 +463,10 @@ void DatabaseContext::deleteUserPasswordHash(const std::string& name)
 /**
  * @brief Checks wether the user exists in the database or not.
  */
-bool DatabaseContext::checkIfUserExists(const std::string& name) { return um_db_get_user(m_db, name.c_str()) != NULL; }
+bool DatabaseContext::checkIfUserExists(const std::string& name)
+{
+    return um_db_get_user(m_db, name.c_str()) != NULL;
+}
 
 /**
  * @brief Store authentication database to the system.
@@ -468,7 +482,7 @@ void DatabaseContext::storeToSystem(void)
     }
 }
 
-}
+} // namespace ietf::sys::auth
 
 namespace ietf::sys::sub::change {
 /**
@@ -477,24 +491,33 @@ namespace ietf::sys::sub::change {
  * @param ctx Plugin module change context.
  *
  */
-AuthUserAuthenticationOrderModuleChangeCb::AuthUserAuthenticationOrderModuleChangeCb(std::shared_ptr<AuthModuleChangesContext> ctx) { m_ctx = ctx; }
+AuthUserAuthenticationOrderModuleChangeCb::
+    AuthUserAuthenticationOrderModuleChangeCb(
+        std::shared_ptr<AuthModuleChangesContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/authentication/user-authentication-order.
+ * sysrepo-plugin-generator: Generated module change operator() for path
+ * /ietf-system:system/authentication/user-authentication-order.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
  * @param event Type of the event that has occured.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * SR_EV_DONE, for example) have the same request ID.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+ * same request ID.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthenticationOrderModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
+sr::ErrorCode AuthUserAuthenticationOrderModuleChangeCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath, sr::Event event,
+    uint32_t requestId)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -506,24 +529,33 @@ sr::ErrorCode AuthUserAuthenticationOrderModuleChangeCb::operator()(sr::Session 
  * @param ctx Plugin module change context.
  *
  */
-AuthUserModuleChangeCb::AuthUserModuleChangeCb(std::shared_ptr<AuthModuleChangesContext> ctx) { m_ctx = ctx; }
+AuthUserModuleChangeCb::AuthUserModuleChangeCb(
+    std::shared_ptr<AuthModuleChangesContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/authentication/user[name='%s'].
+ * sysrepo-plugin-generator: Generated module change operator() for path
+ * /ietf-system:system/authentication/user[name='%s'].
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
  * @param event Type of the event that has occured.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * SR_EV_DONE, for example) have the same request ID.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+ * same request ID.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
+sr::ErrorCode
+AuthUserModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId,
+    std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    sr::Event event, uint32_t requestId)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
@@ -531,104 +563,123 @@ sr::ErrorCode AuthUserModuleChangeCb::operator()(sr::Session session, uint32_t s
     auth::DatabaseContext db;
 
     switch (event) {
-        case sysrepo::Event::Change:
-            // load the database before iterating changes
-            try {
-                db.loadFromSystem();
-            } catch (std::runtime_error& err) {
-                SRPLG_LOG_ERR(getModuleLogPrefix(), "Error loading user database: %s", err.what());
-                error = sr::ErrorCode::OperationFailed;
-            }
+    case sysrepo::Event::Change:
+        // load the database before iterating changes
+        try {
+            db.loadFromSystem();
+        } catch (std::runtime_error& err) {
+            SRPLG_LOG_ERR(getModuleLogPrefix(), "Error loading user database: %s",
+                err.what());
+            error = sr::ErrorCode::OperationFailed;
+        }
 
-            // apply user changes to the database context
-            for (auto& change : session.getChanges("/ietf-system:system/authentication/user/name")) {
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
+        // apply user changes to the database context
+        for (auto& change :
+            session.getChanges("/ietf-system:system/authentication/user/name")) {
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.",
+                change.node.path().c_str());
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.",
+                change.node.schema().name().data());
 
-                SRPLG_LOG_DBG(
-                    getModuleLogPrefix(), "\n%s", change.node.printStr(libyang::DataFormat::XML, libyang::PrintFlags::WithDefaultsAll)->data());
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "\n%s",
+                change.node
+                    .printStr(libyang::DataFormat::XML,
+                        libyang::PrintFlags::WithDefaultsAll)
+                    ->data());
 
-                // extract value
-                const auto& value = change.node.asTerm().value();
-                const auto& name = std::get<std::string>(value);
+            // extract value
+            const auto& value = change.node.asTerm().value();
+            const auto& name = std::get<std::string>(value);
 
-                SRPLG_LOG_DBG(PLUGIN_NAME, "User name: %s", name.c_str());
+            SRPLG_LOG_DBG(PLUGIN_NAME, "User name: %s", name.c_str());
 
-                switch (change.operation) {
-                    case sysrepo::ChangeOperation::Created:
-                        // create a new user in the DatabaseContext
-                        try {
-                            db.createUser(name);
-                        } catch (std::runtime_error& err) {
-                            SRPLG_LOG_ERR(getModuleLogPrefix(), "Error creating user: %s", err.what());
-                            error = sr::ErrorCode::OperationFailed;
-                        }
-                        break;
-                    case sysrepo::ChangeOperation::Modified:
-                        break;
-                    case sysrepo::ChangeOperation::Deleted:
-                        try {
-                            db.deleteUser(name);
-                        } catch (std::runtime_error& err) {
-                            SRPLG_LOG_ERR(getModuleLogPrefix(), "Error deleting user: %s", err.what());
-                            error = sr::ErrorCode::OperationFailed;
-                        }
-                        break;
-                    case sysrepo::ChangeOperation::Moved:
-                        break;
+            switch (change.operation) {
+            case sysrepo::ChangeOperation::Created:
+                // create a new user in the DatabaseContext
+                try {
+                    db.createUser(name);
+                } catch (std::runtime_error& err) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Error creating user: %s",
+                        err.what());
+                    error = sr::ErrorCode::OperationFailed;
                 }
-            }
-
-            // apply password changes to the database context
-            for (auto& change : session.getChanges("/ietf-system:system/authentication/user/password")) {
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
-
-                SRPLG_LOG_DBG(
-                    getModuleLogPrefix(), "\n%s", change.node.printStr(libyang::DataFormat::XML, libyang::PrintFlags::WithDefaultsAll)->data());
-
-                // extract value
-                const auto& value = change.node.asTerm().value();
-                const auto& password_hash = std::get<std::string>(value);
-                const auto& name = srpc::extractListKeyFromXPath("user", "name", change.node.path());
-
-                SRPLG_LOG_DBG(PLUGIN_NAME, "User name: %s", name.c_str());
-                SRPLG_LOG_DBG(PLUGIN_NAME, "User password: %s", password_hash.c_str());
-
-                switch (change.operation) {
-                    case sysrepo::ChangeOperation::Created:
-                    case sysrepo::ChangeOperation::Modified:
-                        // create/modify user password in the DatabaseContext
-                        try {
-                            db.modifyUserPasswordHash(name, password_hash);
-                        } catch (std::runtime_error& err) {
-                            SRPLG_LOG_ERR(getModuleLogPrefix(), "Error createing user password: %s", err.what());
-                            error = sr::ErrorCode::OperationFailed;
-                        }
-                        break;
-                    case sysrepo::ChangeOperation::Deleted:
-                        try {
-                            db.deleteUserPasswordHash(name);
-                        } catch (std::runtime_error& err) {
-                            SRPLG_LOG_ERR(getModuleLogPrefix(), "Error deleting user password: %s", err.what());
-                            error = sr::ErrorCode::OperationFailed;
-                        }
-                        break;
-                    case sysrepo::ChangeOperation::Moved:
-                        break;
+                break;
+            case sysrepo::ChangeOperation::Modified:
+                break;
+            case sysrepo::ChangeOperation::Deleted:
+                try {
+                    db.deleteUser(name);
+                } catch (std::runtime_error& err) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Error deleting user: %s",
+                        err.what());
+                    error = sr::ErrorCode::OperationFailed;
                 }
+                break;
+            case sysrepo::ChangeOperation::Moved:
+                break;
             }
+        }
 
-            // apply database context to the system
-            try {
-                db.storeToSystem();
-            } catch (const std::runtime_error& err) {
-                SRPLG_LOG_ERR(getModuleLogPrefix(), "Error storing database context changes to the system: %s", err.what());
-                error = sr::ErrorCode::OperationFailed;
+        // apply password changes to the database context
+        for (auto& change : session.getChanges(
+                 "/ietf-system:system/authentication/user/password")) {
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.",
+                change.node.path().c_str());
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.",
+                change.node.schema().name().data());
+
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "\n%s",
+                change.node
+                    .printStr(libyang::DataFormat::XML,
+                        libyang::PrintFlags::WithDefaultsAll)
+                    ->data());
+
+            // extract value
+            const auto& value = change.node.asTerm().value();
+            const auto& password_hash = std::get<std::string>(value);
+            const auto& name = srpc::extractListKeyFromXPath("user", "name", change.node.path());
+
+            SRPLG_LOG_DBG(PLUGIN_NAME, "User name: %s", name.c_str());
+            SRPLG_LOG_DBG(PLUGIN_NAME, "User password: %s", password_hash.c_str());
+
+            switch (change.operation) {
+            case sysrepo::ChangeOperation::Created:
+            case sysrepo::ChangeOperation::Modified:
+                // create/modify user password in the DatabaseContext
+                try {
+                    db.modifyUserPasswordHash(name, password_hash);
+                } catch (std::runtime_error& err) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(),
+                        "Error createing user password: %s", err.what());
+                    error = sr::ErrorCode::OperationFailed;
+                }
+                break;
+            case sysrepo::ChangeOperation::Deleted:
+                try {
+                    db.deleteUserPasswordHash(name);
+                } catch (std::runtime_error& err) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(),
+                        "Error deleting user password: %s", err.what());
+                    error = sr::ErrorCode::OperationFailed;
+                }
+                break;
+            case sysrepo::ChangeOperation::Moved:
+                break;
             }
-            break;
-        default:
-            break;
+        }
+
+        // apply database context to the system
+        try {
+            db.storeToSystem();
+        } catch (const std::runtime_error& err) {
+            SRPLG_LOG_ERR(getModuleLogPrefix(),
+                "Error storing database context changes to the system: %s",
+                err.what());
+            error = sr::ErrorCode::OperationFailed;
+        }
+        break;
+    default:
+        break;
     }
 
     return error;
@@ -640,7 +691,11 @@ sr::ErrorCode AuthUserModuleChangeCb::operator()(sr::Session session, uint32_t s
  * @param ctx Plugin module change context.
  *
  */
-AuthUserAuthorizedKeyModuleChangeCb::AuthUserAuthorizedKeyModuleChangeCb(std::shared_ptr<AuthModuleChangesContext> ctx) { m_ctx = ctx; }
+AuthUserAuthorizedKeyModuleChangeCb::AuthUserAuthorizedKeyModuleChangeCb(
+    std::shared_ptr<AuthModuleChangesContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
  * Functor for path /ietf-system:system/authentication/user/authorized-key.
@@ -650,51 +705,58 @@ AuthUserAuthorizedKeyModuleChangeCb::AuthUserAuthorizedKeyModuleChangeCb(std::sh
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
  * @param event Type of the event that has occured.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * SR_EV_DONE, for example) have the same request ID.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+ * same request ID.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthorizedKeyModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
+sr::ErrorCode AuthUserAuthorizedKeyModuleChangeCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath, sr::Event event,
+    uint32_t requestId)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
     switch (event) {
-        case sysrepo::Event::Change:
-            for (auto& change : session.getChanges(subXPath->data())) {
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
+    case sysrepo::Event::Change:
+        for (auto& change : session.getChanges(subXPath->data())) {
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.",
+                change.node.schema().name().data());
 
-                SRPLG_LOG_DBG(
-                    getModuleLogPrefix(), "\n%s", change.node.printStr(libyang::DataFormat::XML, libyang::PrintFlags::WithDefaultsAll)->data());
+            SRPLG_LOG_DBG(getModuleLogPrefix(), "\n%s",
+                change.node
+                    .printStr(libyang::DataFormat::XML,
+                        libyang::PrintFlags::WithDefaultsAll)
+                    ->data());
 
-                SRPLG_LOG_DBG(PLUGIN_NAME, "Node path: %s", change.node.path().data());
+            SRPLG_LOG_DBG(PLUGIN_NAME, "Node path: %s", change.node.path().data());
 
-                const auto& user_name = srpc::extractListKeyFromXPath("user", "name", change.node.path());
+            const auto& user_name = srpc::extractListKeyFromXPath("user", "name", change.node.path());
 
-                SRPLG_LOG_DBG(PLUGIN_NAME, "Username for authorized key: %s", user_name.data());
+            SRPLG_LOG_DBG(PLUGIN_NAME, "Username for authorized key: %s",
+                user_name.data());
 
-                switch (change.operation) {
-                    case sysrepo::ChangeOperation::Created:
-                    case sysrepo::ChangeOperation::Modified:
-                        {
-                            break;
-                        }
-                    case sysrepo::ChangeOperation::Deleted:
-                        break;
-                    case sysrepo::ChangeOperation::Moved:
-                        break;
-                }
+            switch (change.operation) {
+            case sysrepo::ChangeOperation::Created:
+            case sysrepo::ChangeOperation::Modified: {
+                break;
             }
-            break;
-        default:
-            break;
+            case sysrepo::ChangeOperation::Deleted:
+                break;
+            case sysrepo::ChangeOperation::Moved:
+                break;
+            }
+        }
+        break;
+    default:
+        break;
     }
 
     return sr::ErrorCode::CallbackFailed;
 }
-}
+} // namespace ietf::sys::sub::change
 
 namespace ietf::sys::sub::oper {
 /**
@@ -703,23 +765,33 @@ namespace ietf::sys::sub::oper {
  * @param ctx Plugin operational context.
  *
  */
-AuthUserAuthenticationOrderOperGetCb::AuthUserAuthenticationOrderOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserAuthenticationOrderOperGetCb::AuthUserAuthenticationOrderOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user-authentication-order.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user-authentication-order.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthenticationOrderOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserAuthenticationOrderOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -731,23 +803,33 @@ sr::ErrorCode AuthUserAuthenticationOrderOperGetCb::operator()(sr::Session sessi
  * @param ctx Plugin operational context.
  *
  */
-AuthUserNameOperGetCb::AuthUserNameOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserNameOperGetCb::AuthUserNameOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s']/name.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s']/name.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserNameOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserNameOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -759,23 +841,33 @@ sr::ErrorCode AuthUserNameOperGetCb::operator()(sr::Session session, uint32_t su
  * @param ctx Plugin operational context.
  *
  */
-AuthUserPasswordOperGetCb::AuthUserPasswordOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserPasswordOperGetCb::AuthUserPasswordOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s']/password.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s']/password.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserPasswordOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserPasswordOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -787,23 +879,33 @@ sr::ErrorCode AuthUserPasswordOperGetCb::operator()(sr::Session session, uint32_
  * @param ctx Plugin operational context.
  *
  */
-AuthUserAuthorizedKeyNameOperGetCb::AuthUserAuthorizedKeyNameOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserAuthorizedKeyNameOperGetCb::AuthUserAuthorizedKeyNameOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s']/name.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s']/name.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthorizedKeyNameOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserAuthorizedKeyNameOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -815,23 +917,34 @@ sr::ErrorCode AuthUserAuthorizedKeyNameOperGetCb::operator()(sr::Session session
  * @param ctx Plugin operational context.
  *
  */
-AuthUserAuthorizedKeyAlgorithmOperGetCb::AuthUserAuthorizedKeyAlgorithmOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserAuthorizedKeyAlgorithmOperGetCb::
+    AuthUserAuthorizedKeyAlgorithmOperGetCb(
+        std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s']/algorithm.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s']/algorithm.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthorizedKeyAlgorithmOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserAuthorizedKeyAlgorithmOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -843,23 +956,33 @@ sr::ErrorCode AuthUserAuthorizedKeyAlgorithmOperGetCb::operator()(sr::Session se
  * @param ctx Plugin operational context.
  *
  */
-AuthUserAuthorizedKeyKeyDataOperGetCb::AuthUserAuthorizedKeyKeyDataOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserAuthorizedKeyKeyDataOperGetCb::AuthUserAuthorizedKeyKeyDataOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s']/key-data.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s']/key-data.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthorizedKeyKeyDataOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserAuthorizedKeyKeyDataOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -871,23 +994,33 @@ sr::ErrorCode AuthUserAuthorizedKeyKeyDataOperGetCb::operator()(sr::Session sess
  * @param ctx Plugin operational context.
  *
  */
-AuthUserAuthorizedKeyOperGetCb::AuthUserAuthorizedKeyOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserAuthorizedKeyOperGetCb::AuthUserAuthorizedKeyOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s'].
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s']/authorized-key[name='%s'].
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserAuthorizedKeyOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserAuthorizedKeyOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
@@ -899,23 +1032,33 @@ sr::ErrorCode AuthUserAuthorizedKeyOperGetCb::operator()(sr::Session session, ui
  * @param ctx Plugin operational context.
  *
  */
-AuthUserOperGetCb::AuthUserOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthUserOperGetCb::AuthUserOperGetCb(
+    std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication/user[name='%s'].
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication/user[name='%s'].
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthUserOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthUserOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
@@ -978,28 +1121,37 @@ sr::ErrorCode AuthUserOperGetCb::operator()(sr::Session session, uint32_t subscr
  * @param ctx Plugin operational context.
  *
  */
-AuthOperGetCb::AuthOperGetCb(std::shared_ptr<AuthOperationalContext> ctx) { m_ctx = ctx; }
+AuthOperGetCb::AuthOperGetCb(std::shared_ptr<AuthOperationalContext> ctx)
+{
+    m_ctx = ctx;
+}
 
 /**
- * sysrepo-plugin-generator: Generated operator() for path /ietf-system:system/authentication.
+ * sysrepo-plugin-generator: Generated operator() for path
+ * /ietf-system:system/authentication.
  *
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
  * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+ * @param requestId Request ID unique for the specific module_name. Connected
+ * events for one request (SR_EV_CHANGE and
+ * @param output A handle to a tree. The callback is supposed to fill this tree
+ * with the requested data.
  *
  * @return Error code.
  *
  */
-sr::ErrorCode AuthOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
+sr::ErrorCode AuthOperGetCb::operator()(
+    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+    std::optional<std::string_view> subXPath,
+    std::optional<std::string_view> requestXPath, uint32_t requestId,
+    std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
 }
-}
+} // namespace ietf::sys::sub::oper
 
 /**
  * @brief Check for the datastore values on the system.
@@ -1008,7 +1160,8 @@ sr::ErrorCode AuthOperGetCb::operator()(sr::Session session, uint32_t subscripti
  *
  * @return Enum describing the output of values comparison.
  */
-srpc::DatastoreValuesCheckStatus UserValuesChecker::checkDatastoreValues(sysrepo::Session& session)
+srpc::DatastoreValuesCheckStatus
+UserValuesChecker::checkDatastoreValues(sysrepo::Session& session)
 {
     srpc::DatastoreValuesCheckStatus status;
 
@@ -1031,14 +1184,16 @@ void UserValuesApplier::applyDatastoreValues(sysrepo::Session& session)
     users_db.loadFromSystem();
 
     for (const auto& user_node : user_nodes) {
-        // check the current user node and throw an error if it doesn't exist on the system
+        // check the current user node and throw an error if it doesn't exist on the
+        // system
         const auto& name_node = user_node.findPath("name");
         const auto& password_node = user_node.findPath("password");
 
         const auto name_value = std::get<std::string>(name_node->asTerm().value());
         if (!users_db.checkIfUserExists(name_value)) {
             // create the missing user and set the password hash
-            SRPLG_LOG_INF(getModuleLogPrefix(), "Creating missing user %s", name_value.c_str());
+            SRPLG_LOG_INF(getModuleLogPrefix(), "Creating missing user %s",
+                name_value.c_str());
             users_db.createUser(name_value);
 
             if (password_node) {
@@ -1060,7 +1215,8 @@ void UserValuesApplier::applyDatastoreValues(sysrepo::Session& session)
  *
  * @return Enum describing the output of values comparison.
  */
-srpc::DatastoreValuesCheckStatus AuthorizedKeyValuesChecker::checkDatastoreValues(sysrepo::Session& session)
+srpc::DatastoreValuesCheckStatus
+AuthorizedKeyValuesChecker::checkDatastoreValues(sysrepo::Session& session)
 {
     srpc::DatastoreValuesCheckStatus status;
 
@@ -1072,7 +1228,8 @@ srpc::DatastoreValuesCheckStatus AuthorizedKeyValuesChecker::checkDatastoreValue
  *
  * @param session Session to use for retreiving datastore data.
  */
-void AuthorizedKeyValuesApplier::applyDatastoreValues(sysrepo::Session& session) { }
+void AuthorizedKeyValuesApplier::applyDatastoreValues(
+    sysrepo::Session& session) { }
 
 /**
  * Authentication module constructor. Allocates each context.
@@ -1096,17 +1253,26 @@ AuthModule::AuthModule(ietf::sys::PluginContext& plugin_ctx)
 /**
  * Return the operational context from the module.
  */
-std::shared_ptr<srpc::IModuleContext> AuthModule::getOperationalContext() { return m_operContext; }
+std::shared_ptr<srpc::IModuleContext> AuthModule::getOperationalContext()
+{
+    return m_operContext;
+}
 
 /**
  * Return the module changes context from the module.
  */
-std::shared_ptr<srpc::IModuleContext> AuthModule::getModuleChangesContext() { return m_changeContext; }
+std::shared_ptr<srpc::IModuleContext> AuthModule::getModuleChangesContext()
+{
+    return m_changeContext;
+}
 
 /**
  * Return the RPC context from the module.
  */
-std::shared_ptr<srpc::IModuleContext> AuthModule::getRpcContext() { return m_rpcContext; }
+std::shared_ptr<srpc::IModuleContext> AuthModule::getRpcContext()
+{
+    return m_rpcContext;
+}
 
 /**
  * Get all operational callbacks which the module should use.
@@ -1136,7 +1302,8 @@ std::list<srpc::ModuleChangeCallback> AuthModule::getModuleChangeCallbacks()
         srpc::ModuleChangeCallback {
             "ietf-system",
             "/ietf-system:system/authentication/user/authorized-key",
-            ietf::sys::sub::change::AuthUserAuthorizedKeyModuleChangeCb(this->m_changeContext),
+            ietf::sys::sub::change::AuthUserAuthorizedKeyModuleChangeCb(
+                this->m_changeContext),
         },
     };
 }

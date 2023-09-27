@@ -40,19 +40,19 @@ set(
     MODULE_SOURCES
 
     # modules
-    src/modules/system.cpp
-    src/modules/hostname.cpp
-    src/modules/timezone-name.cpp
-    src/modules/dns.cpp
-    src/modules/ntp.cpp
-    src/modules/auth.cpp
+    src/plugin/modules/system.cpp
+    src/plugin/modules/hostname.cpp
+    src/plugin/modules/timezone-name.cpp
+    src/plugin/modules/dns.cpp
+    src/plugin/modules/ntp.cpp
+    src/plugin/modules/auth.cpp
 )
 
 set(
-    CORE_SOURCES
+    PLUGIN_CORE_SOURCES
 
-    src/core/context.cpp
-    src/core/ip.cpp
+    src/plugin/context.cpp
+    src/plugin/ip.cpp
 
     ${MODULE_SOURCES}
 )
@@ -119,7 +119,7 @@ endif()
 add_library(
     ${PLUGIN_CORE_LIBRARY_NAME}
     STATIC
-    ${CORE_SOURCES}
+    ${PLUGIN_CORE_SOURCES}
 )
 
 target_include_directories(

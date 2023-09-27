@@ -1,14 +1,14 @@
-#include "core/context.hpp"
+#include "plugin/context.hpp"
 #include "srpcpp/datastore.hpp"
-#include <srpcpp/module.hpp>
 #include <srpcpp/module-registry.hpp>
+#include <srpcpp/module.hpp>
 
-#include <sysrepo-cpp/Subscription.hpp>
 #include <libyang-cpp/Context.hpp>
+#include <sysrepo-cpp/Subscription.hpp>
 
-#include <string>
 #include <list>
 #include <optional>
+#include <string>
 
 namespace sr = sysrepo;
 namespace ly = libyang;
@@ -41,7 +41,8 @@ struct NtpServer {
 class NtpServerList {
 public:
     /**
-     * @brief Constructor for the list of ntp servers. Uses the session and augyang ability to retrieve NTP servers on the system.
+     * @brief Constructor for the list of ntp servers. Uses the session and
+     * augyang ability to retrieve NTP servers on the system.
      */
     NtpServerList(sr::Session& sess);
 
@@ -59,12 +60,13 @@ private:
     std::list<NtpServer> m_servers; ///< List of NTP servers to manipulate.
     sr::Session& m_session;
 };
-}
+} // namespace ietf::sys::ntp
 
 namespace ietf::sys::ntp::change {
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/enabled.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/enabled.
  */
 class NtpEnabledModuleChangeCb {
 public:
@@ -77,20 +79,24 @@ public:
     NtpEnabledModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/enabled.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/enabled.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -98,7 +104,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/name.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/name.
  */
 class NtpServerNameModuleChangeCb {
 public:
@@ -111,20 +118,24 @@ public:
     NtpServerNameModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/name.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/name.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -132,7 +143,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/udp/address.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/udp/address.
  */
 class NtpServerUdpAddressModuleChangeCb {
 public:
@@ -142,23 +154,28 @@ public:
      * @param ctx Plugin module change context.
      *
      */
-    NtpServerUdpAddressModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
+    NtpServerUdpAddressModuleChangeCb(
+        std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/udp/address.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/udp/address.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -166,7 +183,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/udp/port.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/udp/port.
  */
 class NtpServerUdpPortModuleChangeCb {
 public:
@@ -179,20 +197,24 @@ public:
     NtpServerUdpPortModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/udp/port.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/udp/port.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -200,7 +222,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/udp.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/udp.
  */
 class NtpServerUdpModuleChangeCb {
 public:
@@ -213,20 +236,24 @@ public:
     NtpServerUdpModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/udp.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/udp.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -234,7 +261,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/association-type.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/association-type.
  */
 class NtpServerAssociationTypeModuleChangeCb {
 public:
@@ -244,23 +272,28 @@ public:
      * @param ctx Plugin module change context.
      *
      */
-    NtpServerAssociationTypeModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
+    NtpServerAssociationTypeModuleChangeCb(
+        std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/association-type.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/association-type.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -268,7 +301,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/iburst.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/iburst.
  */
 class NtpServerIburstModuleChangeCb {
 public:
@@ -281,20 +315,24 @@ public:
     NtpServerIburstModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/iburst.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/iburst.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -302,7 +340,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s']/prefer.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s']/prefer.
  */
 class NtpServerPreferModuleChangeCb {
 public:
@@ -315,20 +354,24 @@ public:
     NtpServerPreferModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s']/prefer.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/prefer.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -336,7 +379,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp/server[name='%s'].
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp/server[name='%s'].
  */
 class NtpServerModuleChangeCb {
 public:
@@ -349,20 +393,24 @@ public:
     NtpServerModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp/server[name='%s'].
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp/server[name='%s'].
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
@@ -370,7 +418,8 @@ private:
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-system:system/ntp.
+ * @brief sysrepo-plugin-generator: Generated module change functor for path
+ * /ietf-system:system/ntp.
  */
 class NtpModuleChangeCb {
 public:
@@ -383,30 +432,35 @@ public:
     NtpModuleChangeCb(std::shared_ptr<NtpModuleChangesContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated module change operator() for path /ietf-system:system/ntp.
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/ntp.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
         sr::Event event, uint32_t requestId);
 
 private:
     std::shared_ptr<NtpModuleChangesContext> m_ctx;
 };
-}
+} // namespace ietf::sys::ntp::change
 
 namespace ietf::sys::ntp::oper {
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/enabled.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/enabled.
  */
 class NtpEnabledOperGetCb {
 public:
@@ -419,27 +473,35 @@ public:
     NtpEnabledOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/enabled.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/enabled.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/name.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/name.
  */
 class NtpServerNameOperGetCb {
 public:
@@ -452,27 +514,35 @@ public:
     NtpServerNameOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/name.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/name.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/udp/address.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/udp/address.
  */
 class NtpServerUdpAddressOperGetCb {
 public:
@@ -485,27 +555,35 @@ public:
     NtpServerUdpAddressOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/udp/address.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/udp/address.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/udp/port.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/udp/port.
  */
 class NtpServerUdpPortOperGetCb {
 public:
@@ -518,27 +596,35 @@ public:
     NtpServerUdpPortOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/udp/port.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/udp/port.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/udp.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/udp.
  */
 class NtpServerUdpOperGetCb {
 public:
@@ -551,27 +637,35 @@ public:
     NtpServerUdpOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/udp.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/udp.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/association-type.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/association-type.
  */
 class NtpServerAssociationTypeOperGetCb {
 public:
@@ -584,27 +678,35 @@ public:
     NtpServerAssociationTypeOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/association-type.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/association-type.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/iburst.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/iburst.
  */
 class NtpServerIburstOperGetCb {
 public:
@@ -617,27 +719,35 @@ public:
     NtpServerIburstOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/iburst.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/iburst.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s']/prefer.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s']/prefer.
  */
 class NtpServerPreferOperGetCb {
 public:
@@ -650,27 +760,35 @@ public:
     NtpServerPreferOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s']/prefer.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s']/prefer.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp/server[name='%s'].
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp/server[name='%s'].
  */
 class NtpServerOperGetCb {
 public:
@@ -683,27 +801,35 @@ public:
     NtpServerOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp/server[name='%s'].
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp/server[name='%s'].
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system/ntp.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system/ntp.
  */
 class NtpOperGetCb {
 public:
@@ -716,28 +842,36 @@ public:
     NtpOperGetCb(std::shared_ptr<NtpOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system/ntp.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system/ntp.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<NtpOperationalContext> m_ctx;
 };
-}
+} // namespace ietf::sys::ntp::oper
 
 /**
- * @brief Applier used to apply /ietf-system:system/ntp values from the datastore to the system.
+ * @brief Applier used to apply /ietf-system:system/ntp values from the
+ * datastore to the system.
  */
 class NtpValuesApplier : public srpc::IDatastoreApplier {
     /**
@@ -773,12 +907,14 @@ public:
     /**
      * Return the operational context from the module.
      */
-    virtual std::shared_ptr<srpc::IModuleContext> getOperationalContext() override;
+    virtual std::shared_ptr<srpc::IModuleContext>
+    getOperationalContext() override;
 
     /**
      * Return the module changes context from the module.
      */
-    virtual std::shared_ptr<srpc::IModuleContext> getModuleChangesContext() override;
+    virtual std::shared_ptr<srpc::IModuleContext>
+    getModuleChangesContext() override;
 
     /**
      * Return the RPC context from the module.
@@ -788,12 +924,14 @@ public:
     /**
      * Get all operational callbacks which the module should use.
      */
-    virtual std::list<srpc::OperationalCallback> getOperationalCallbacks() override;
+    virtual std::list<srpc::OperationalCallback>
+    getOperationalCallbacks() override;
 
     /**
      * Get all module change callbacks which the module should use.
      */
-    virtual std::list<srpc::ModuleChangeCallback> getModuleChangeCallbacks() override;
+    virtual std::list<srpc::ModuleChangeCallback>
+    getModuleChangeCallbacks() override;
 
     /**
      * Get all RPC callbacks which the module should use.

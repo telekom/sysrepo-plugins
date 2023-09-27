@@ -2,12 +2,12 @@
 
 #include <srpcpp/module.hpp>
 
-#include <sysrepo-cpp/Subscription.hpp>
 #include <libyang-cpp/Context.hpp>
+#include <sysrepo-cpp/Subscription.hpp>
 
 #include <sysrepo.h>
 
-#include "core/context.hpp"
+#include "plugin/context.hpp"
 
 // helpers
 namespace sr = sysrepo;
@@ -62,7 +62,8 @@ struct ClockInfo {
 ClockInfo getClockInfo();
 
 /**
- * @brief Set system current datetime. Throws a runtime_error if unable to set datetime.
+ * @brief Set system current datetime. Throws a runtime_error if unable to set
+ * datetime.
  *
  * @param datetime Datetime.
  */
@@ -77,11 +78,12 @@ static void restartSystem();
  * @brief Shutdown system.
  */
 static void shutdownSystem();
-}
+} // namespace ietf::sys::state
 
 namespace ietf::sys::sub::oper {
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system-state/platform.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system-state/platform.
  */
 class StatePlatformOperGetCb {
 public:
@@ -94,27 +96,35 @@ public:
     StatePlatformOperGetCb(std::shared_ptr<SystemOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system-state/platform.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system-state/platform.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<SystemOperationalContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-system:system-state/clock.
+ * @brief sysrepo-plugin-generator: Generated operational get functor for path
+ * /ietf-system:system-state/clock.
  */
 class StateClockOperGetCb {
 public:
@@ -127,33 +137,40 @@ public:
     StateClockOperGetCb(std::shared_ptr<SystemOperationalContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated operational get operator() for path /ietf-system:system-state/clock.
+     * sysrepo-plugin-generator: Generated operational get operator() for path
+     * /ietf-system:system-state/clock.
      *
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param moduleName The module name used for subscribing.
      * @param subXPath The optional xpath used at the time of subscription.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with the requested data.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with the requested data.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath,
-        std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath,
+        uint32_t requestId,
+        std::optional<ly::DataNode>& output);
 
 private:
     std::shared_ptr<SystemOperationalContext> m_ctx;
 };
-}
+} // namespace ietf::sys::sub::oper
 
 namespace ietf::sys::sub::change {
-
 }
 
 namespace ietf::sys::sub::rpc {
 /**
- * @brief sysrepo-plugin-generator: Generated RPC functor for path /ietf-system:set-current-datetime.
+ * @brief sysrepo-plugin-generator: Generated RPC functor for path
+ * /ietf-system:set-current-datetime.
  */
 class SetCurrentDatetimeRpcCb {
 public:
@@ -166,29 +183,35 @@ public:
     SetCurrentDatetimeRpcCb(std::shared_ptr<SystemRpcContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated RPC/action operator() for path /ietf-system:set-current-datetime.
+     * sysrepo-plugin-generator: Generated RPC/action operator() for path
+     * /ietf-system:set-current-datetime.
      *
      * A callback for RPC/action subscriptions.
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param path Path identifying the RPC/action.
      * @param input Data tree specifying the input of the RPC/action.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with output data (if there are any).
-     * Points to the operation root node.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with output data (if there are any). Points to the operation root
+     * node.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view path, const ly::DataNode input, sr::Event event,
-        uint32_t requestId, ly::DataNode output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view path, const ly::DataNode input,
+        sr::Event event, uint32_t requestId,
+        ly::DataNode output);
 
 private:
     std::shared_ptr<SystemRpcContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated RPC functor for path /ietf-system:system-restart.
+ * @brief sysrepo-plugin-generator: Generated RPC functor for path
+ * /ietf-system:system-restart.
  */
 class SystemRestartRpcCb {
 public:
@@ -201,29 +224,35 @@ public:
     SystemRestartRpcCb(std::shared_ptr<SystemRpcContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated RPC/action operator() for path /ietf-system:system-restart.
+     * sysrepo-plugin-generator: Generated RPC/action operator() for path
+     * /ietf-system:system-restart.
      *
      * A callback for RPC/action subscriptions.
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param path Path identifying the RPC/action.
      * @param input Data tree specifying the input of the RPC/action.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with output data (if there are any).
-     * Points to the operation root node.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with output data (if there are any). Points to the operation root
+     * node.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view path, const ly::DataNode input, sr::Event event,
-        uint32_t requestId, ly::DataNode output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view path, const ly::DataNode input,
+        sr::Event event, uint32_t requestId,
+        ly::DataNode output);
 
 private:
     std::shared_ptr<SystemRpcContext> m_ctx;
 };
 
 /**
- * @brief sysrepo-plugin-generator: Generated RPC functor for path /ietf-system:system-shutdown.
+ * @brief sysrepo-plugin-generator: Generated RPC functor for path
+ * /ietf-system:system-shutdown.
  */
 class SystemShutdownRpcCb {
 public:
@@ -236,27 +265,32 @@ public:
     SystemShutdownRpcCb(std::shared_ptr<SystemRpcContext> ctx);
 
     /**
-     * sysrepo-plugin-generator: Generated RPC/action operator() for path /ietf-system:system-shutdown.
+     * sysrepo-plugin-generator: Generated RPC/action operator() for path
+     * /ietf-system:system-shutdown.
      *
      * A callback for RPC/action subscriptions.
      * @param session An implicit session for the callback.
      * @param subscriptionId ID the subscription associated with the callback.
      * @param path Path identifying the RPC/action.
      * @param input Data tree specifying the input of the RPC/action.
-     * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * @param output A handle to a tree. The callback is supposed to fill this tree with output data (if there are any).
-     * Points to the operation root node.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this
+     * tree with output data (if there are any). Points to the operation root
+     * node.
      *
      * @return Error code.
      *
      */
-    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId, std::string_view path, const ly::DataNode input, sr::Event event,
-        uint32_t requestId, ly::DataNode output);
+    sr::ErrorCode operator()(sr::Session session, uint32_t subscriptionId,
+        std::string_view path, const ly::DataNode input,
+        sr::Event event, uint32_t requestId,
+        ly::DataNode output);
 
 private:
     std::shared_ptr<SystemRpcContext> m_ctx;
 };
-}
+} // namespace ietf::sys::sub::rpc
 
 /**
  * @brief System module.
@@ -271,12 +305,14 @@ public:
     /**
      * Return the operational context from the module.
      */
-    virtual std::shared_ptr<srpc::IModuleContext> getOperationalContext() override;
+    virtual std::shared_ptr<srpc::IModuleContext>
+    getOperationalContext() override;
 
     /**
      * Return the module changes context from the module.
      */
-    virtual std::shared_ptr<srpc::IModuleContext> getModuleChangesContext() override;
+    virtual std::shared_ptr<srpc::IModuleContext>
+    getModuleChangesContext() override;
 
     /**
      * Return the RPC context from the module.
@@ -286,12 +322,14 @@ public:
     /**
      * Get all operational callbacks which the module should use.
      */
-    virtual std::list<srpc::OperationalCallback> getOperationalCallbacks() override;
+    virtual std::list<srpc::OperationalCallback>
+    getOperationalCallbacks() override;
 
     /**
      * Get all module change callbacks which the module should use.
      */
-    virtual std::list<srpc::ModuleChangeCallback> getModuleChangeCallbacks() override;
+    virtual std::list<srpc::ModuleChangeCallback>
+    getModuleChangeCallbacks() override;
 
     /**
      * Get all RPC callbacks which the module should use.
