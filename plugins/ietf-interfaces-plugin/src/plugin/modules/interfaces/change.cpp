@@ -1,5 +1,5 @@
 #include "change.hpp"
-#include "modules/interfaces/common.hpp"
+#include "common.hpp"
 #include "sysrepo-cpp/Enum.hpp"
 
 #include <stdexcept>
@@ -2105,8 +2105,6 @@ sr::ErrorCode InterfaceIpv6ModuleChangeCb::operator()(sr::Session session, uint3
     sr::ErrorCode error = sr::ErrorCode::Ok;
     return error;
 }
-
-
 
 /**
  * sysrepo-plugin-generator: Generated default constructor.

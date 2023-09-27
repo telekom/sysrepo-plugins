@@ -2,7 +2,7 @@
 
 #include <srpcpp.hpp>
 
-#include "core/context.hpp"
+#include "plugin/context.hpp"
 
 // module context
 #include "interfaces/context.hpp"

@@ -25,23 +25,23 @@ find_package(SYSREPOCPP REQUIRED)
 find_package(NL REQUIRED)
 
 set(
-    CORE_SOURCES
+    PLUGIN_CORE_SOURCES
 
-    src/core/context.cpp
+    src/plugin/context.cpp
 )
 
 set(
     MODULE_SOURCES
 
-    src/modules/interfaces.cpp
-    src/modules/interfaces/oper.cpp
-    src/modules/interfaces/change.cpp
-    src/modules/interfaces/context.cpp
-    src/modules/interfaces/common.cpp
-    src/modules/interfaces/api/nl.cpp
-    src/modules/interfaces/api/interface.cpp
-    src/modules/interfaces/api/address.cpp
-    src/modules/interfaces/api/neighbor.cpp
+    src/plugin/modules/interfaces.cpp
+    src/plugin/modules/interfaces/oper.cpp
+    src/plugin/modules/interfaces/change.cpp
+    src/plugin/modules/interfaces/context.cpp
+    src/plugin/modules/interfaces/common.cpp
+    src/plugin/modules/interfaces/api/nl.cpp
+    src/plugin/modules/interfaces/api/interface.cpp
+    src/plugin/modules/interfaces/api/address.cpp
+    src/plugin/modules/interfaces/api/neighbor.cpp
 )
 
 set(
@@ -61,7 +61,7 @@ set(
 add_library(
     ${PLUGIN_CORE_LIBRARY_NAME}
     STATIC
-    ${CORE_SOURCES}
+    ${PLUGIN_CORE_SOURCES}
     ${MODULE_SOURCES}
 )
 

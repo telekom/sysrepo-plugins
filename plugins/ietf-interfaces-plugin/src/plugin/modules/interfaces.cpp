@@ -1,6 +1,6 @@
 #include "interfaces.hpp"
-#include "modules/interfaces/change.hpp"
-#include "modules/interfaces/oper.hpp"
+#include "interfaces/change.hpp"
+#include "interfaces/oper.hpp"
 
 #include <memory>
 
@@ -235,7 +235,7 @@ std::list<srpc::ModuleChangeCallback> InterfacesModule::getModuleChangeCallbacks
             "/ietf-interfaces:interfaces/interface/ipv6/autoconf/temporary-preferred-lifetime",
             Ipv6AutoconfTemporaryPreferredLifetimeModuleChangeCb(this->m_changeContext),
         },
-      
+
     };
 }
 /**
