@@ -69,12 +69,12 @@ private:
     using NlSocketPtr = std::unique_ptr<NlSocket, NlSocketDeleter>; ///< Socket unique pointer type alias.
 
     /**
-     * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of link members.
+     * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of members.
      */
     RouteRef(struct rtnl_route* route, struct nl_sock* socket);
 
     /**
-     * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of link members.
+     * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of members.
      */
     RouteRef(struct nl_object* route, struct nl_sock* socket);
 
