@@ -16,9 +16,19 @@ public:
     std::uint8_t getWeight() const;
 
     /**
+     * @brief Sets the weight of the next hop.
+     */
+    void setWeight(std::uint8_t weight);
+
+    /**
      * @brief Returns the weight of the next hop.
      */
     std::int32_t getInterfaceIndex() const;
+
+    /**
+     * @brief Sets the ifindex of the next hop.
+     */
+    void setInterfaceIndex(std::int32_t ifindex);
 
     /**
      * @brief Returns the weight of the next hop.
@@ -26,14 +36,34 @@ public:
     AddressRef getGateway() const;
 
     /**
+     * @brief Sets the gateway of the next hop.
+     */
+    void setGateway(AddressRef addr);
+
+    /**
      * @brief Returns the weight of the next hop.
      */
     std::uint32_t getFlags() const;
 
     /**
+     * @brief Sets the flags of the next hop.
+     */
+    void setFlags(std::uint32_t flags);
+
+    /**
+     * @brief Unsets the flags of the next hop.
+     */
+    void unsetFlags(std::int32_t flags);
+
+    /**
      * @brief Returns the weight of the next hop.
      */
     std::uint32_t getRealms() const;
+
+    /**
+     * @brief Sets the realms of the next hop.
+     */
+    void setRealms(std::uint32_t realms);
 
 private:
     using RtnlNextHop = struct rtnl_nexthop; ///< NextHop type alias.
