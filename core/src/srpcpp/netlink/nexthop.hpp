@@ -10,6 +10,31 @@ public:
     friend class NlContext; ///< Allow NlContext to use the private constructor.
     friend class CacheRef<NextHopRef>; ///< Allow Cache to use the private constructor.
 
+    /**
+     * @brief Returns the weight of the next hop.
+     */
+    std::uint8_t getWeight() const;
+
+    /**
+     * @brief Returns the weight of the next hop.
+     */
+    std::int32_t getInterfaceIndex() const;
+
+    /**
+     * @brief Returns the weight of the next hop.
+     */
+    AddressRef getGateway() const;
+
+    /**
+     * @brief Returns the weight of the next hop.
+     */
+    std::uint32_t getFlags() const;
+
+    /**
+     * @brief Returns the weight of the next hop.
+     */
+    std::uint32_t getRealms() const;
+
 private:
     using RtnlNextHop = struct rtnl_nexthop; ///< NextHop type alias.
     using RtnlNextHopDeleter = NlDeleter<RtnlNextHop>; ///< Deleter type alias.
