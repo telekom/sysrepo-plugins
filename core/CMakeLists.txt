@@ -31,6 +31,7 @@ SET(
     src/srpcpp/netlink/address.cpp
     src/srpcpp/netlink/neighbor.cpp
     src/srpcpp/netlink/interface.cpp
+    src/srpcpp/netlink/route.cpp
 )
 
 find_package(LIBYANG REQUIRED)
