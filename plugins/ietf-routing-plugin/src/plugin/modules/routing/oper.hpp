@@ -47,7 +47,7 @@ namespace sub::oper {
         std::shared_ptr<RoutingOperationalContext> m_ctx;
     };
 
-        /**
+    /**
      * @brief sysrepo-plugin-generator: Generated operational get functor for path /ietf-routing:routing/interfaces.
      */
     class RoutingInterfacesOperGetCb {
