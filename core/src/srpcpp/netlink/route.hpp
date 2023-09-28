@@ -16,9 +16,19 @@ public:
     std::uint32_t getTable() const;
 
     /**
+     * @brief Sets the table ID of the route.
+     */
+    void setTable(std::uint32_t table);
+
+    /**
      * @brief Returns the scope of the route.
      */
     std::uint8_t getScope() const;
+
+    /**
+     * @brief Sets the scope of the route.
+     */
+    void setScope(std::uint8_t scope);
 
     /**
      * @brief Returns the TOS of the route.
@@ -26,9 +36,19 @@ public:
     std::uint8_t getTOS() const;
 
     /**
+     * @brief Sets the TOS of the route.
+     */
+    void setTOS(std::uint8_t tos);
+
+    /**
      * @brief Returns the protocol of the route.
      */
     std::uint8_t getProtocol() const;
+
+    /**
+     * @brief Sets the protocol of the route.
+     */
+    void setProtocol(std::uint8_t protocol);
 
     /**
      * @brief Returns the priority of the route.
@@ -36,9 +56,19 @@ public:
     std::uint32_t getPriority() const;
 
     /**
+     * @brief Sets the priority of the route.
+     */
+    void setPriority(std::uint32_t priority);
+
+    /**
      * @brief Returns the family of the route.
      */
     std::uint8_t getFamily() const;
+
+    /**
+     * @brief Sets the family of the route.
+     */
+    void setFamily(std::uint8_t family);
 
     /**
      * @brief Returns the type of the route.
@@ -46,9 +76,24 @@ public:
     std::uint8_t getType() const;
 
     /**
+     * @brief Sets the type of the route.
+     */
+    void setType(std::uint8_t type);
+
+    /**
      * @brief Returns the flags of the route.
      */
     std::uint32_t getFlags() const;
+
+    /**
+     * @brief Sets the flags of the route.
+     */
+    void setFlags(std::uint32_t flags);
+
+    /**
+     * @brief Unsets the flags of the route.
+     */
+    void unsetFlags(std::uint32_t flags);
 
     /**
      * @brief Returns the destination address of the route.
@@ -56,9 +101,19 @@ public:
     AddressRef getDestination() const;
 
     /**
+     * @brief Sets the destination address of the route.
+     */
+    void setDestination(AddressRef addr);
+
+    /**
      * @brief Returns the source address of the route.
      */
     AddressRef getSource() const;
+
+    /**
+     * @brief Sets the source address of the route.
+     */
+    void setSource(AddressRef addr);
 
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.
