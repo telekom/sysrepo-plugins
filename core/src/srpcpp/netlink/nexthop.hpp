@@ -4,11 +4,13 @@
 #include "cache.hpp"
 
 class AddressRef;
+class RouteRef;
 
 class NextHopRef {
 public:
     friend class NlContext; ///< Allow NlContext to use the private constructor.
     friend class CacheRef<NextHopRef>; ///< Allow Cache to use the private constructor.
+    friend class RouteRef;
 
     /**
      * @brief Returns the weight of the next hop.

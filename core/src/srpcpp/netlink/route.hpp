@@ -3,7 +3,10 @@
 #include "nl.hpp"
 #include "cache.hpp"
 
+#include <list>
+
 class AddressRef;
+class NextHopRef;
 
 class RouteRef {
 public:
@@ -114,6 +117,11 @@ public:
      * @brief Sets the source address of the route.
      */
     void setSource(AddressRef addr);
+
+    /**
+     * @brief Returns the list of next-hops for the given route.
+     */
+    std::list<NextHopRef> getNextHops();
 
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.

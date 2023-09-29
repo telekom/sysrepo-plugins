@@ -1,5 +1,6 @@
 #include "route.hpp"
 #include "address.hpp"
+#include "nexthop.hpp"
 #include <netlink/route/route.h>
 #include <stdexcept>
 
@@ -157,4 +158,20 @@ void RouteRef::setSource(AddressRef addr)
     if (error != 0) {
         throw std::runtime_error("Unable to set source address of the route");
     }
+}
+
+/**
+ * @brief Returns the list of next-hops for the given route.
+ */
+std::list<NextHopRef> RouteRef::getNextHops()
+{
+    std::list<NextHopRef> nhs;
+    const auto n = rtnl_route_get_nnexthops(m_route.get());
+
+    for (auto i = 0; i < n; i++) {
+        const auto nh = rtnl_route_nexthop_n(m_route.get(), i);
+        nhs.push_back(NextHopRef(nh, m_socket.get()));
+    }
+
+    return nhs;
 }
