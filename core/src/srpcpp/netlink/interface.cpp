@@ -23,7 +23,7 @@ InterfaceRef::InterfaceRef(struct nl_object* link, struct nl_sock* socket)
 {
     m_link = RtnlLinkPtr(reinterpret_cast<RtnlLink*>(link), NlEmptyDeleter<RtnlLink>),
     m_socket = NlSocketPtr(reinterpret_cast<struct nl_sock*>(socket), NlEmptyDeleter<struct nl_sock>);
-};
+}
 
 /**
  * @breif Wrapper function for rtnl_link_get_name().
