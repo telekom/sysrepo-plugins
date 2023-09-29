@@ -101,6 +101,11 @@ public:
      */
     CacheRef<NeighborRef> getNeighborCache();
 
+    /**
+     * @brief Get the routes cache.
+     */
+    CacheRef<RouteRef> getRouteCache();
+
 private:
     std::unique_ptr<struct nl_sock, NlDeleter<struct nl_sock>> m_sock; ///< Netlink socket.
     std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_linkCache; ///< Links cache.
