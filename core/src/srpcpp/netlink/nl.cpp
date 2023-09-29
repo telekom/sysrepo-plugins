@@ -3,6 +3,8 @@
 // libnl
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
+#include <netlink/route/route.h>
+#include <netlink/route/neighbour.h>
 #include <linux/if.h>
 
 // include types
@@ -10,7 +12,6 @@
 #include "address.hpp"
 #include "neighbor.hpp"
 #include "cache.hpp"
-#include "netlink/route/neighbour.h"
 
 /**
  * @brief Default constructor. Allocates each member of the class.
@@ -22,6 +23,7 @@ NlContext::NlContext()
     struct nl_cache* link_cache = nullptr;
     struct nl_cache* addr_cache = nullptr;
     struct nl_cache* neigh_cache = nullptr;
+    struct nl_cache* route_cache = nullptr;
 
     sock = nl_socket_alloc();
     if (!sock) {
@@ -56,6 +58,23 @@ NlContext::NlContext()
     }
 
     m_neighCache = std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>>(neigh_cache, nl_cache_free);
+
+    error = rtnl_route_alloc_cache(m_sock.get(), AF_UNSPEC, 0, &route_cache);
+    if (error != 0) {
+        throw std::runtime_error("Unable to alloc route cache");
+    }
+
+    m_routeCache = std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>>(route_cache, nl_cache_free);
+
+    error = rtnl_route_read_table_names("/etc/iproute2/rt_tables");
+    if (error != 0) {
+        throw std::runtime_error("Unable to read routing table names");
+    }
+
+    error = rtnl_route_read_protocol_names("/etc/iproute2/rt_protos");
+    if (error != 0) {
+        throw std::runtime_error("Unable to read routing protocol names");
+    }
 }
 
 /**
