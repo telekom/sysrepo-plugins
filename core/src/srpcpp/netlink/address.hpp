@@ -9,12 +9,16 @@
 
 class RouteAddressRef;
 class NeighborRef;
+class RouteRef;
+class NextHopRef;
 
 class AddressRef {
 public:
     friend class InterfaceRef; ///< Allow Interface class to use the private constructor.
     friend class RouteAddressRef; ///< Allow RouteAddressRef to use the private constructor.
     friend class NeighborRef; ///< Allow NeighborRef to use the private constructor.
+    friend class RouteRef; ///< Allow RouteRef private constructor usage.
+    friend class NextHopRef; ///< Allow NextHopRef private constructor usage.
 
     /**
      * @breif Convert the address to string.

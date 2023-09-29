@@ -18,6 +18,7 @@ class InterfaceRef;
 class AddressRef;
 class RouteAddressRef;
 class NeighborRef;
+class RouteRef;
 enum class AddressFamily;
 template <typename T>
 class CacheRef;
@@ -105,4 +106,5 @@ private:
     std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_linkCache; ///< Links cache.
     std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_addressCache; ///< Addresses cache.
     std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_neighCache; ///< Neighbors cache.
+    std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_routeCache; ///< Routes cache.
 };
