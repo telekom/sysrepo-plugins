@@ -20,6 +20,22 @@ public:
      */
     RoutingInformationBase(CacheRef<RouteRef>& routes);
 
+    /**
+     * @brief Wrapper for the map iterator start.
+     */
+    auto begin()
+    {
+        return m_ribs.begin();
+    }
+
+    /**
+     * @brief Wrapper for the map iterator end.
+     */
+    auto end()
+    {
+        return m_ribs.end();
+    }
+
 private:
     /**
      * @brief Class which contains data from the ietf-routing YANG module and the RIB list element.
@@ -45,6 +61,11 @@ private:
          * @brief Returns the description of the RIB.
          */
         std::string getDescription() const;
+
+        /**
+         * @brief Returns the reference to the list of routes in the RIB.
+         */
+        std::list<Route>& getRoutes();
 
     private:
         friend class RoutingInformationBase;

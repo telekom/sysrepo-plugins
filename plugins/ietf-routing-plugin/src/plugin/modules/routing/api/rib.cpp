@@ -47,6 +47,14 @@ bool RoutingInformationBase::Object::isDefault() const { return m_default; }
 std::string RoutingInformationBase::Object::getDescription() const { return m_description; }
 
 /**
+ * @brief Returns the reference to the list of routes in the RIB.
+ */
+std::list<Route>& RoutingInformationBase::Object::getRoutes()
+{
+    return m_routes;
+}
+
+/**
  * @brief Creates a RIB hash/YANG list from the list of routes on the system.
  */
 RoutingInformationBase::RoutingInformationBase(CacheRef<RouteRef>& routes)
@@ -74,8 +82,8 @@ RoutingInformationBase::RoutingInformationBase(CacheRef<RouteRef>& routes)
 
         auto& current_rib = m_ribs.at(full_name);
 
-        SRPLG_LOG_INF(getModuleLogPrefix(), "Route belongs to %s table and is of %s family -> %s", table_name.c_str(), family == AddressFamily::V4 ? "IPv4" : "IPv6", full_name.c_str());
-        SRPLG_LOG_INF(getModuleLogPrefix(), "Route: %s -> %s", route.getSource().toString().c_str(), route.getDestination().toString().c_str());
+        // add current route to the current RIB
+        current_rib.addRoute(route);
     }
 }
 

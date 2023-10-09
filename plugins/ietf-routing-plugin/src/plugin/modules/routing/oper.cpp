@@ -111,7 +111,40 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
     auto route_cache = nl_ctx.getRouteCache();
 
-    auto rib_list = RoutingInformationBase(route_cache);
+    auto ipv4_module = session.getContext().getModule("ietf-ipv4-unicast-routing", "2018-03-13");
+    auto ipv6_module = session.getContext().getModule("ietf-ipv6-unicast-routing", "2018-03-13");
+
+    auto base = RoutingInformationBase(route_cache);
+
+    for (auto& rib_iter : base) {
+        auto& rib_name = rib_iter.first;
+        auto& rib_object = rib_iter.second;
+        auto& routes = rib_object.getRoutes();
+
+        std::stringstream rib_path_buffer;
+
+        rib_path_buffer << "rib[name=\'" << rib_name << "\']";
+        auto rib_node = output->newPath(rib_path_buffer.str());
+        auto routes_node = rib_node->newPath("routes");
+
+        SRPLG_LOG_INF(getModuleLogPrefix(), "RIB: %s", rib_name.c_str());
+
+        rib_node->newPath("default-rib", rib_object.isDefault() ? "true" : "false");
+        for (auto& route : routes) {
+            std::stringstream pref_buffer, ifname_buffer, ip_buffer;
+            auto route_node = routes_node->newPath("route");
+            auto nh_node = route_node->newPath("next-hop");
+
+            pref_buffer << route.getPreference();
+
+            // route-preference
+            route_node->newPath("route-preference", pref_buffer.str());
+
+            // route-metadata
+            route_node->newPath("source-protocol", route.getMetadata().source_protocol);
+            SRPLG_LOG_INF(getModuleLogPrefix(), "Route: %d, %s", route.getPreference(), route.getMetadata().source_protocol.c_str());
+        }
+    }
 
     return error;
 }
