@@ -28,6 +28,7 @@ RoutingInformationBase::Object::Object(AddressFamily family, bool is_default, co
  */
 void RoutingInformationBase::Object::addRoute(RouteRef& route)
 {
+    m_routes.push_back(Route(route));
 }
 
 /**
