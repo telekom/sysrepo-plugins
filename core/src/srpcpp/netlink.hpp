@@ -6,3 +6,4 @@
 #include "netlink/neighbor.hpp"
 #include "netlink/interface.hpp"
 #include "netlink/route.hpp"
+#include "netlink/nexthop.hpp"

@@ -37,6 +37,8 @@ set(
     src/plugin/modules/routing/change.cpp
     src/plugin/modules/routing/oper.cpp
     src/plugin/modules/routing/api/rib.cpp
+    src/plugin/modules/routing/api/route.cpp
+    src/plugin/modules/routing/api/nexthop.cpp
 )
 
 set(
