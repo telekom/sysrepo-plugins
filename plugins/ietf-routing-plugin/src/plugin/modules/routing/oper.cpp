@@ -1,4 +1,5 @@
 #include "oper.hpp"
+#include "plugin/modules/routing/api/rib.hpp"
 #include "sysrepo.h"
 #include "common.hpp"
 #include <stdexcept>
@@ -105,6 +106,13 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
     std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
+
+    auto& nl_ctx = m_ctx->getNetlinkContext();
+
+    auto route_cache = nl_ctx.getRouteCache();
+
+    auto rib_list = RoutingInformationBase(route_cache);
+
     return error;
 }
 
