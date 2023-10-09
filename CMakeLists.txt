@@ -18,6 +18,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 option(BUILD_SYSTEM_PLUGIN "Build the ietf-system-plugin" ON)
 option(BUILD_INTERFACES_PLUGIN "Build the ietf-interfaces-plugin" ON)
+option(BUILD_ROUTING_PLUGIN "Build the ietf-routing-plugin" ON)
+option(BUILD_BRIDGING_PLUGIN "Build the ieee802-dot1q-bridge-plugin" ON)
 
 # build core first
 add_subdirectory(core)
@@ -46,4 +48,8 @@ endif()
 
 if(BUILD_ROUTING_PLUGIN)
     add_subdirectory(plugins/ietf-routing-plugin)
+endif()
+
+if(BUILD_BRIDGING_PLUGIN)
+    add_subdirectory(plugins/ieee802-dot1q-bridge-plugin)
 endif()
