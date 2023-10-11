@@ -12,10 +12,24 @@ public:
 
     std::string getMacAddr(void);
 
-    std::map<int,std::string> getSlaveInterfaces();
+    std::map<int, std::string> getSlaveInterfaces();
 
+    void addInterfaceToBridge(int ifindex);
+
+    void addInterfaceToBridge(std::string interface_name);
+
+    void removeInterfaceFromBridge(int ifindex);
+
+    void removeInterfaceFromBridge(std::string interface_name);
 
 private:
+    enum BridgeOperation {
+        BRIDGE_ADD,
+        BRIDGE_REMOVE,
+    };
+
+    void add_or_remove_interface_to_bridge(int ifindex, const char* interface_name, BridgeOperation op);
+
     using RtnlLink = struct rtnl_link; ///< Route link type alias.
     using RtnlLinkDeleter = NlDeleter<RtnlLink>; ///< Deleter type alias.
     using BridgeLinkPtr = std::unique_ptr<RtnlLink, RtnlLinkDeleter>; ///< Unique pointer type alias.

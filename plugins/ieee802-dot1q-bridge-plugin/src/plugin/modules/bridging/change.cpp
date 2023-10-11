@@ -51,6 +51,8 @@ namespace sub::change {
 
                     for (auto& bridge : nl_ctx.getBridgeInterfaces()) {
                         SRPLG_LOG_INF("BRIDGE", "BR_NAME: %s, BR ADDR: %s", bridge.getName().c_str(), bridge.getMacAddr().c_str() );
+                        
+                        bridge.removeInterfaceFromBridge(9);
 
                         for( auto& slave : bridge.getSlaveInterfaces()){
                             SRPLG_LOG_INF(" SLAVE: ","NAME: %s, IFINDEX: %d",slave.second.c_str(), slave.first);

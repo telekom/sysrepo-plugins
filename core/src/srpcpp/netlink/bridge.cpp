@@ -75,3 +75,57 @@ std::map<int, std::string> BridgeRef::getSlaveInterfaces()
 
     return bridge_slaves;
 }
+
+void BridgeRef::addInterfaceToBridge(std::string interface_name)
+{
+    add_or_remove_interface_to_bridge(0, interface_name.c_str(), BRIDGE_ADD);
+}
+
+void BridgeRef::addInterfaceToBridge(int ifindex)
+{
+    add_or_remove_interface_to_bridge(ifindex, NULL, BRIDGE_ADD);
+};
+
+void BridgeRef::removeInterfaceFromBridge(std::string interface_name)
+{
+    add_or_remove_interface_to_bridge(0, interface_name.c_str(), BRIDGE_REMOVE);
+}
+
+void BridgeRef::removeInterfaceFromBridge(int ifindex)
+{
+    add_or_remove_interface_to_bridge(ifindex, NULL, BRIDGE_REMOVE);
+};
+
+void BridgeRef::add_or_remove_interface_to_bridge(int ifindex, const char* interface_name, BridgeOperation op)
+{
+    rtnl_link* slave_link = NULL;
+    int error = 0;
+
+    auto clean = [&]() {
+        if (slave_link != NULL)
+            rtnl_link_put(slave_link);
+    };
+
+    error = rtnl_link_get_kernel(m_socket.get(), ifindex, interface_name, &slave_link);
+
+    if (error < 0)
+        throw std::runtime_error("error rtnl_link_get_kernel, reason: " + std::string(nl_geterror(error)));
+
+    switch (op) {
+    case BRIDGE_ADD:
+        error = rtnl_link_enslave(m_socket.get(), m_link.get(), slave_link);
+        break;
+    case BRIDGE_REMOVE:
+        error = rtnl_link_release(m_socket.get(), slave_link);
+        break;
+    default:
+        break;
+    }
+
+    if (error < 0) {
+        clean();
+        throw std::runtime_error("error rtnl_link_enslave, reason: " + std::string(nl_geterror(error)));
+    }
+
+    clean();
+}
