@@ -116,6 +116,11 @@ public:
      */
     void setForwarding(bool enabled, AddressFamily fam);
 
+    /**
+     * @breif Check if link is bridge
+     */
+    bool isBridge(void);
+
 private:
     using RtnlLink = struct rtnl_link; ///< Route link type alias.
     using RtnlLinkDeleter = NlDeleter<RtnlLink>; ///< Deleter type alias.

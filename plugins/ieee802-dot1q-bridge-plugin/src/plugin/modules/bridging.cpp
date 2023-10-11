@@ -43,7 +43,15 @@ std::list<srpc::OperationalCallback> BridgingModule::getOperationalCallbacks()
  */
 std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
 {
-    return {};
+    return
+    {
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/name",
+            ieee::br::sub::change::BridgeNameModuleChangeCb(this->m_changeContext),  
+        },
+        
+    };
 }
 /**
  * Get all RPC callbacks which the module should use.

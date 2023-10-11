@@ -1,4 +1,7 @@
 #include "change.hpp"
+#include "common.hpp"
+#include <sysrepo-cpp/Enum.hpp>
+#include <sysrepo.h>
 
 namespace ieee::br {
 namespace sub::change {
@@ -30,6 +33,41 @@ namespace sub::change {
     sr::ErrorCode BridgeNameModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        // get the Netlink context
+        auto& nl_ctx = m_ctx->getNetlinkContext();
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/name")) {
+
+                const auto& value = change.node.asTerm().value();
+                const auto& name_value = std::get<std::string>(value);
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created: {
+
+                    nl_ctx.refillCache();
+
+                    for (auto& bridge : nl_ctx.getBridgeInterfaces()) {
+                        SRPLG_LOG_INF("BRIDGE", "BR_NAME: %s, BR ADDR: %s", bridge.getName().c_str(), bridge.getMacAddr().c_str() );
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
