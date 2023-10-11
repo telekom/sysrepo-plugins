@@ -2,6 +2,7 @@
 
 #include "nl.hpp"
 #include <netlink/route/link/bridge.h>
+#include <map>
 
 class BridgeRef {
 public:
@@ -10,6 +11,8 @@ public:
     std::string getName(void);
 
     std::string getMacAddr(void);
+
+    std::map<int,std::string> getSlaveInterfaces();
 
 
 private:
