@@ -3,6 +3,7 @@
 #include <netlink/route/link.h>
 #include <netlink/route/qdisc.h>
 #include <netlink/route/tc.h>
+#include <netlink/route/link/bridge.h>
 #include <memory>
 #include <stdexcept>
 #include <linux/if.h>
@@ -229,4 +230,9 @@ void InterfaceRef::setForwarding(bool enabled, AddressFamily fam)
 
     // probably some reset of network service afterwords
     // file path probably varies from system to system
+}
+
+bool InterfaceRef::isBridge(void)
+{
+    return (bool)rtnl_link_is_bridge(m_link.get());
 }

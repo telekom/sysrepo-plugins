@@ -5,6 +5,7 @@
 #include <netlink/route/link.h>
 #include <netlink/route/route.h>
 #include <netlink/route/neighbour.h>
+#include <netlink/route/link/bridge.h>
 #include <linux/if.h>
 #include <new>
 #include <stdexcept>
@@ -16,6 +17,7 @@
 #include "route.hpp"
 #include "cache.hpp"
 #include "netlink/route/nexthop.h"
+#include "bridge.hpp"
 
 /**
  * @brief Default constructor. Allocates each member of the class.
@@ -165,6 +167,26 @@ std::optional<InterfaceRef> NlContext::getInterfaceByIndex(const uint32_t index)
         return InterfaceRef(link, m_sock.get());
     }
     return std::nullopt;
+}
+
+/**
+ * @brief Get Bridge Interfaces.
+ */
+std::vector<BridgeRef> NlContext::getBridgeInterfaces()
+{
+    std::vector<BridgeRef> bridges;
+    struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
+
+    while (iter != nullptr) {
+
+        if (rtnl_link_is_bridge(iter)) {
+            bridges.push_back(BridgeRef(iter, m_sock.get()));
+        };
+
+        iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
+    }
+
+    return bridges;
 }
 
 /**

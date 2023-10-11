@@ -7,3 +7,4 @@
 #include "netlink/interface.hpp"
 #include "netlink/route.hpp"
 #include "netlink/nexthop.hpp"
+#include "netlink/bridge.hpp"

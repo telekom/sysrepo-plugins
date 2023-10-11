@@ -22,6 +22,7 @@ class AddressRef;
 class RouteAddressRef;
 class NeighborRef;
 class RouteRef;
+class BridgeRef;
 enum class AddressFamily;
 template <typename T>
 class CacheRef;
@@ -71,6 +72,11 @@ public:
      * @brief Return an interface found in cache by its index.
      */
     std::optional<InterfaceRef> getInterfaceByIndex(const uint32_t index);
+
+    /**
+     * @brief Get Bridge interfaces.
+     */
+    std::vector<BridgeRef> getBridgeInterfaces();
 
     /**
      * @brief Create interface.
