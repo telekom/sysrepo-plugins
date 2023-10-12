@@ -47,22 +47,24 @@ namespace sub::change {
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created: {
 
-                    nl_ctx.refillCache();
+                    try {
 
-                    for (auto& bridge : nl_ctx.getBridgeInterfaces()) {
-                        SRPLG_LOG_INF("BRIDGE", "BR_NAME: %s, BR ADDR: %s", bridge.getName().c_str(), bridge.getMacAddr().c_str() );
-                        
-                        bridge.removeInterfaceFromBridge(9);
+                        nl_ctx.refillCache();
+                        // get address node
+                        auto ds_addr = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge/address");
+                        BridgeRef bridge_ref = nl_ctx.createBridgeInterface(name_value);
+                        bridge_ref.setMacAddr(ds_addr.asTerm().valueStr().data());
 
-                        for( auto& slave : bridge.getSlaveInterfaces()){
-                            SRPLG_LOG_INF(" SLAVE: ","NAME: %s, IFINDEX: %d",slave.second.c_str(), slave.first);
-                        }
-                    }
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to create Bridge %s! reason: %s", name_value.c_str(), e.what());
+                        error = sr::ErrorCode::CallbackFailed;
+                    };
 
                     break;
                 }
                 case sysrepo::ChangeOperation::Deleted:
-
+                    // delete the bridge interface
+                    nl_ctx.deleteInterface(name_value.data());
                     break;
                 default:
                     break;
@@ -105,6 +107,55 @@ namespace sub::change {
     sr::ErrorCode BridgeAddressModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/address")) {
+
+                // get the Netlink context
+                auto& nl_ctx = m_ctx->getNetlinkContext();
+
+                // get bridge name (key) value
+                std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                const auto& value = change.node.asTerm().value();
+                const auto& addr_value = std::get<std::string>(value);
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                    break;
+                case sysrepo::ChangeOperation::Modified: {
+                    // refill netlink cache
+                    nl_ctx.refillCache();
+
+                    auto bridge = nl_ctx.getBridgeByName(bridge_name);
+
+                    if (!bridge.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot find bridge %s", bridge_name);
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    try {
+                        bridge->setMacAddr(addr_value);
+                    } catch (std::runtime_error& e) {
+                        error = sr::ErrorCode::CallbackFailed;
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to modify MAC address %s on bridge %s! reason: %s", addr_value.c_str(), bridge_name.c_str(), e.what());
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 

@@ -22,6 +22,8 @@ public:
 
     void removeInterfaceFromBridge(std::string interface_name);
 
+    void setMacAddr(std::string address);
+
 private:
     enum BridgeOperation {
         BRIDGE_ADD,

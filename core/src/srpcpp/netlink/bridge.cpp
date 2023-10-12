@@ -111,12 +111,31 @@ void BridgeRef::add_or_remove_interface_to_bridge(int ifindex, const char* inter
     if (error < 0)
         throw std::runtime_error("error rtnl_link_get_kernel, reason: " + std::string(nl_geterror(error)));
 
+    // check if interface is allready bridged
+    int master_if = rtnl_link_get_master(slave_link);
+
     switch (op) {
     case BRIDGE_ADD:
-        error = rtnl_link_enslave(m_socket.get(), m_link.get(), slave_link);
+
+        if (master_if == 0) {
+            // no bridge is associated, can enslave
+            error = rtnl_link_enslave(m_socket.get(), m_link.get(), slave_link);
+        } else {
+            clean();
+            throw std::runtime_error("Cannot enslave link, associated with index: " + std::to_string(master_if));
+        };
+
         break;
     case BRIDGE_REMOVE:
-        error = rtnl_link_release(m_socket.get(), slave_link);
+
+        // it has bridge associated on `master_if` ifindex
+        if (master_if > 0) {
+            error = rtnl_link_release(m_socket.get(), slave_link);
+        } else {
+            clean();
+            throw std::runtime_error("Link allready released!");
+        }
+
         break;
     default:
         break;
@@ -125,6 +144,47 @@ void BridgeRef::add_or_remove_interface_to_bridge(int ifindex, const char* inter
     if (error < 0) {
         clean();
         throw std::runtime_error("error rtnl_link_enslave, reason: " + std::string(nl_geterror(error)));
+    }
+
+    clean();
+}
+
+void BridgeRef::setMacAddr(std::string address)
+{
+    nl_addr* addr = NULL;
+    rtnl_link* change_link = NULL;
+    rtnl_link* current_link = m_link.get();
+
+    int err = -1;
+
+    auto clean = [&]() {
+        if (change_link != NULL)
+            rtnl_link_put(change_link);
+        if (addr != NULL)
+            nl_addr_put(addr);
+    };
+
+    std::replace(address.begin(), address.end(), '-', ':');
+
+    change_link = rtnl_link_alloc();
+
+    if (change_link == NULL)
+        throw std::runtime_error("Cannot allocate link!");
+
+    err = nl_addr_parse(address.c_str(), AF_LLC, &addr);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    rtnl_link_set_addr(change_link, addr);
+
+    err = rtnl_link_change(m_socket.get(), current_link, change_link, 0);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
     }
 
     clean();
