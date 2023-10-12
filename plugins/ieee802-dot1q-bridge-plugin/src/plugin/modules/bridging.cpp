@@ -43,14 +43,19 @@ std::list<srpc::OperationalCallback> BridgingModule::getOperationalCallbacks()
  */
 std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
 {
-    return
-    {
+    return {
         srpc::ModuleChangeCallback {
             "ieee802-dot1q-bridge",
             "/ieee802-dot1q-bridge:bridges/bridge/name",
-            ieee::br::sub::change::BridgeNameModuleChangeCb(this->m_changeContext),  
+            ieee::br::sub::change::BridgeNameModuleChangeCb(this->m_changeContext),
         },
-        
+
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/address",
+            ieee::br::sub::change::BridgeAddressModuleChangeCb(this->m_changeContext),
+        },
+
     };
 }
 /**

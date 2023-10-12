@@ -79,9 +79,20 @@ public:
     std::vector<BridgeRef> getBridgeInterfaces();
 
     /**
+     * @brief Get Bridge Interface by name.
+     */
+    std::optional<BridgeRef> getBridgeByName(std::string name);
+
+    /**
      * @brief Create interface.
      */
     void createInterface(std::string name, std::string type, bool enabled);
+
+    /**
+     * @brief Create interface.
+     * @returns Created Bridge
+     */
+    BridgeRef createBridgeInterface(std::string name);
 
     /**
      * @brief Create new address.
