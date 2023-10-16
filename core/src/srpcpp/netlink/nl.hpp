@@ -90,9 +90,9 @@ public:
 
     /**
      * @brief Create interface.
-     * @returns Created Bridge
+     * 
      */
-    BridgeRef createBridgeInterface(std::string name);
+    void createBridgeInterface(std::string name);
 
     /**
      * @brief Create new address.

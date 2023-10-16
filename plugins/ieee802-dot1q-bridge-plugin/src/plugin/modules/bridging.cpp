@@ -56,6 +56,24 @@ std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
             ieee::br::sub::change::BridgeAddressModuleChangeCb(this->m_changeContext),
         },
 
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/name",
+            ieee::br::sub::change::BridgeComponentNameModuleChangeCb(this->m_changeContext),
+        },
+
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/address",
+            ieee::br::sub::change::BridgeComponentAddressModuleChangeCb(this->m_changeContext),
+        },
+
+        srpc::ModuleChangeCallback {
+            "ietf-interfaces",
+            "/ietf-interfaces:interfaces/interface/bridge-port/component-name",
+            ieee::br::sub::change::InterfaceBridgePortComponentNameModuleChangeCb(this->m_changeContext),
+        },
+
     };
 }
 /**
