@@ -198,21 +198,13 @@ std::optional<BridgeRef> NlContext::getBridgeByName(std::string name)
     rtnl_link* bridge_if = NULL;
     int error = -1;
 
-    auto clean = [&]() {
-        if (bridge_if != NULL)
-            rtnl_link_put(bridge_if);
-    };
-
     error = rtnl_link_get_kernel(this->m_sock.get(), 0, name.c_str(), &bridge_if);
 
     if (error < 0) {
-        clean();
         return std::nullopt;
     };
 
     BridgeRef bridge(bridge_if, this->m_sock.get());
-
-    clean();
 
     return bridge;
 }
@@ -274,27 +266,14 @@ void NlContext::deleteInterface(const std::string& name)
     };
 }
 
-BridgeRef NlContext::createBridgeInterface(std::string name)
+void NlContext::createBridgeInterface(std::string name)
 {
     int error = -1;
-    rtnl_link* bridge = NULL;
 
     error = rtnl_link_bridge_add(this->m_sock.get(), name.c_str());
 
     if (error < 0)
         throw std::runtime_error(nl_geterror(error));
-
-    error = rtnl_link_get_kernel(this->m_sock.get(), 0, name.c_str(), &bridge);
-
-    if (error < 0) {
-        throw std::runtime_error(nl_geterror(error));
-        rtnl_link_put(bridge);
-    }
-    BridgeRef br(bridge, this->m_sock.get());
-
-    rtnl_link_put(bridge);
-
-    return br;
 }
 
 /**

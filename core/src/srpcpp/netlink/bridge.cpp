@@ -148,12 +148,13 @@ void BridgeRef::add_or_remove_interface_to_bridge(int ifindex, const char* inter
 
     clean();
 }
-
 void BridgeRef::setMacAddr(std::string address)
 {
     nl_addr* addr = NULL;
     rtnl_link* change_link = NULL;
     rtnl_link* current_link = m_link.get();
+
+    std::string new_addr = address;
 
     int err = -1;
 
@@ -164,14 +165,14 @@ void BridgeRef::setMacAddr(std::string address)
             nl_addr_put(addr);
     };
 
-    std::replace(address.begin(), address.end(), '-', ':');
+    std::replace(new_addr.begin(), new_addr.end(), '-', ':');
 
     change_link = rtnl_link_alloc();
 
     if (change_link == NULL)
         throw std::runtime_error("Cannot allocate link!");
 
-    err = nl_addr_parse(address.c_str(), AF_LLC, &addr);
+    err = nl_addr_parse(new_addr.c_str(), 0, &addr);
 
     if (err < 0) {
         clean();

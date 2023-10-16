@@ -3,6 +3,7 @@
 #include "nl.hpp"
 #include <netlink/route/link/bridge.h>
 #include <map>
+#include <iostream>
 
 class BridgeRef {
 public:
