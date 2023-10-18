@@ -74,6 +74,12 @@ std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
             ieee::br::sub::change::InterfaceBridgePortComponentNameModuleChangeCb(this->m_changeContext),
         },
 
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/database-id",
+            ieee::br::sub::change::BridgeComponentFilteringDatabaseVlanRegistrationEntryDatabaseIdModuleChangeCb(this->m_changeContext),
+        },
+        
     };
 }
 /**

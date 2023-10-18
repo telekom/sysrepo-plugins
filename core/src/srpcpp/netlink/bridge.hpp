@@ -2,6 +2,15 @@
 
 #include "nl.hpp"
 #include <netlink/route/link/bridge.h>
+#include <netlink/route/link/vlan.h>
+#include <linux/if_bridge.h>
+#include <netlink/netlink.h>
+
+#include <arpa/inet.h>
+#include <linux/if_ether.h>
+#include <linux/if_bridge.h>
+#include <linux/if_arp.h>
+
 #include <map>
 #include <iostream>
 
@@ -24,6 +33,8 @@ public:
     void removeInterfaceFromBridge(std::string interface_name);
 
     void setMacAddr(std::string address);
+
+    void vlanTest();
 
 private:
     enum BridgeOperation {

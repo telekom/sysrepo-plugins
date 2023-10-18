@@ -1150,6 +1150,41 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseVlanRegistrationEntryDatabaseIdModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/database-id")) {
+
+                const std::string& value = change.node.asTerm().valueStr().data();
+
+                auto& nl_ctx = m_ctx->getNetlinkContext();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created: {
+                    nl_ctx.refillCache();
+
+                    auto bridge = nl_ctx.getBridgeByName("veth1_bport");
+
+                    SRPLG_LOG_INF("TEST", "GOT HERE %s", bridge->getName().c_str());
+
+                    bridge->vlanTest();
+                    break;
+                }
+                case sysrepo::ChangeOperation::Modified:
+                    break;
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
