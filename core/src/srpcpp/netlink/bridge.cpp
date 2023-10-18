@@ -190,3 +190,86 @@ void BridgeRef::setMacAddr(std::string address)
 
     clean();
 }
+
+void BridgeRef::vlanTest()
+{
+    int error = 0;
+    int len = 0;
+    struct nl_msg* msg = NULL;
+    unsigned char* msg_buf = NULL;
+    struct sockaddr_nl nla = { 0 };
+    struct nlmsghdr* hdr = NULL;
+    struct nlattr* current_vlan_entry = NULL;
+    struct nlattr* entry_info = NULL;
+    int remaining = 0;
+    size_t list_size = 16; /* initial size */
+    int proto_header_len = 0;
+    int if_index = rtnl_link_get_ifindex(m_link.get());
+    struct bridge_vlan_info* port_vlan_list = NULL;
+
+    msg = nlmsg_alloc_simple(RTM_GETVLAN, NLM_F_REQUEST | NLM_F_DUMP);
+    if (msg == NULL) {
+        std::cout << "nlmsg_alloc_simple" << std::endl;
+        return;
+    }
+    // fill RTM_GETVLAN message header
+    struct br_vlan_msg vlan_msg = {
+        .family = AF_BRIDGE,
+        .ifindex = (unsigned)if_index,
+    };
+    error = nlmsg_append(msg, &vlan_msg, sizeof(vlan_msg), nlmsg_padlen(sizeof(vlan_msg)));
+    if (error) {
+        std::cout << "nlmsg_append" << std::endl;
+        return;
+    }
+    len = nl_send_auto(m_socket.get(), msg);
+    if (len < 0) {
+        std::cout << "send_autoo" << std::endl;
+        return;
+    }
+
+    // wait for kernel response
+    len = nl_recv(m_socket.get(), &nla, &msg_buf, NULL);
+    if (len <= 0) {
+        std::cout << "nl_recv" << std::endl;
+        return;
+    }
+    // validate message type
+    hdr = (struct nlmsghdr*)msg_buf;
+    if (hdr->nlmsg_type != RTM_NEWVLAN) {
+        std::cout << "not RTM_NEWVLAN" << std::endl;
+        return;
+    }
+
+    // find first vlan entry
+    proto_header_len = sizeof(struct br_vlan_msg);
+    current_vlan_entry = nlmsg_find_attr(hdr, proto_header_len, BRIDGE_VLANDB_ENTRY);
+    if (current_vlan_entry == NULL) {
+        std::cout << "current_vlan_entry == NULL" << std::endl;
+        return;
+    }
+    remaining = nlmsg_attrlen(hdr, sizeof(struct br_vlan_msg));
+
+    bridge_vlan_info inf;
+
+    // *count = 0;
+    // port_vlan_list = xcalloc(list_size, sizeof(struct bridge_vlan_info));
+    while (nla_ok(current_vlan_entry, remaining)) {
+        if (nla_type(current_vlan_entry) != BRIDGE_VLANDB_ENTRY) {
+            std::cout << "unexpected entry" << std::endl;
+            return;
+        }
+        entry_info = (nlattr*)nla_data(current_vlan_entry);
+        if (nla_type(entry_info) != BRIDGE_VLANDB_ENTRY_INFO) {
+            std::cout << "bad entry info" << std::endl;
+            return;
+        }
+
+        int len = nla_memcpy(&inf,entry_info,sizeof(bridge_vlan_info));
+
+        std::cout<<"Entry info: vid: "<<inf.vid<<" Flags: "<<inf.flags<<std::endl;
+
+        current_vlan_entry = nla_next(current_vlan_entry, &remaining);
+    }
+   
+}
