@@ -10,6 +10,20 @@
 #include <variant>
 
 namespace ietf::rt::sub::oper {
+
+static std::optional<std::string> getUnicastModuleForAddressFamily(AddressFamily af)
+{
+    switch (af) {
+    case AddressFamily::V4:
+        return "ietf-ipv4-unicast-routing";
+    case AddressFamily::V6:
+        return "ietf-ipv6-unicast-routing";
+    case AddressFamily::Other:
+        break;
+    }
+    return std::nullopt;
+}
+
 /**
  * sysrepo-plugin-generator: Generated default constructor.
  *
@@ -162,25 +176,11 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
                 nh_node->newPath("outgoing-interface", interface->getName());
 
-                std::optional<std::string> addr_module = std::nullopt;
-
-                switch (rib_object.getFamily()) {
-                case AddressFamily::V4:
-                    addr_module = "ipv4";
-                    break;
-                case AddressFamily::V6:
-                    addr_module = "ipv6";
-                    break;
-                default:
-                    // return an error
-                    break;
-                }
+                auto addr_module = getUnicastModuleForAddressFamily(rib_object.getFamily());
 
                 // add gateway
                 if (gateway != "none" && addr_module.has_value()) {
-                    auto ss = std::stringstream();
-                    ss << "ietf-" << addr_module.value() << "-unicast-routing:next-hop-address";
-                    nh_node->newPath(ss.str(), gateway);
+                    nh_node->newPath(addr_module.value() + ":next-hop-address", gateway);
                 }
             } else if (std::holds_alternative<NextHopList>(next_hop)) {
                 auto next_hop_list = std::get<NextHopList>(next_hop);
