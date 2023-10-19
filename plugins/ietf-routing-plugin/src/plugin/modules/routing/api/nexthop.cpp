@@ -12,6 +12,22 @@ NextHopSimple::NextHopSimple(NextHopRef& nh)
 }
 
 /**
+ * @brief Returns the next hop interface index.
+ */
+std::int32_t NextHopSimple::getInterfaceIndex() const
+{
+    return m_ifIndex;
+}
+
+/**
+ * @brief Returns the gateway of the next hop.
+ */
+std::string NextHopSimple::getGateway() const
+{
+    return m_gateway;
+}
+
+/**
  * @brief Constructs the special value of the next hop.
  */
 NextHopSpecial::NextHopSpecial(const std::string& value)

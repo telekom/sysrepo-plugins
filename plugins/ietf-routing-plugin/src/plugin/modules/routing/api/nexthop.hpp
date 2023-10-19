@@ -14,6 +14,16 @@ struct NextHopNone { };
 
 class NextHopSimple {
 public:
+    /**
+     * @brief Returns the next hop interface index.
+     */
+    std::int32_t getInterfaceIndex() const;
+
+    /**
+     * @brief Returns the gateway of the next hop.
+     */
+    std::string getGateway() const;
+
 private:
     friend class Route;
     friend class NextHopList;

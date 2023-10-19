@@ -1,8 +1,11 @@
 #include "oper.hpp"
 #include "plugin/modules/routing/api/nexthop.hpp"
 #include "plugin/modules/routing/api/rib.hpp"
+#include "srpcpp/netlink/address.hpp"
 #include "sysrepo.h"
 #include "common.hpp"
+#include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <variant>
 
@@ -113,8 +116,8 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
     auto route_cache = nl_ctx.getRouteCache();
 
-    auto ipv4_module = session.getContext().getModule("ietf-ipv4-unicast-routing", "2018-03-13");
-    auto ipv6_module = session.getContext().getModule("ietf-ipv6-unicast-routing", "2018-03-13");
+    auto ipv4_module = session.getContext().loadModule("ietf-ipv4-unicast-routing");
+    auto ipv6_module = session.getContext().loadModule("ietf-ipv6-unicast-routing");
 
     auto base = RoutingInformationBase(route_cache);
 
@@ -129,15 +132,11 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
         auto rib_node = output->newPath(rib_path_buffer.str());
         auto routes_node = rib_node->newPath("routes");
 
-        SRPLG_LOG_INF(getModuleLogPrefix(), "RIB: %s", rib_name.c_str());
-
-        // configure rib
-
         // default
         rib_node->newPath("default-rib", rib_object.isDefault() ? "true" : "false");
 
         // address family
-        rib_node->newPath("address-family", rib_object.getFamily() == AddressFamily::V4 ? "ipv4" : "ipv6");
+        rib_node->newPath("address-family", rib_object.getFamily() == AddressFamily::V4 ? "ietf-ipv4-unicast-routing:ipv4-unicast" : "ietf-ipv6-unicast-routing:ipv6-unicast");
 
         for (auto& route : routes) {
             std::stringstream pref_buffer, ifname_buffer, ip_buffer;
@@ -152,7 +151,46 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
             // route-metadata
             route_node->newPath("source-protocol", route.getMetadata().source_protocol);
 
-            SRPLG_LOG_INF(getModuleLogPrefix(), "Route: %d, %s", route.getPreference(), route.getMetadata().source_protocol.c_str());
+            // next-hop data
+            auto& next_hop = route.getNextHop();
+            if (std::holds_alternative<NextHopSimple>(next_hop)) {
+                auto next_hop_simple = std::get<NextHopSimple>(next_hop);
+
+                auto if_index = next_hop_simple.getInterfaceIndex();
+                auto gateway = next_hop_simple.getGateway();
+                auto interface = nl_ctx.getInterfaceByIndex((uint32_t)if_index);
+
+                nh_node->newPath("outgoing-interface", interface->getName());
+
+                std::optional<std::string> addr_module = std::nullopt;
+
+                switch (rib_object.getFamily()) {
+                case AddressFamily::V4:
+                    addr_module = "ipv4";
+                    break;
+                case AddressFamily::V6:
+                    addr_module = "ipv6";
+                    break;
+                default:
+                    // return an error
+                    break;
+                }
+
+                // add gateway
+                if (gateway != "none" && addr_module.has_value()) {
+                    auto ss = std::stringstream();
+                    ss << "ietf-" << addr_module.value() << "-unicast-routing:next-hop-address";
+                    nh_node->newPath(ss.str(), gateway);
+                }
+            } else if (std::holds_alternative<NextHopList>(next_hop)) {
+                auto next_hop_list = std::get<NextHopList>(next_hop);
+            } else if (std::holds_alternative<NextHopSpecial>(next_hop)) {
+                auto next_hop_spec = std::get<NextHopSpecial>(next_hop);
+            } else {
+                // invalid next-hop
+            }
+
+            // SRPLG_LOG_INF(getModuleLogPrefix(), "Route: %d, %s", route.getPreference(), route.getMetadata().source_protocol.c_str());
         }
     }
 
