@@ -1,8 +1,10 @@
 #include "oper.hpp"
+#include "plugin/modules/routing/api/nexthop.hpp"
 #include "plugin/modules/routing/api/rib.hpp"
 #include "sysrepo.h"
 #include "common.hpp"
 #include <stdexcept>
+#include <variant>
 
 namespace ietf::rt::sub::oper {
 /**
@@ -129,7 +131,14 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
         SRPLG_LOG_INF(getModuleLogPrefix(), "RIB: %s", rib_name.c_str());
 
+        // configure rib
+
+        // default
         rib_node->newPath("default-rib", rib_object.isDefault() ? "true" : "false");
+
+        // address family
+        rib_node->newPath("address-family", rib_object.getFamily() == AddressFamily::V4 ? "ipv4" : "ipv6");
+
         for (auto& route : routes) {
             std::stringstream pref_buffer, ifname_buffer, ip_buffer;
             auto route_node = routes_node->newPath("route");
@@ -142,6 +151,7 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
             // route-metadata
             route_node->newPath("source-protocol", route.getMetadata().source_protocol);
+
             SRPLG_LOG_INF(getModuleLogPrefix(), "Route: %d, %s", route.getPreference(), route.getMetadata().source_protocol.c_str());
         }
     }
