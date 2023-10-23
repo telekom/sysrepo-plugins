@@ -101,11 +101,11 @@ void NlContext::refillCache(void)
         throw std::runtime_error("Unable to refill links cache");
     }
 
-    if (nl_cache_refill(m_sock.get(), m_addressCache.get())) {
+    if (nl_cache_refill(m_sock.get(), m_addressCache.get()) < 0) {
         throw std::runtime_error("Unable to refill address cache");
     }
 
-    if (nl_cache_refill(m_sock.get(), m_neighCache.get())) {
+    if (nl_cache_refill(m_sock.get(), m_neighCache.get()) < 0) {
         throw std::runtime_error("Unable to refill neighbors cache");
     }
 
@@ -194,19 +194,17 @@ std::vector<BridgeRef> NlContext::getBridgeInterfaces()
  */
 std::optional<BridgeRef> NlContext::getBridgeByName(std::string name)
 {
+    struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
 
-    rtnl_link* bridge_if = NULL;
-    int error = -1;
+    while (iter != nullptr) {
 
-    error = rtnl_link_get_kernel(this->m_sock.get(), 0, name.c_str(), &bridge_if);
+        if (rtnl_link_is_bridge(iter) && (std::string(rtnl_link_get_name(iter)).compare(name) == 0)) {
+            return BridgeRef(iter, m_sock.get());
+        };
 
-    if (error < 0) {
-        return std::nullopt;
-    };
-
-    BridgeRef bridge(bridge_if, this->m_sock.get());
-
-    return bridge;
+        iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
+    }
+    return std::nullopt;
 }
 
 /**
@@ -250,7 +248,6 @@ void NlContext::createInterface(std::string name, std::string type, bool enabled
  */
 void NlContext::deleteInterface(const std::string& name)
 {
-    refillCache();
     struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
 
     while (iter != nullptr) {

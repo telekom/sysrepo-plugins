@@ -17,6 +17,23 @@ BridgeRef::BridgeRef(struct nl_object* link, struct nl_sock* socket)
     m_socket = NlSocketPtr(reinterpret_cast<struct nl_sock*>(socket), NlEmptyDeleter<struct nl_sock>);
 }
 
+/**
+ * @brief Private constructor accessible only to netlink context. Stores a reference to a link for later access of link members.
+ */
+BridgeSlaveRef::BridgeSlaveRef(struct rtnl_link* link, struct nl_sock* socket)
+{
+    m_link = BridgeLinkPtr(link, NlEmptyDeleter<RtnlLink>), m_socket = NlSocketPtr(socket, NlEmptyDeleter<struct nl_sock>);
+}
+
+/**
+ * @brief Private constructor accessible only to netlink context. Stores a reference to a link for later access of link members.
+ */
+BridgeSlaveRef::BridgeSlaveRef(struct nl_object* link, struct nl_sock* socket)
+{
+    m_link = BridgeLinkPtr(reinterpret_cast<RtnlLink*>(link), NlEmptyDeleter<RtnlLink>),
+    m_socket = NlSocketPtr(reinterpret_cast<struct nl_sock*>(socket), NlEmptyDeleter<struct nl_sock>);
+}
+
 std::string BridgeRef::getName(void)
 {
     return std::string(rtnl_link_get_name(this->m_link.get()));
@@ -38,7 +55,7 @@ std::string BridgeRef::getMacAddr(void)
     return std::string(addr_buffer);
 }
 
-std::map<int, std::string> BridgeRef::getSlaveInterfaces()
+std::map<int, std::string> BridgeRef::getSlaveInterfacesIfindexName()
 {
     nl_cache* link_cache = NULL;
     rtnl_link* iter = NULL;
@@ -79,7 +96,7 @@ std::map<int, std::string> BridgeRef::getSlaveInterfaces()
 void BridgeRef::addInterfaceToBridge(std::string interface_name)
 {
     add_or_remove_interface_to_bridge(0, interface_name.c_str(), BRIDGE_ADD);
-}
+};
 
 void BridgeRef::addInterfaceToBridge(int ifindex)
 {
@@ -191,85 +208,223 @@ void BridgeRef::setMacAddr(std::string address)
     clean();
 }
 
-void BridgeRef::vlanTest()
+void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info> vlan_ids, uint8_t oper)
 {
-    int error = 0;
-    int len = 0;
-    struct nl_msg* msg = NULL;
-    unsigned char* msg_buf = NULL;
-    struct sockaddr_nl nla = { 0 };
-    struct nlmsghdr* hdr = NULL;
-    struct nlattr* current_vlan_entry = NULL;
-    struct nlattr* entry_info = NULL;
-    int remaining = 0;
-    size_t list_size = 16; /* initial size */
-    int proto_header_len = 0;
-    int if_index = rtnl_link_get_ifindex(m_link.get());
-    struct bridge_vlan_info* port_vlan_list = NULL;
 
-    msg = nlmsg_alloc_simple(RTM_GETVLAN, NLM_F_REQUEST | NLM_F_DUMP);
-    if (msg == NULL) {
-        std::cout << "nlmsg_alloc_simple" << std::endl;
-        return;
-    }
-    // fill RTM_GETVLAN message header
-    struct br_vlan_msg vlan_msg = {
-        .family = AF_BRIDGE,
-        .ifindex = (unsigned)if_index,
+    nl_msg* msg = NULL;
+    nl_sock* socket = NULL;
+    struct nlattr* afspec = NULL;
+    int err = -1;
+
+    auto clean = [&]() {
+        if (msg != NULL)
+            nlmsg_free(msg);
+        if (socket != NULL)
+            nl_socket_free(socket);
     };
-    error = nlmsg_append(msg, &vlan_msg, sizeof(vlan_msg), nlmsg_padlen(sizeof(vlan_msg)));
-    if (error) {
-        std::cout << "nlmsg_append" << std::endl;
-        return;
-    }
-    len = nl_send_auto(m_socket.get(), msg);
-    if (len < 0) {
-        std::cout << "send_autoo" << std::endl;
-        return;
+
+    socket = nl_socket_alloc();
+
+    if (socket == NULL) {
+        throw std::runtime_error("Failed to allocate socket for nl_msg");
     }
 
-    // wait for kernel response
-    len = nl_recv(m_socket.get(), &nla, &msg_buf, NULL);
-    if (len <= 0) {
-        std::cout << "nl_recv" << std::endl;
-        return;
-    }
-    // validate message type
-    hdr = (struct nlmsghdr*)msg_buf;
-    if (hdr->nlmsg_type != RTM_NEWVLAN) {
-        std::cout << "not RTM_NEWVLAN" << std::endl;
-        return;
+    err = nl_connect(socket, NETLINK_ROUTE);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
     }
 
-    // find first vlan entry
-    proto_header_len = sizeof(struct br_vlan_msg);
-    current_vlan_entry = nlmsg_find_attr(hdr, proto_header_len, BRIDGE_VLANDB_ENTRY);
-    if (current_vlan_entry == NULL) {
-        std::cout << "current_vlan_entry == NULL" << std::endl;
-        return;
+    nl_socket_disable_seq_check(socket);
+    // operation can be RTM_SETLINK for create, and RTM_DELLINK for deletion
+    msg = nlmsg_alloc_simple(oper, NLM_F_REQUEST | NLM_F_ACK);
+
+    if (msg == NULL) {
+        throw std::runtime_error("nlmsg_alloc_simple() failed!");
     }
-    remaining = nlmsg_attrlen(hdr, sizeof(struct br_vlan_msg));
 
-    bridge_vlan_info inf;
+    struct ifinfomsg ifinfo = {
+        .ifi_family = AF_BRIDGE,
+        .ifi_type = ARPHRD_NETROM,
+        .ifi_index = rtnl_link_get_ifindex(m_link.get()),
+        .ifi_flags = 0,
+        .ifi_change = 0
+    };
 
-    // *count = 0;
-    // port_vlan_list = xcalloc(list_size, sizeof(struct bridge_vlan_info));
-    while (nla_ok(current_vlan_entry, remaining)) {
-        if (nla_type(current_vlan_entry) != BRIDGE_VLANDB_ENTRY) {
-            std::cout << "unexpected entry" << std::endl;
-            return;
+    err = nlmsg_append(msg, &ifinfo, sizeof(ifinfo), nlmsg_padlen(sizeof(ifinfo)));
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    uint16_t cmd_flags = 0;
+
+    if (rtnl_link_is_bridge(m_link.get())) {
+        cmd_flags = BRIDGE_FLAGS_SELF;
+    } else
+        cmd_flags = BRIDGE_FLAGS_MASTER; // send command to bridge master
+
+    err = nla_put_u16(msg, IFLA_BRIDGE_FLAGS, cmd_flags);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    afspec = nla_nest_start(msg, IFLA_AF_SPEC);
+
+    if (afspec == NULL) {
+        clean();
+        throw std::runtime_error("nla_nest_start() failed");
+    }
+    // bridge_vlan_info inf = { 0 };
+    // inf.flags = 0;
+    // inf.vid = 10;
+    // nla_put(msg, IFLA_BRIDGE_VLAN_INFO, sizeof(inf), &inf);
+
+    for (auto id : vlan_ids) {
+        if ((nla_put(msg, IFLA_BRIDGE_VLAN_INFO, sizeof(id), &id)) < 0) {
+            // break  the loop for bad msg so it can go to nest_end
+            break;
         }
-        entry_info = (nlattr*)nla_data(current_vlan_entry);
-        if (nla_type(entry_info) != BRIDGE_VLANDB_ENTRY_INFO) {
-            std::cout << "bad entry info" << std::endl;
-            return;
+    }
+
+    err = nla_nest_end(msg, afspec);
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    err = nl_send(socket, msg);
+    if (err < 0) {
+        clean();
+        throw std::runtime_error("send failed! " + std::string(nl_geterror(err)));
+    }
+
+    clean();
+}
+
+std::vector<uint16_t> BridgeRef::parseStringToVlanIDS(const std::string& vlan_str)
+{
+    // the string value can be formulated in 3 ways:
+    // 1. just a single num (3)
+    // 2. range of nums (3-20)
+    // 3. selection of nums by delimiter (3,5,6,9,10)
+    // probably no need for regex since it will be validated on libyang side
+
+    std::vector<uint16_t> vids;
+
+    std::istringstream chunkStream(vlan_str);
+    std::string chunk;
+
+    while (std::getline(chunkStream, chunk, ',')) {
+
+        int pos = chunk.find('-');
+        if (pos != std::string::npos) {
+
+            std::string min_range = std::string(chunk.begin(), chunk.begin() + pos);
+            std::string max_range = std::string(chunk.begin() + (++pos), chunk.end());
+
+            for (int i = std::stoi(min_range); i <= std::stoi(max_range); i++) {
+                vids.push_back(i);
+            }
+
+            continue;
         }
 
-        int len = nla_memcpy(&inf,entry_info,sizeof(bridge_vlan_info));
-
-        std::cout<<"Entry info: vid: "<<inf.vid<<" Flags: "<<inf.flags<<std::endl;
-
-        current_vlan_entry = nla_next(current_vlan_entry, &remaining);
+        vids.push_back(std::stoi(chunk));
     }
-   
+
+    return vids;
+}
+
+void BridgeSlaveRef::addVlanIDS(const std::vector<uint16_t>& vlan_ids, uint16_t flags)
+{
+
+    std::vector<bridge_vlan_info> vec;
+    bridge_vlan_info inf = { 0 };
+    for (auto i : vlan_ids) {
+        inf.vid = i;
+        inf.flags = flags;
+        vec.push_back(inf);
+    }
+
+    add_or_remove_bridge_vlan_ids(vec, RTM_SETLINK);
+}
+
+void BridgeSlaveRef::removeVlanIDS(const std::vector<uint16_t>& vlan_ids)
+{
+
+    std::vector<bridge_vlan_info> vec;
+    bridge_vlan_info inf = { 0 };
+    for (auto i : vlan_ids) {
+        inf.vid = i;
+        inf.flags = 0;
+        vec.push_back(inf);
+    }
+
+    add_or_remove_bridge_vlan_ids(vec, RTM_DELLINK);
+}
+
+std::string BridgeSlaveRef::getName()
+{
+    return std::string(rtnl_link_get_name(this->m_link.get()));
+}
+
+std::vector<BridgeSlaveRef> BridgeRef::getSlaveInterfaces()
+{
+    std::vector<BridgeSlaveRef> slaves;
+
+    rtnl_link* iter = NULL;
+    nl_cache* cache = NULL;
+    int err = -1;
+
+    auto clean = [&]() {
+        if (cache != NULL)
+            nl_cache_free(cache);
+    };
+
+    err = rtnl_link_alloc_cache(m_socket.get(), AF_BRIDGE, &cache);
+
+    if (err < 0) {
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    iter = (rtnl_link*)nl_cache_get_first(cache);
+
+    int master_ifindex = rtnl_link_get_ifindex(m_link.get());
+
+    while (iter != nullptr) {
+
+        if (master_ifindex == rtnl_link_get_master(iter)) {
+            slaves.push_back(BridgeSlaveRef(iter, m_socket.get()));
+        }
+
+        iter = (rtnl_link*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    return slaves;
+}
+
+int BridgeSlaveRef::getIfindex()
+{
+    return rtnl_link_get_ifindex(this->m_link.get());
+}
+
+std::optional<BridgeSlaveRef> BridgeRef::getSlaveByIfindex(int ifindex)
+{
+    for (auto&& i : this->getSlaveInterfaces()) {
+        if (i.getIfindex() == ifindex) {
+            return std::move(i);
+        }
+    }
+
+    return std::nullopt;
+}
+
+void BridgeSlaveRef::removeAllVlanIDS()
+{
+    //[TODO]: Removing all vlan ids with one function.
 }
