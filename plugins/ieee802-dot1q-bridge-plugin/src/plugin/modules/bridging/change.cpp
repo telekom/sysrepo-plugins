@@ -1155,19 +1155,26 @@ namespace sub::change {
 
             for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/database-id")) {
 
-                const std::string& value = change.node.asTerm().valueStr().data();
+                // const std::string& value = change.node.asTerm().valueStr().data();
 
-                auto& nl_ctx = m_ctx->getNetlinkContext();
+                // auto& nl_ctx = m_ctx->getNetlinkContext();
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created: {
-                    nl_ctx.refillCache();
 
-                    auto bridge = nl_ctx.getBridgeByName("veth1_bport");
+                    // nl_ctx.refillCache();
 
-                    SRPLG_LOG_INF("TEST", "GOT HERE %s", bridge->getName().c_str());
+                    // auto bridge_opt = nl_ctx.getBridgeByName("veth1_bport");
 
-                    bridge->vlanTest();
+                    // BridgeRef& bridge = bridge_opt.value();
+
+                    // std::vector<uint16_t> vids = BridgeRef::parseStringToVlanIDS("10,12,14,19-23,25");
+
+                    // // for (auto &&i : vids)
+                    // // {
+
+                    // // }
+
                     break;
                 }
                 case sysrepo::ChangeOperation::Modified:
@@ -1278,6 +1285,118 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapPortRefModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/port-ref")) {
+
+                const auto& value = change.node.asTerm().value();
+
+                const auto& port_ref = std::get<uint32_t>(value);
+
+                auto& nl_ctx = m_ctx->getNetlinkContext();
+
+                nl_ctx.refillCache();
+
+                std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+                if (!bridge_opt.has_value()) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s does not exist!", bridge_name.c_str());
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                BridgeRef& bridge = bridge_opt.value();
+
+                std::map<int, std::string> slave_interfaces = bridge.getSlaveInterfacesIfindexName();
+
+                if (slave_interfaces.find(port_ref) == slave_interfaces.end()) {
+                    // port ref not found
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Port ref not found!");
+                    return sr::ErrorCode::CallbackFailed;
+                }
+                // all legit with existing port ref, continue with vids
+
+                auto slave_bridge_ref_opt = bridge.getSlaveByIfindex(port_ref);
+
+                if (!slave_bridge_ref_opt.has_value()) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge slave %s not found!", slave_interfaces.at(port_ref).c_str());
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    // get vids node and parse it
+                    // Deleted and Created vids node with previous values must be taken from the session changes.
+                    std::string vids_data;
+
+                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+
+                        switch (change.operation) {
+                        case sr::ChangeOperation::Created: {
+                            // vids node
+                            vids_data = change.node.asTerm().valueStr().data();
+                            break;
+                        }
+                        }
+                    }
+
+                    if (vids_data.empty()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
+
+                    // and finaly modify vlans
+                    slave_bridge_ref_opt->addVlanIDS(parsed_vids, 0);
+                    break;
+                }
+
+                case sysrepo::ChangeOperation::Deleted: {
+
+                    // get vids node and parse it
+                    // Deleted and Created vids node with previous values must be taken from the session changes.
+                    std::string vids_data;
+
+                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+
+                        switch (change.operation) {
+                        case sr::ChangeOperation::Deleted: {
+                            // vids node
+                            vids_data = change.node.asTerm().valueStr().data();
+                            break;
+                        }
+                        }
+                    }
+
+                    if (vids_data.empty()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
+
+                    // and finaly modify vlans
+                    slave_bridge_ref_opt->removeVlanIDS(parsed_vids);
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
