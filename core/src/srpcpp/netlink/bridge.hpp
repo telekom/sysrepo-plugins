@@ -80,6 +80,8 @@ public:
 
     void setMacAddr(std::string address);
 
+    void setAgeingTime(uint32_t ageingTime);
+
 private:
     enum BridgeOperation {
         BRIDGE_ADD,

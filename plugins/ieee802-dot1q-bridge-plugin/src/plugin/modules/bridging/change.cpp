@@ -468,6 +468,47 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseAgingTimeModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/aging-time")) {
+
+                const uint32_t ageing_value = std::get<uint32_t>(change.node.asTerm().value());
+
+                std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                auto& nl_ctx = m_ctx->getNetlinkContext();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    auto bridge = nl_ctx.getBridgeByName(bridge_name);
+
+                    if (!bridge) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s does not exist!", bridge_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    bridge->setAgeingTime(ageing_value);
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    // not clear if there is default value
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -1352,8 +1393,26 @@ namespace sub::change {
 
                     std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
 
+                    // //handle flags
+                    std::string path = change.node.parent()->path();
+
+                    // get the tagged/untagged flag
+                    path.append("/static-vlan-registration-entries/vlan-transmitted");
+
+                    const auto& flags_node = change.node.findPath(path);
+
+                    uint16_t flags = 0;
+
+                    if (flags_node.has_value()) {
+                        std::string vlan_flags = flags_node->asTerm().valueStr().data();
+
+                        if (vlan_flags.compare("untagged") == 0) {
+                            flags = BRIDGE_VLAN_INFO_UNTAGGED;
+                        }
+                    }
+
                     // and finaly modify vlans
-                    slave_bridge_ref_opt->addVlanIDS(parsed_vids, 0);
+                    slave_bridge_ref_opt->addVlanIDS(parsed_vids, flags);
                     break;
                 }
 
