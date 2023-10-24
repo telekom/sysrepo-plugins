@@ -86,8 +86,15 @@ std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
             ieee::br::sub::change::BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapPortRefModuleChangeCb(this->m_changeContext),
         },
 
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/aging-time",
+            ieee::br::sub::change::BridgeComponentFilteringDatabaseAgingTimeModuleChangeCb(this->m_changeContext),
+        },
+
     };
 }
+
 /**
  * Get all RPC callbacks which the module should use.
  */

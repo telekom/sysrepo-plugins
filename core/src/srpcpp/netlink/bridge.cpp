@@ -208,32 +208,80 @@ void BridgeRef::setMacAddr(std::string address)
     clean();
 }
 
+void BridgeRef::setAgeingTime(uint32_t ageing_time)
+{
+    struct nl_msg* msg = NULL;
+    struct nlattr* link_info = NULL;
+    struct nlattr* info_data = NULL;
+    nl_sock* socket = m_socket.get();
+    int error = 0;
+
+    msg = nlmsg_alloc_simple(RTM_NEWLINK, NLM_F_REQUEST | NLM_F_ACK);
+    if (msg == NULL) {
+        throw std::runtime_error("nlmsg_alloc_simple() failed");
+    }
+
+    // fill RTM_NEWLINK message header
+    struct ifinfomsg ifinfo = {
+        .ifi_family = AF_BRIDGE,
+        .ifi_type = ARPHRD_NETROM,
+        .ifi_index = rtnl_link_get_ifindex(m_link.get()),
+        .ifi_flags = 0,
+        .ifi_change = 0
+    };
+
+    error = nlmsg_append(msg, &ifinfo, sizeof(ifinfo), nlmsg_padlen(sizeof(ifinfo)));
+    if (error) {
+        throw std::runtime_error(nl_geterror(error));
+    }
+    // open nested attributes IFLA_LINKINFO->IFLA_INFO_DATA
+    link_info = nla_nest_start(msg, IFLA_LINKINFO);
+    if (link_info == NULL) {
+        throw std::runtime_error("nla_nest_start() failed");
+    }
+
+    error = nla_put_string(msg, IFLA_INFO_KIND, "bridge");
+    if (error) {
+        throw std::runtime_error("nla_put_string() failed: " + std::string(nl_geterror(error)));
+    }
+
+    info_data = nla_nest_start(msg, IFLA_INFO_DATA);
+
+    if (info_data == NULL) {
+        throw std::runtime_error("nla_nest_start() failed");
+    }
+    // add bridge vlan attributes
+    error = nla_put_u32(msg, IFLA_BR_AGEING_TIME, ageing_time);
+    if (error) {
+        throw std::runtime_error("nla_put_u32() failed: " + std::string(nl_geterror(error)));
+    }
+
+    // close nested attributes
+    error = nla_nest_end(msg, info_data);
+    if (error) {
+        throw std::runtime_error("nla_nest_end() failed: " + std::string(nl_geterror(error)));
+    }
+
+    error = nla_nest_end(msg, link_info);
+    if (error) {
+        throw std::runtime_error("nla_nest_end() failed: " + std::string(nl_geterror(error)));
+    }
+    error = nl_send_sync(socket, msg);
+    if (error) {
+        throw std::runtime_error("nl_send() failed: " + std::string(nl_geterror(error)));
+    }
+}
+
 void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info> vlan_ids, uint8_t oper)
 {
 
     nl_msg* msg = NULL;
-    nl_sock* socket = NULL;
+    nl_sock* socket = m_socket.get();
     struct nlattr* afspec = NULL;
     int err = -1;
 
-    auto clean = [&]() {
-        if (msg != NULL)
-            nlmsg_free(msg);
-        if (socket != NULL)
-            nl_socket_free(socket);
-    };
-
-    socket = nl_socket_alloc();
-
     if (socket == NULL) {
         throw std::runtime_error("Failed to allocate socket for nl_msg");
-    }
-
-    err = nl_connect(socket, NETLINK_ROUTE);
-
-    if (err < 0) {
-        clean();
-        throw std::runtime_error(nl_geterror(err));
     }
 
     nl_socket_disable_seq_check(socket);
@@ -255,7 +303,6 @@ void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info>
     err = nlmsg_append(msg, &ifinfo, sizeof(ifinfo), nlmsg_padlen(sizeof(ifinfo)));
 
     if (err < 0) {
-        clean();
         throw std::runtime_error(nl_geterror(err));
     }
 
@@ -269,20 +316,14 @@ void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info>
     err = nla_put_u16(msg, IFLA_BRIDGE_FLAGS, cmd_flags);
 
     if (err < 0) {
-        clean();
         throw std::runtime_error(nl_geterror(err));
     }
 
     afspec = nla_nest_start(msg, IFLA_AF_SPEC);
 
     if (afspec == NULL) {
-        clean();
         throw std::runtime_error("nla_nest_start() failed");
     }
-    // bridge_vlan_info inf = { 0 };
-    // inf.flags = 0;
-    // inf.vid = 10;
-    // nla_put(msg, IFLA_BRIDGE_VLAN_INFO, sizeof(inf), &inf);
 
     for (auto id : vlan_ids) {
         if ((nla_put(msg, IFLA_BRIDGE_VLAN_INFO, sizeof(id), &id)) < 0) {
@@ -293,17 +334,13 @@ void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info>
 
     err = nla_nest_end(msg, afspec);
     if (err < 0) {
-        clean();
         throw std::runtime_error(nl_geterror(err));
     }
 
-    err = nl_send(socket, msg);
+    err = nl_send_sync(socket, msg);
     if (err < 0) {
-        clean();
         throw std::runtime_error("send failed! " + std::string(nl_geterror(err)));
     }
-
-    clean();
 }
 
 std::vector<uint16_t> BridgeRef::parseStringToVlanIDS(const std::string& vlan_str)
