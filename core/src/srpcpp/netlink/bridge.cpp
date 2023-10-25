@@ -232,42 +232,52 @@ void BridgeRef::setAgeingTime(uint32_t ageing_time)
 
     error = nlmsg_append(msg, &ifinfo, sizeof(ifinfo), nlmsg_padlen(sizeof(ifinfo)));
     if (error) {
+        nlmsg_free(msg);
         throw std::runtime_error(nl_geterror(error));
     }
     // open nested attributes IFLA_LINKINFO->IFLA_INFO_DATA
     link_info = nla_nest_start(msg, IFLA_LINKINFO);
     if (link_info == NULL) {
+        nlmsg_free(msg);
         throw std::runtime_error("nla_nest_start() failed");
     }
 
     error = nla_put_string(msg, IFLA_INFO_KIND, "bridge");
     if (error) {
+        nlmsg_free(msg);
         throw std::runtime_error("nla_put_string() failed: " + std::string(nl_geterror(error)));
     }
 
     info_data = nla_nest_start(msg, IFLA_INFO_DATA);
 
     if (info_data == NULL) {
+        nlmsg_free(msg);
         throw std::runtime_error("nla_nest_start() failed");
     }
     // add bridge vlan attributes
     error = nla_put_u32(msg, IFLA_BR_AGEING_TIME, ageing_time);
+
     if (error) {
+        nlmsg_free(msg);
         throw std::runtime_error("nla_put_u32() failed: " + std::string(nl_geterror(error)));
     }
 
     // close nested attributes
     error = nla_nest_end(msg, info_data);
+
     if (error) {
+        nlmsg_free(msg);
         throw std::runtime_error("nla_nest_end() failed: " + std::string(nl_geterror(error)));
     }
 
     error = nla_nest_end(msg, link_info);
     if (error) {
+        nlmsg_free(msg);
         throw std::runtime_error("nla_nest_end() failed: " + std::string(nl_geterror(error)));
     }
     error = nl_send_sync(socket, msg);
     if (error) {
+        nlmsg_free(msg);
         throw std::runtime_error("nl_send() failed: " + std::string(nl_geterror(error)));
     }
 }
@@ -303,6 +313,7 @@ void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info>
     err = nlmsg_append(msg, &ifinfo, sizeof(ifinfo), nlmsg_padlen(sizeof(ifinfo)));
 
     if (err < 0) {
+        nlmsg_free(msg);
         throw std::runtime_error(nl_geterror(err));
     }
 
@@ -316,6 +327,7 @@ void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info>
     err = nla_put_u16(msg, IFLA_BRIDGE_FLAGS, cmd_flags);
 
     if (err < 0) {
+        nlmsg_free(msg);
         throw std::runtime_error(nl_geterror(err));
     }
 
@@ -334,11 +346,13 @@ void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info>
 
     err = nla_nest_end(msg, afspec);
     if (err < 0) {
+        nlmsg_free(msg);
         throw std::runtime_error(nl_geterror(err));
     }
 
     err = nl_send_sync(socket, msg);
     if (err < 0) {
+        nlmsg_free(msg);
         throw std::runtime_error("send failed! " + std::string(nl_geterror(err)));
     }
 }

@@ -92,7 +92,7 @@ public:
      * @brief Create interface.
      * 
      */
-    void createBridgeInterface(std::string name);
+    void createBridgeInterface(std::string name, std::string address);
 
     /**
      * @brief Create new address.

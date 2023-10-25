@@ -263,14 +263,58 @@ void NlContext::deleteInterface(const std::string& name)
     };
 }
 
-void NlContext::createBridgeInterface(std::string name)
+void NlContext::createBridgeInterface(std::string name, std::string address)
 {
-    int error = -1;
+    // name cannot be more than 15 characters
+    if (name.size() > 15)
+        throw std::runtime_error("Name to long!");
 
-    error = rtnl_link_bridge_add(this->m_sock.get(), name.c_str());
+    nl_addr* addr = NULL;
+    rtnl_link* link = NULL;
+    std::string new_addr = address;
+    int err = 0;
 
-    if (error < 0)
-        throw std::runtime_error(nl_geterror(error));
+    auto clean = [&]() {
+        if (link != NULL)
+            rtnl_link_put(link);
+        if (addr != NULL)
+            nl_addr_put(addr);
+    };
+
+    std::replace(new_addr.begin(), new_addr.end(), '-', ':');
+
+    err = nl_addr_parse(new_addr.c_str(), 0, &addr);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    // allocate link
+    link = rtnl_link_alloc();
+    if (link == NULL)
+        throw std::runtime_error("link alloc error!");
+
+    // set name to link
+    rtnl_link_set_name(link, name.c_str());
+
+    // set type to link
+    if (rtnl_link_set_type(link, "bridge") < 0) {
+        clean();
+        throw std::runtime_error("rtnl_link_set_type error");
+    };
+    rtnl_link_set_flags(link, IFF_UP);
+
+    // set the mac addr
+    rtnl_link_set_addr(link, addr);
+
+    // add link to socket
+    if (rtnl_link_add(m_sock.get(), link, NLM_F_CREATE) < 0) {
+        clean();
+        throw std::runtime_error("rtnl_link_add error");
+    };
+
+    clean();
 }
 
 /**
