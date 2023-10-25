@@ -66,11 +66,7 @@ namespace sub::change {
                         nl_ctx.refillCache();
                         // get address node
                         auto ds_addr = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge/address");
-                        nl_ctx.createBridgeInterface(name_value);
-
-                        auto bridge_ref = nl_ctx.getBridgeByName(name_value);
-
-                        bridge_ref->setMacAddr(ds_addr.asTerm().valueStr().data());
+                        nl_ctx.createBridgeInterface(name_value, ds_addr.asTerm().valueStr().data());
 
                     } catch (std::exception& e) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to create Bridge %s! reason: %s", name_value.c_str(), e.what());
@@ -482,6 +478,7 @@ namespace sub::change {
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created:
+                    break;
                 case sysrepo::ChangeOperation::Modified: {
 
                     auto bridge = nl_ctx.getBridgeByName(bridge_name);
@@ -489,8 +486,7 @@ namespace sub::change {
                     if (!bridge) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s does not exist!", bridge_name.c_str());
                         return sr::ErrorCode::CallbackFailed;
-                    }
-
+                    };
                     bridge->setAgeingTime(ageing_value);
 
                     break;
