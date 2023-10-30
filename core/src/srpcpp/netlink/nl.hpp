@@ -3,6 +3,8 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <stdexcept>
+#include <unordered_map>
 
 ///< Type used for deleting libnl allocated structs
 template <typename T>
@@ -143,6 +145,7 @@ public:
      * @brief Get the routes cache.
      */
     CacheRef<RouteRef> getRouteCache();
+    static std::unordered_map<std::string,std::string> getKeyValFromXpath(const std::string& list_name, const std::string& xpath);
 
 private:
     NlUniquePtr<struct nl_sock> m_sock; ///< Netlink socket.

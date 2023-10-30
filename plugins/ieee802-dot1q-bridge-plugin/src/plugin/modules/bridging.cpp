@@ -92,6 +92,12 @@ std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
             ieee::br::sub::change::BridgeComponentFilteringDatabaseAgingTimeModuleChangeCb(this->m_changeContext),
         },
 
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/filtering-entry/port-map/port-ref",
+            ieee::br::sub::change::BridgeComponentFilteringDatabaseFilteringEntryPortMapPortRefModuleChangeCb(this->m_changeContext),
+        },
+
     };
 }
 

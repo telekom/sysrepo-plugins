@@ -479,3 +479,107 @@ void BridgeSlaveRef::removeAllVlanIDS()
 {
     //[TODO]: Removing all vlan ids with one function.
 }
+
+void BridgeSlaveRef::addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address)
+{
+    add_or_remove_address_to_vids(vlan_ids, address, ADD_ADDRESS);
+}
+
+void BridgeSlaveRef::removeAddressFromVids(const std::vector<uint16_t>& vlan_ids, const std::string& address)
+{
+    add_or_remove_address_to_vids(vlan_ids, address, REMOVE_ADDRESS);
+}
+
+void BridgeSlaveRef::add_or_remove_address_to_vids(const std::vector<uint16_t>& vlan_ids, const std::string& address, AddressOperation operation)
+{
+
+    rtnl_neigh* neigh = NULL;
+    nl_addr* addr = NULL;
+    nl_sock* socket = m_socket.get();
+    std::string new_addr = address;
+
+    auto clean = [&]() {
+        if (neigh != NULL)
+            rtnl_neigh_put(neigh);
+        if (addr != NULL)
+            nl_addr_put(addr);
+    };
+
+    // replace characters to match addr
+    std::replace(new_addr.begin(), new_addr.end(), '-', ':');
+
+    int err = -1;
+
+    neigh = rtnl_neigh_alloc();
+
+    if (neigh == NULL)
+        throw std::runtime_error("Failed to allocate neighbor");
+
+    rtnl_neigh_set_family(neigh, AF_BRIDGE);
+    rtnl_neigh_set_ifindex(neigh, rtnl_link_get_ifindex(m_link.get()));
+
+    err = nl_addr_parse(new_addr.c_str(), AF_LLC, &addr);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    rtnl_neigh_set_lladdr(neigh, addr);
+
+    // TODO: research possible state flags
+    rtnl_neigh_set_state(neigh, NUD_NOARP);
+    rtnl_neigh_set_flags(neigh, NTF_MASTER); // add neigh to bridge master FDB
+
+    for (auto id : vlan_ids) {
+
+        rtnl_neigh_set_vlan(neigh, id);
+
+        switch (operation) {
+        case ADD_ADDRESS:
+            err = rtnl_neigh_add(socket, neigh, NLM_F_CREATE);
+            if (err < 0) {
+                clean();
+                throw std::runtime_error("Failed to add neigh, " + std::string(nl_geterror(err)));
+            };
+
+            break;
+        case REMOVE_ADDRESS:
+            err = rtnl_neigh_delete(socket, neigh, 0);
+            if (err < 0) {
+                clean();
+                throw std::runtime_error("Failed to delete neigh, " + std::string(nl_geterror(err)));
+            };
+
+            break;
+
+        default:
+            break;
+        }
+    }
+    clean();
+}
+
+bool BridgeSlaveRef::isSubset(const std::vector<uint16_t>& main_list, const std::vector<uint16_t>& subset)
+{
+    // subset array cannot be larger than main array
+    if (main_list.size() < subset.size())
+        return false;
+
+    bool found = false;
+    for (int i = 0; i < subset.size(); i++) {
+
+        for (int j = 0; j < main_list.size(); j++) {
+            if (subset[i] == main_list[j]) {
+                found = true;
+                break;
+            }
+
+            found = false;
+        }
+        if (!found)
+            return false;
+    }
+
+    return true;
+}

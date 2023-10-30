@@ -3,6 +3,7 @@
 #include "nl.hpp"
 #include <netlink/route/link/bridge.h>
 #include <netlink/route/link/vlan.h>
+#include <netlink/route/neighbour.h>
 #include <linux/if_bridge.h>
 #include <netlink/netlink.h>
 #include <sstream>
@@ -20,7 +21,7 @@ class BridgeSlaveRef {
 public:
     friend class NlContext;
     friend class BridgeRef;
-    
+
     std::string getName();
 
     int getIfindex();
@@ -29,10 +30,24 @@ public:
 
     void removeVlanIDS(const std::vector<uint16_t>& vlan_ids);
 
+    // [TODO] remove all at once
     void removeAllVlanIDS();
 
+    void addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address);
+
+    void removeAddressFromVids(const std::vector<uint16_t>& vlan_ids, const std::string& address);
+
+    static bool isSubset(const std::vector<uint16_t>& main, const std::vector<uint16_t>& subset );
+
 private:
+    enum AddressOperation {
+        ADD_ADDRESS,
+        REMOVE_ADDRESS
+    };
+
     void add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info> vlan_ids, uint8_t oper);
+
+    void add_or_remove_address_to_vids(const std::vector<uint16_t>& vlan_ids, const std::string& address, AddressOperation operation);
 
     using RtnlLink = struct rtnl_link; ///< Route link type alias.
     using RtnlLinkDeleter = NlDeleter<RtnlLink>; ///< Deleter type alias.
