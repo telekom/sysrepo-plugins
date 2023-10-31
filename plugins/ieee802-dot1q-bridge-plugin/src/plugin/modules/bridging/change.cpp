@@ -664,7 +664,9 @@ namespace sub::change {
         switch (event) {
         case sysrepo::Event::Change: {
 
-            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/filtering-entry/port-map/port-ref")) {
+            sysrepo::ChangeCollection collection = session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/filtering-entry/port-map/port-ref");
+
+            for (sysrepo::Change change : collection) {
 
                 uint32_t port_ref = std::get<uint32_t>(change.node.asTerm().value());
 
@@ -734,7 +736,6 @@ namespace sub::change {
 
                     try {
                         slave_opt->addAddressToVids(vids, address);
-
                     } catch (std::runtime_error& e) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
                         return sr::ErrorCode::OperationFailed;
@@ -743,6 +744,30 @@ namespace sub::change {
                     break;
                 }
                 case sysrepo::ChangeOperation::Deleted: {
+
+                    // since first cb is delete, check if the create vids are subset of all vids on specific port ref
+
+                    std::string keys;
+
+                    for (sysrepo::Change change : collection) {
+                        if (change.operation == sysrepo::ChangeOperation::Created || change.operation == sysrepo::ChangeOperation::Modified) {
+                            keys = change.node.path();
+                            break;
+                        }
+                    }
+
+                    if (keys.empty()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot check if delete vids correspond to subset!");
+                        return sr::ErrorCode::OperationFailed;
+                    }
+
+                    auto str_vids_create = NlContext::getKeyValFromXpath("filtering-entry", keys)["vids"];
+                    auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);
+                    // and now check if array is a subset
+                    if (!BridgeSlaveRef::isSubset(vids_from_upper, vec_str_vids_create)) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Filtering entry vids are not subset of all vids on port-ref %d!", port_ref);
+                        return sr::ErrorCode::CallbackFailed;
+                    }
 
                     try {
                         slave_opt->removeAddressFromVids(vids, address);
@@ -760,7 +785,6 @@ namespace sub::change {
 
             break;
         }
-
         default:
             break;
         }
