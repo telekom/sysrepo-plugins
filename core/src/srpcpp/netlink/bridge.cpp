@@ -42,15 +42,15 @@ std::string BridgeRef::getName(void)
 std::string BridgeRef::getMacAddr(void)
 {
     nl_addr* addr = NULL;
+    rtnl_link* lnk = this->m_link.get();
     char addr_buffer[50] = { 0 };
 
-    addr = rtnl_link_get_addr(this->m_link.get());
+    addr = rtnl_link_get_addr(lnk);
 
     if (addr == NULL)
         throw std::runtime_error("NULL Address error");
 
     nl_addr2str(addr, addr_buffer, sizeof(addr_buffer));
-    nl_addr_put(addr);
 
     return std::string(addr_buffer);
 }
@@ -449,7 +449,8 @@ std::vector<BridgeSlaveRef> BridgeRef::getSlaveInterfaces()
 
     while (iter != nullptr) {
 
-        if (master_ifindex == rtnl_link_get_master(iter)) {
+        if (master_ifindex == rtnl_link_get_master(iter) && master_ifindex != rtnl_link_get_ifindex(iter)) {
+            
             slaves.push_back(BridgeSlaveRef(iter, m_socket.get()));
         }
 
