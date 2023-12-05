@@ -59,6 +59,25 @@ namespace sub::oper {
     sr::ErrorCode BridgeAddressOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", output->path());
+
+        auto& nl_ctx = m_ctx->getNetlinkContext();
+        nl_ctx.refillCache();
+
+        // find the bridge
+        auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+        if (!bridge_opt.has_value()) {
+            SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge operational callback failed!");
+            return sr::ErrorCode::NotFound;
+        }
+
+        std::string bridge_addr = bridge_opt->getMacAddr();
+
+        std::replace(bridge_addr.begin(), bridge_addr.end(), ':', '-');
+
+        output->newPath("address", bridge_addr);
         return error;
     }
 
@@ -119,6 +138,30 @@ namespace sub::oper {
     sr::ErrorCode BridgePortsOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", output->path());
+
+        auto& nl_ctx = m_ctx->getNetlinkContext();
+        nl_ctx.refillCache();
+
+        // find the bridge
+        auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+        if (!bridge_opt.has_value()) {
+            SRPLG_LOG_ERR(getModuleLogPrefix(), "BridgePortsOperGetCb operational callback failed!");
+            return sr::ErrorCode::NotFound;
+        }
+
+        int ports = bridge_opt->getSlaveInterfaces().size();
+
+        for (auto&& slave : bridge_opt->getSlaveInterfaces()) {
+            std::cout << "SLAVES: " << slave.getName() << std::endl;
+        }
+
+        std::cout << "PORT SIZE " << ports << std::endl;
+
+        if (ports > 0)
+            output->newPath("ports", std::to_string(ports));
+
         return error;
     }
 
@@ -269,6 +312,7 @@ namespace sub::oper {
     sr::ErrorCode BridgeComponentTypeOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        output->newPath("type","c-vlan-component");
         return error;
     }
 
@@ -4079,6 +4123,10 @@ namespace sub::oper {
     sr::ErrorCode BridgeComponentOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        std::string component_name = srpc::extractListKeyFromXPath("bridge", "name", output->path());
+        std::cout << "COMP NAME: " << component_name << std::endl;
+        output->newPath("component[name='" + component_name + "']");
         return error;
     }
 
@@ -4109,6 +4157,14 @@ namespace sub::oper {
     sr::ErrorCode BridgeOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        auto& nl_ctx = m_ctx->getNetlinkContext();
+
+        std::vector<BridgeRef> bridges = nl_ctx.getBridgeInterfaces();
+
+        for (auto& bridge : bridges) {
+            output->newPath("bridge[name='" + bridge.getName() + "']");
+        };
+
         return error;
     }
 

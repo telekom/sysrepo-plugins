@@ -35,7 +35,39 @@ std::shared_ptr<srpc::IModuleContext> BridgingModule::getRpcContext() { return m
  */
 std::list<srpc::OperationalCallback> BridgingModule::getOperationalCallbacks()
 {
-    return {};
+    return {
+        // srpc::OperationalCallback {
+        //     "ieee802-dot1q-bridge",
+        //     "/ieee802-dot1q-bridge:bridges/bridge/name",
+        //     ieee::br::sub::oper::BridgeNameOperGetCb(this->m_operContext)
+        // },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge",
+            ieee::br::sub::oper::BridgeOperGetCb(this->m_operContext)
+        },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/address",
+            ieee::br::sub::oper::BridgeAddressOperGetCb(this->m_operContext)
+        },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/ports",
+            ieee::br::sub::oper::BridgePortsOperGetCb(this->m_operContext)
+        },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component",
+            ieee::br::sub::oper::BridgeComponentOperGetCb(this->m_operContext)
+        },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/type",
+            ieee::br::sub::oper::BridgeComponentTypeOperGetCb(this->m_operContext)
+        }
+       
+    };
 }
 
 /**

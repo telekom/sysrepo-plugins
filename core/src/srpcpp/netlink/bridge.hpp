@@ -8,6 +8,8 @@
 #include <netlink/netlink.h>
 #include <sstream>
 
+#include <netlink/route/link/bridge.h>
+
 #include <arpa/inet.h>
 #include <linux/if_ether.h>
 #include <linux/if_bridge.h>
