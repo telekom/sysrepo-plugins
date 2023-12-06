@@ -39,6 +39,11 @@ private:
 
 class NextHopSpecial {
 public:
+    /**
+     * @brief Returns the next hop value.
+     */
+    std::string getValue() const;
+
 private:
     friend class Route;
 

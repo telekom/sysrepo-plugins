@@ -36,6 +36,14 @@ NextHopSpecial::NextHopSpecial(const std::string& value)
 }
 
 /**
+ * @brief Returns the next hop value.
+ */
+std::string NextHopSpecial::getValue() const
+{
+    return m_value;
+}
+
+/**
  * @brief Initializes an empty list.
  */
 NextHopList::NextHopList(std::list<NextHopRef>& nhs)

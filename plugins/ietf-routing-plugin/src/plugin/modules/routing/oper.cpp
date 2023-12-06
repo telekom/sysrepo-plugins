@@ -186,6 +186,9 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
                 auto next_hop_list = std::get<NextHopList>(next_hop);
             } else if (std::holds_alternative<NextHopSpecial>(next_hop)) {
                 auto next_hop_spec = std::get<NextHopSpecial>(next_hop);
+
+                // special-next-hop
+                nh_node->newPath("special-next-hop", next_hop_spec.getValue());
             } else {
                 // invalid next-hop
             }
