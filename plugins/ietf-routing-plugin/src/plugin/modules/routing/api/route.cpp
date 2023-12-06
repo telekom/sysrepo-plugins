@@ -21,7 +21,7 @@ Route::Route(RouteRef& route_ref)
         m_nextHop = NextHopSpecial("prohibit");
         break;
     case RTN_LOCAL:
-        m_nextHop = NextHopSpecial("local");
+        m_nextHop = NextHopSpecial("receive");
         break;
     default:
         auto nhs = route_ref.getNextHops();

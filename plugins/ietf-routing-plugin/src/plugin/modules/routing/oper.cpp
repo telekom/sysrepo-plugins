@@ -130,9 +130,6 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
     auto route_cache = nl_ctx.getRouteCache();
 
-    auto ipv4_module = session.getContext().loadModule("ietf-ipv4-unicast-routing");
-    auto ipv6_module = session.getContext().loadModule("ietf-ipv6-unicast-routing");
-
     auto base = RoutingInformationBase(route_cache);
 
     for (auto& rib_iter : base) {
