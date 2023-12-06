@@ -1,5 +1,6 @@
 #include "routing.hpp"
 
+#include "plugin/modules/routing/change.hpp"
 #include "routing/oper.hpp"
 
 /**
@@ -48,7 +49,16 @@ std::list<srpc::OperationalCallback> RoutingModule::getOperationalCallbacks()
 /**
  * Get all module change callbacks which the module should use.
  */
-std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks() { return {}; }
+std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks()
+{
+    return {
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/description",
+            .Callback = ietf::rt::sub::change::ControlPlaneProtocolDescriptionModuleChangeCb(m_changeContext),
+        },
+    };
+}
 
 /**
  * Get all RPC callbacks which the module should use.
