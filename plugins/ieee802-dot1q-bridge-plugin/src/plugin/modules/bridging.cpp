@@ -36,11 +36,7 @@ std::shared_ptr<srpc::IModuleContext> BridgingModule::getRpcContext() { return m
 std::list<srpc::OperationalCallback> BridgingModule::getOperationalCallbacks()
 {
     return {
-        // srpc::OperationalCallback {
-        //     "ieee802-dot1q-bridge",
-        //     "/ieee802-dot1q-bridge:bridges/bridge/name",
-        //     ieee::br::sub::oper::BridgeNameOperGetCb(this->m_operContext)
-        // },
+        
         srpc::OperationalCallback {
             "ieee802-dot1q-bridge",
             "/ieee802-dot1q-bridge:bridges/bridge",

@@ -28,6 +28,8 @@ public:
 
     int getIfindex();
 
+    std::vector<uint16_t> getVlanList();
+
     void addVlanIDS(const std::vector<uint16_t>& vlan_ids, uint16_t flags);
 
     void removeVlanIDS(const std::vector<uint16_t>& vlan_ids);

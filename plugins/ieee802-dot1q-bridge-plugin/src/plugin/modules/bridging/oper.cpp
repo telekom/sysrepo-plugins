@@ -154,10 +154,11 @@ namespace sub::oper {
         int ports = bridge_opt->getSlaveInterfaces().size();
 
         for (auto&& slave : bridge_opt->getSlaveInterfaces()) {
-            std::cout << "SLAVES: " << slave.getName() << std::endl;
+            std::cout << "SLAVE: " << slave.getName() << std::endl;
+            for (auto&& i : slave.getVlanList()) {
+                std::cout<<"----VID: "<<i<<std::endl;
+            }
         }
-
-        std::cout << "PORT SIZE " << ports << std::endl;
 
         if (ports > 0)
             output->newPath("ports", std::to_string(ports));
@@ -312,7 +313,7 @@ namespace sub::oper {
     sr::ErrorCode BridgeComponentTypeOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
-        output->newPath("type","c-vlan-component");
+        output->newPath("type", "c-vlan-component");
         return error;
     }
 
