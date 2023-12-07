@@ -756,10 +756,10 @@ namespace sub::change {
                         }
                     }
 
-                    if (keys.empty()) {
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot check if delete vids correspond to subset!");
-                        return sr::ErrorCode::OperationFailed;
-                    }
+                    // if (keys.empty()) {
+                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot check if delete vids correspond to subset!");
+                    //     return sr::ErrorCode::OperationFailed;
+                    // }
 
                     auto str_vids_create = NlContext::getKeyValFromXpath("filtering-entry", keys)["vids"];
                     auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);

@@ -59,10 +59,11 @@ std::map<int, std::string> BridgeRef::getSlaveInterfacesIfindexName()
 {
     nl_cache* link_cache = NULL;
     rtnl_link* iter = NULL;
+    rtnl_link* link = this->m_link.get();
     int error = 0;
     std::map<int, std::string> bridge_slaves;
 
-    int current_ifindex = rtnl_link_get_ifindex(this->m_link.get());
+    int current_ifindex = rtnl_link_get_ifindex(link);
     if (current_ifindex <= 0)
         throw std::runtime_error("Failed to obtain ifindex");
 
@@ -116,6 +117,7 @@ void BridgeRef::removeInterfaceFromBridge(int ifindex)
 void BridgeRef::add_or_remove_interface_to_bridge(int ifindex, const char* interface_name, BridgeOperation op)
 {
     rtnl_link* slave_link = NULL;
+    rtnl_link* link = this->m_link.get();
     int error = 0;
 
     auto clean = [&]() {
@@ -136,7 +138,7 @@ void BridgeRef::add_or_remove_interface_to_bridge(int ifindex, const char* inter
 
         if (master_if == 0) {
             // no bridge is associated, can enslave
-            error = rtnl_link_enslave(m_socket.get(), m_link.get(), slave_link);
+            error = rtnl_link_enslave(m_socket.get(), link, slave_link);
         } else {
             clean();
             throw std::runtime_error("Cannot enslave link, associated with index: " + std::to_string(master_if));
@@ -450,7 +452,7 @@ std::vector<BridgeSlaveRef> BridgeRef::getSlaveInterfaces()
     while (iter != nullptr) {
 
         if (master_ifindex == rtnl_link_get_master(iter) && master_ifindex != rtnl_link_get_ifindex(iter)) {
-            
+
             slaves.push_back(BridgeSlaveRef(iter, m_socket.get()));
         }
 
@@ -583,4 +585,109 @@ bool BridgeSlaveRef::isSubset(const std::vector<uint16_t>& main_list, const std:
     }
 
     return true;
+}
+
+std::vector<uint16_t> BridgeSlaveRef::getVlanList()
+{
+    struct nl_msg* msg = NULL;
+    nl_sock* socket = NULL;
+    rtnl_link* link = this->m_link.get();
+    int ifindex = rtnl_link_get_ifindex(link);
+    struct nlattr* current_vlan_entry = NULL;
+    struct nlattr* entry_info = NULL;
+    unsigned char* msg_buf = NULL;
+    struct bridge_vlan_info port_vlan_list = { 0 };
+    struct sockaddr_nl nla = { 0 };
+    struct nlmsghdr* hdr = NULL;
+    int proto_header_len = 0;
+    int remaining = 0;
+    int error = 0;
+    int len = 0;
+    std::vector<uint16_t> vids;
+
+    auto clean = [&]() {
+        if (msg != NULL)
+            nlmsg_free(msg);
+        if (socket != NULL)
+            nl_socket_free(socket);
+    };
+
+    socket = nl_socket_alloc();
+
+    nl_connect(socket, NETLINK_ROUTE);
+
+    msg = nlmsg_alloc_simple(RTM_GETVLAN, NLM_F_REQUEST | NLM_F_DUMP);
+    if (msg == NULL) {
+        clean();
+        throw std::runtime_error("Failed to allocate netlink message!");
+    }
+
+    struct br_vlan_msg vlan_msg = {
+        .family = AF_BRIDGE,
+        .ifindex = (unsigned)ifindex,
+    };
+
+    error = nlmsg_append(msg, &vlan_msg, sizeof(vlan_msg), nlmsg_padlen(sizeof(vlan_msg)));
+    if (error) {
+        clean();
+        throw std::runtime_error("nlmsg_append() error");
+    }
+
+    len = nl_send_auto(socket, msg);
+    if (len < 0) {
+        clean();
+        throw std::runtime_error("nl_send_auto() failed");
+    }
+
+    len = nl_recv(socket, &nla, &msg_buf, NULL);
+    if (len <= 0) {
+        clean();
+        throw std::runtime_error("nl_recv() failed");
+    }
+
+    // validate message type
+    hdr = (struct nlmsghdr*)msg_buf;
+    if (hdr->nlmsg_type != RTM_NEWVLAN) {
+        throw std::runtime_error("nlmsghdr Header validation error!");
+    };
+
+    proto_header_len = sizeof(br_vlan_msg);
+    current_vlan_entry = nlmsg_find_attr(hdr, proto_header_len, BRIDGE_VLANDB_ENTRY);
+
+    if (current_vlan_entry == NULL) {
+        clean();
+        throw std::runtime_error("BRIDGE_VLANDB_ENTRY attribute not found.");
+    }
+
+    remaining = nlmsg_attrlen(hdr, sizeof(struct br_vlan_msg));
+
+    while (nla_ok(current_vlan_entry, remaining)) {
+
+        entry_info = (nlattr*)nla_data(current_vlan_entry);
+        nla_memcpy(&port_vlan_list, entry_info, sizeof(bridge_vlan_info));
+
+        vids.push_back(port_vlan_list.vid);
+
+        if (nla_is_nested(current_vlan_entry)) {
+
+            nlattr* attributes[BRIDGE_VLANDB_ENTRY_MAX] = { 0 };
+            nla_parse_nested(attributes, BRIDGE_VLANDB_ENTRY_MAX, current_vlan_entry, NULL);
+
+            if (attributes[BRIDGE_VLANDB_ENTRY_RANGE] != NULL) {
+                // it is range
+                uint16_t end = nla_get_u16(attributes[BRIDGE_VLANDB_ENTRY_RANGE]);
+                // now parse all of them
+                for(int i = port_vlan_list.vid+1; i<= end; i++ ){
+                    vids.push_back(i);
+                }
+
+            }
+        }
+
+        current_vlan_entry = nla_next(current_vlan_entry, &remaining);
+    }
+    
+    clean();
+
+    return vids;
 }
