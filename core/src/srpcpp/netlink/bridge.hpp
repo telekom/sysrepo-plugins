@@ -18,6 +18,26 @@
 #include <map>
 #include <iostream>
 
+// Helper class for the vlans
+class BridgeVlanID {
+
+private:
+    uint16_t vlan_id;
+    uint16_t flags;
+
+public:
+    // Deleted default constructor
+    inline BridgeVlanID() = delete;
+
+    BridgeVlanID(uint16_t vid, uint16_t flags);
+
+    bool getPvidFlag();
+
+    bool getUntaggedFlag();
+
+    uint16_t getVid();
+};
+
 class BridgeSlaveRef {
 
 public:
@@ -28,7 +48,7 @@ public:
 
     int getIfindex();
 
-    std::vector<uint16_t> getVlanList();
+    std::vector<BridgeVlanID> getVlanList();
 
     void addVlanIDS(const std::vector<uint16_t>& vlan_ids, uint16_t flags);
 
@@ -41,7 +61,7 @@ public:
 
     void removeAddressFromVids(const std::vector<uint16_t>& vlan_ids, const std::string& address);
 
-    static bool isSubset(const std::vector<uint16_t>& main, const std::vector<uint16_t>& subset );
+    static bool isSubset(const std::vector<uint16_t>& main, const std::vector<uint16_t>& subset);
 
 private:
     enum AddressOperation {

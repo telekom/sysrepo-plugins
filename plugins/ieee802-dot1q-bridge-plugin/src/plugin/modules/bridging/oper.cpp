@@ -156,7 +156,8 @@ namespace sub::oper {
         for (auto&& slave : bridge_opt->getSlaveInterfaces()) {
             std::cout << "SLAVE: " << slave.getName() << std::endl;
             for (auto&& i : slave.getVlanList()) {
-                std::cout<<"----VID: "<<i<<std::endl;
+                std::cout << "----VID: " << i.getVid() << std::endl;
+                std::cout << "----UNTAGGED: " << i.getUntaggedFlag() << std::endl;
             }
         }
 
@@ -3854,6 +3855,35 @@ namespace sub::oper {
     sr::ErrorCode BridgeComponentBridgeVlanOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        // first obtain the vids
+        auto& nl_ctx = m_ctx->getNetlinkContext();
+        nl_ctx.refillCache();
+
+        // get bridge name
+        std::string br_name = NlContext::getKeyValFromXpath("bridge", output->path())["name"];
+
+        auto bridge = nl_ctx.getBridgeByName(br_name);
+
+        if (!bridge) {
+            SRPLG_LOG_ERR(getModuleLogPrefix(), "BridgeComponentBridgeVlanOperGetCb failed!");
+            return sr::ErrorCode::NotFound;
+        }
+
+        std::vector<BridgeSlaveRef> br_slave_ifs = bridge->getSlaveInterfaces();
+
+        for (auto&& i : br_slave_ifs) {
+
+            auto vlan_list = i.getVlanList();
+
+            for (auto&& vlan : vlan_list) {
+
+                std::string untagged_egress = vlan.getUntaggedFlag() ? "untagged-ports" : "egress-ports";
+                output->newPath("bridge-vlan/vlan[vid='" + std::to_string(vlan.getVid()) + "']", std::nullopt, libyang::CreationOptions::Update);
+                output->newPath("bridge-vlan/vlan[vid='" + std::to_string(vlan.getVid()) + "']/" + untagged_egress, i.getName(), libyang::CreationOptions::Update);
+            };
+        };
+
         return error;
     }
 
@@ -4126,7 +4156,6 @@ namespace sub::oper {
         sr::ErrorCode error = sr::ErrorCode::Ok;
 
         std::string component_name = srpc::extractListKeyFromXPath("bridge", "name", output->path());
-        std::cout << "COMP NAME: " << component_name << std::endl;
         output->newPath("component[name='" + component_name + "']");
         return error;
     }
