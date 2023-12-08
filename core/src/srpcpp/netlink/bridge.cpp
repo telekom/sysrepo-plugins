@@ -480,7 +480,16 @@ std::optional<BridgeSlaveRef> BridgeRef::getSlaveByIfindex(int ifindex)
 
 void BridgeSlaveRef::removeAllVlanIDS()
 {
-    //[TODO]: Removing all vlan ids with one function.
+    std::vector<BridgeVlanID> vlans = this->getVlanList();
+
+    std::vector<uint16_t> vlan_list;
+
+    // note: first has to be jumped since it will delete the bridge port, or should it?
+    for (int i = 0; i < vlans.size(); i++) {
+        vlan_list.push_back(vlans[i].getVid());
+    }
+
+    this->removeVlanIDS(vlan_list);
 }
 
 void BridgeSlaveRef::addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address)
@@ -587,7 +596,7 @@ bool BridgeSlaveRef::isSubset(const std::vector<uint16_t>& main_list, const std:
     return true;
 }
 
-std::vector<uint16_t> BridgeSlaveRef::getVlanList()
+std::vector<BridgeVlanID> BridgeSlaveRef::getVlanList()
 {
     struct nl_msg* msg = NULL;
     nl_sock* socket = NULL;
@@ -603,7 +612,7 @@ std::vector<uint16_t> BridgeSlaveRef::getVlanList()
     int remaining = 0;
     int error = 0;
     int len = 0;
-    std::vector<uint16_t> vids;
+    std::vector<BridgeVlanID> vids;
 
     auto clean = [&]() {
         if (msg != NULL)
@@ -656,7 +665,8 @@ std::vector<uint16_t> BridgeSlaveRef::getVlanList()
 
     if (current_vlan_entry == NULL) {
         clean();
-        throw std::runtime_error("BRIDGE_VLANDB_ENTRY attribute not found.");
+        // return empty vector, so it does not crash if you remove port ref;
+        return {};
     }
 
     remaining = nlmsg_attrlen(hdr, sizeof(struct br_vlan_msg));
@@ -666,28 +676,52 @@ std::vector<uint16_t> BridgeSlaveRef::getVlanList()
         entry_info = (nlattr*)nla_data(current_vlan_entry);
         nla_memcpy(&port_vlan_list, entry_info, sizeof(bridge_vlan_info));
 
-        vids.push_back(port_vlan_list.vid);
+        // vids.push_back(port_vlan_list.vid);
 
         if (nla_is_nested(current_vlan_entry)) {
 
             nlattr* attributes[BRIDGE_VLANDB_ENTRY_MAX] = { 0 };
             nla_parse_nested(attributes, BRIDGE_VLANDB_ENTRY_MAX, current_vlan_entry, NULL);
 
+            uint16_t flg = nla_get_u16(attributes[BRIDGE_VLANDB_ENTRY_INFO]);
+
+            vids.push_back(BridgeVlanID(port_vlan_list.vid, flg));
+
             if (attributes[BRIDGE_VLANDB_ENTRY_RANGE] != NULL) {
                 // it is range
                 uint16_t end = nla_get_u16(attributes[BRIDGE_VLANDB_ENTRY_RANGE]);
                 // now parse all of them
-                for(int i = port_vlan_list.vid+1; i<= end; i++ ){
-                    vids.push_back(i);
+                for (int i = port_vlan_list.vid + 1; i <= end; i++) {
+                    vids.push_back(BridgeVlanID(i, flg));
                 }
-
             }
         }
 
         current_vlan_entry = nla_next(current_vlan_entry, &remaining);
     }
-    
+
     clean();
 
     return vids;
+}
+
+// BridgeVid helper class
+
+BridgeVlanID::BridgeVlanID(uint16_t vid, uint16_t flags)
+    : vlan_id(vid)
+    , flags(flags) {};
+
+bool BridgeVlanID::getUntaggedFlag()
+{
+    return (bool)(flags &= BRIDGE_VLAN_INFO_UNTAGGED);
+}
+
+bool BridgeVlanID::getPvidFlag()
+{
+    return (bool)(flags &= BRIDGE_VLAN_INFO_PVID);
+}
+
+uint16_t BridgeVlanID::getVid()
+{
+    return this->vlan_id;
 }

@@ -61,6 +61,11 @@ std::list<srpc::OperationalCallback> BridgingModule::getOperationalCallbacks()
             "ieee802-dot1q-bridge",
             "/ieee802-dot1q-bridge:bridges/bridge/component/type",
             ieee::br::sub::oper::BridgeComponentTypeOperGetCb(this->m_operContext)
+        },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/bridge-vlan",
+            ieee::br::sub::oper::BridgeComponentBridgeVlanOperGetCb(this->m_operContext)
         }
        
     };

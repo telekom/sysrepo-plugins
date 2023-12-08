@@ -1492,8 +1492,13 @@ namespace sub::change {
                     }
 
                     if (vids_data.empty()) {
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
-                        return sr::ErrorCode::CallbackFailed;
+                        // SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                        // return sr::ErrorCode::CallbackFailed;
+
+                        //get data from datastore
+                        //since vids are keys, easy-parse
+
+                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry",change.node.path())["vids"];
                     }
 
                     std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
@@ -1525,28 +1530,31 @@ namespace sub::change {
 
                     // get vids node and parse it
                     // Deleted and Created vids node with previous values must be taken from the session changes.
-                    std::string vids_data;
+                    // std::string vids_data;
 
-                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+                    // for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
 
-                        switch (change.operation) {
-                        case sr::ChangeOperation::Deleted: {
-                            // vids node
-                            vids_data = change.node.asTerm().valueStr().data();
-                            break;
-                        }
-                        }
-                    }
+                    //     switch (change.operation) {
+                    //     case sr::ChangeOperation::Deleted: {
+                    //         // vids node
+                    //         vids_data = change.node.asTerm().valueStr().data();
+                    //         break;
+                    //     }
+                    //     }
+                    // }
 
-                    if (vids_data.empty()) {
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
-                        return sr::ErrorCode::CallbackFailed;
-                    }
+                    // if (vids_data.empty()) {
+                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                    //     return sr::ErrorCode::CallbackFailed;
+                    // }
 
-                    std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
+                    // std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
 
-                    // and finaly modify vlans
-                    slave_bridge_ref_opt->removeVlanIDS(parsed_vids);
+                    // // and finaly modify vlans
+                    // slave_bridge_ref_opt->removeVlanIDS(parsed_vids);
+
+                    // ***BIG FIX*** no point of parsing since now we can delete all for bigger data consistancy
+                    slave_bridge_ref_opt->removeAllVlanIDS();
 
                     break;
                 }
