@@ -9,7 +9,6 @@
 #include <sysrepo-cpp/Session.hpp>
 
 #include "module.hpp"
-#include "context.hpp"
 
 namespace ly = libyang;
 

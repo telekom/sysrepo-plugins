@@ -30,6 +30,21 @@ class IDatastoreApplier : public IAssignedPaths
 };
 
 /**
+ * @brief Interface used for loading content from the system to the datastore.
+ */
+class IDatastoreLoader : public IAssignedPaths
+{
+  public:
+    /**
+     * @brief Load data from the system into the datastore.
+     *
+     * @param session Session to use for storing data in the datastore.
+     */
+    virtual void loadDataToDatastore(sysrepo::Session &session) = 0;
+};
+
+
+/**
  * @brief Enum used for receiving comparison status between datastore values and values found on the system.
  */
 enum class DatastoreValuesCheckStatus
@@ -58,10 +73,16 @@ class IDatastoreChecker : public IAssignedPaths
 };
 
 /**
- * @brief Datastore checker concept for determining a valid datastore checker.
+ * @brief Datastore applier concept for determining a valid datastore applier.
  */
 template <typename T>
 concept DatastoreValueApplier = std::is_base_of<IDatastoreApplier, T>::value;
+
+/**
+ * @brief Datastore loader concept for determining a valid datastore loader.
+ */
+template <typename T>
+concept DatastoreValueLoader = std::is_base_of<IDatastoreLoader, T>::value;
 
 /**
  * @brief Datastore checker concept for determining a valid datastore checker.
