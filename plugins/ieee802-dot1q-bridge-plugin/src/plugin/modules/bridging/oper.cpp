@@ -153,14 +153,6 @@ namespace sub::oper {
 
         int ports = bridge_opt->getSlaveInterfaces().size();
 
-        for (auto&& slave : bridge_opt->getSlaveInterfaces()) {
-            std::cout << "SLAVE: " << slave.getName() << std::endl;
-            for (auto&& i : slave.getVlanList()) {
-                std::cout << "----VID: " << i.getVid() << std::endl;
-                std::cout << "----UNTAGGED: " << i.getUntaggedFlag() << std::endl;
-            }
-        }
-
         if (ports > 0)
             output->newPath("ports", std::to_string(ports));
 

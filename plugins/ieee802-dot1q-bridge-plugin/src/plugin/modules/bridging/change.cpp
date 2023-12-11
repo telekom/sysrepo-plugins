@@ -1544,6 +1544,10 @@ namespace sub::change {
                     }
 
                     if (vids_data.empty()) {
+                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                    }
+
+                    if (vids_data.empty()) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
                         return sr::ErrorCode::CallbackFailed;
                     }
