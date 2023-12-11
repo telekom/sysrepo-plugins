@@ -118,6 +118,13 @@ std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
             "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/port-ref",
             ieee::br::sub::change::BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapPortRefModuleChangeCb(this->m_changeContext),
         },
+        srpc::ModuleChangeCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/static-vlan-registration-entries/vlan-transmitted",
+            ieee::br::sub::change::BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapStaticVlanRegistrationEntriesVlanTransmittedModuleChangeCb(this->m_changeContext),
+        },
+
+        
 
         srpc::ModuleChangeCallback {
             "ieee802-dot1q-bridge",

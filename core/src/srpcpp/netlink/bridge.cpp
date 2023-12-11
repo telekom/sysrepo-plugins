@@ -485,7 +485,7 @@ void BridgeSlaveRef::removeAllVlanIDS()
     std::vector<uint16_t> vlan_list;
 
     // note: first has to be jumped since it will delete the bridge port, or should it?
-    for (int i = 0; i < vlans.size(); i++) {
+    for (int i = 1; i < vlans.size(); i++) {
         vlan_list.push_back(vlans[i].getVid());
     }
 
