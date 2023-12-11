@@ -1495,10 +1495,10 @@ namespace sub::change {
                         // SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
                         // return sr::ErrorCode::CallbackFailed;
 
-                        //get data from datastore
-                        //since vids are keys, easy-parse
+                        // get data from datastore
+                        // since vids are keys, easy-parse
 
-                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry",change.node.path())["vids"];
+                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
                     }
 
                     std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
@@ -1530,31 +1530,34 @@ namespace sub::change {
 
                     // get vids node and parse it
                     // Deleted and Created vids node with previous values must be taken from the session changes.
-                    // std::string vids_data;
+                    std::string vids_data;
 
-                    // for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
 
-                    //     switch (change.operation) {
-                    //     case sr::ChangeOperation::Deleted: {
-                    //         // vids node
-                    //         vids_data = change.node.asTerm().valueStr().data();
-                    //         break;
-                    //     }
-                    //     }
-                    // }
+                        switch (change.operation) {
+                        case sr::ChangeOperation::Deleted: {
+                            // vids node
+                            vids_data = change.node.asTerm().valueStr().data();
+                            break;
+                        }
+                        }
+                    }
 
-                    // if (vids_data.empty()) {
-                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
-                    //     return sr::ErrorCode::CallbackFailed;
-                    // }
+                    if (vids_data.empty()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                        return sr::ErrorCode::CallbackFailed;
+                    }
 
-                    // std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
+                    std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
 
-                    // // and finaly modify vlans
-                    // slave_bridge_ref_opt->removeVlanIDS(parsed_vids);
+                    // and finaly modify vlans
+                    slave_bridge_ref_opt->removeVlanIDS(parsed_vids);
 
-                    // ***BIG FIX*** no point of parsing since now we can delete all for bigger data consistancy
-                    slave_bridge_ref_opt->removeAllVlanIDS();
+                    // // ***BIG FIX*** no point of parsing since now we can delete all for bigger data consistancy
+                    // this will not work, since it will delete all of the vids for continuouts vlan-registration-entry if
+                    // they exist multiple
+                    //
+                    // slave_bridge_ref_opt->removeAllVlanIDS();
 
                     break;
                 }
@@ -1724,6 +1727,63 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapStaticVlanRegistrationEntriesVlanTransmittedModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/static-vlan-registration-entries/vlan-transmitted")) {
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Modified: {
+
+                    // here we have to modify <vlan-transmitted>
+                    auto& nl_ctx = m_ctx->getNetlinkContext();
+                    nl_ctx.refillCache();
+
+                    std::string value = change.node.asTerm().valueStr().data();
+
+                    std::string vids = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                    int port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", change.node.path())["port-ref"]);
+                    std::string bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path())["name"];
+
+                    auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+                    if (!bridge_opt) {
+                        throw std::runtime_error("Cannot find bridge " + bridge_name);
+                    }
+
+                    auto vids_vec = BridgeRef::parseStringToVlanIDS(vids);
+
+                    auto bridge_slave_ref = bridge_opt->getSlaveByIfindex(port_ref);
+
+                    if (!bridge_slave_ref) {
+                        throw std::runtime_error("Bridge slave at index " + std::to_string(port_ref) + " not found!");
+                    }
+
+                    bridge_slave_ref->removeVlanIDS(vids_vec);
+
+                    // untagged
+
+                    uint16_t flags = 0;
+
+                    if (value.compare("untagged") == 0) {
+                        flags = BRIDGE_VLAN_INFO_UNTAGGED;
+                    }
+
+                    bridge_slave_ref->addVlanIDS(vids_vec, flags);
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
