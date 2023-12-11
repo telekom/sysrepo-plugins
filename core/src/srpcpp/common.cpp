@@ -2,8 +2,7 @@
 
 #include <regex>
 
-namespace srpc
-{
+namespace srpc {
 /**
  * @brief Extracts the key from the list XPath.
  *
@@ -12,7 +11,7 @@ namespace srpc
  * @param xpath XPath of the list.
  * @return std::string Key value.
  */
-const std::string extractListKeyFromXPath(const std::string &list, const std::string &key, const std::string &xpath)
+const std::string extractListKeyFromXPath(const std::string& list, const std::string& key, const std::string& xpath)
 {
     std::string value;
 
@@ -20,21 +19,69 @@ const std::string extractListKeyFromXPath(const std::string &list, const std::st
 
     ss << list << "\\[" << key << "='([^']*)'\\]";
 
-    const auto &xpath_expr = ss.str();
+    const auto& xpath_expr = ss.str();
 
     std::regex re(xpath_expr);
     std::smatch xpath_match;
 
-    if (std::regex_search(xpath, xpath_match, re))
-    {
+    if (std::regex_search(xpath, xpath_match, re)) {
         value = xpath_match[1];
-    }
-    else
-    {
+    } else {
         throw std::runtime_error("Failed to extract key from XPath.");
     }
 
     return value;
+}
+
+/**
+ * @brief Extracts all the keys from the list XPath by list name.
+ *
+ * @param list List name.
+ * @param xpath XPath of the list.
+ * @return std::unordered_map<std::string, std::string> Key values.
+ */
+std::unordered_map<std::string, std::string> extractListKeysFromXpath(const std::string& list, const std::string& xpath)
+{
+    std::unordered_map<std::string, std::string> keys_map;
+
+    std::istringstream chunkStream(xpath);
+    std::string chunk;
+
+    while (std::getline(chunkStream, chunk, '/')) {
+        int pos = chunk.find(list);
+
+        // it should be at the begin of chunk so its 0
+        if (pos == 0) {
+            int begin = chunk.find('[');
+            int end = chunk.find(']');
+            // list is found, continue
+
+            while (begin != std::string::npos || end != std::string::npos) {
+
+                std::string mapstr(++chunk.begin() + begin, chunk.begin() + end);
+                chunk.erase(begin, ++end - begin);
+
+                // now split it by '=' in key value
+
+                int eq_pos = mapstr.find('=');
+
+                if (eq_pos == std::string::npos) {
+                    throw std::runtime_error("Failed to parse '=' sympol");
+                }
+
+                std::string key(mapstr.begin(), mapstr.begin() + eq_pos);
+                // value shrink by one place begin to end to eliminate ' '
+                std::string value(mapstr.begin() + eq_pos + 2, --mapstr.end());
+
+                keys_map.insert(std::make_pair(key, value));
+
+                begin = chunk.find('[');
+                end = chunk.find(']');
+            }
+        }
+    }
+
+    return keys_map;
 }
 
 /**
@@ -44,12 +91,10 @@ const std::string extractListKeyFromXPath(const std::string &list, const std::st
  * @param name Meta name.
  * @return std::string Meta value.
  */
-const std::string getMetaValue(const ly::MetaCollection &meta, const std::string &name)
+const std::string getMetaValue(const ly::MetaCollection& meta, const std::string& name)
 {
-    for (const auto &m : meta)
-    {
-        if (m.name() == name)
-        {
+    for (const auto& m : meta) {
+        if (m.name() == name) {
             return m.valueStr();
         }
     }
@@ -66,8 +111,7 @@ std::map<std::string, std::string> getMetaValuesHash(const ly::MetaCollection me
 {
     std::map<std::string, std::string> hash;
 
-    for (const auto &m : meta)
-    {
+    for (const auto& m : meta) {
         hash[m.name()] = m.valueStr();
     }
 

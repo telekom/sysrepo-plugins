@@ -9,12 +9,10 @@
 #include <sysrepo-cpp/Session.hpp>
 
 #include "module.hpp"
-#include "context.hpp"
 
 namespace ly = libyang;
 
-namespace srpc
-{
+namespace srpc {
 
 /**
  * @brief Extracts the key from the list XPath.
@@ -24,7 +22,16 @@ namespace srpc
  * @param xpath XPath of the list.
  * @return std::string Key value.
  */
-const std::string extractListKeyFromXPath(const std::string &list, const std::string &key, const std::string &xpath);
+const std::string extractListKeyFromXPath(const std::string& list, const std::string& key, const std::string& xpath);
+
+/**
+ * @brief Extracts all the keys from the list XPath by list name.
+ *
+ * @param list List name.
+ * @param xpath XPath of the list.
+ * @return std::unordered_map<std::string, std::string> Key values.
+ */
+std::unordered_map<std::string, std::string> extractListKeysFromXpath(const std::string& list, const std::string& xpath);
 
 /**
  * @brief Get meta value.
@@ -33,7 +40,7 @@ const std::string extractListKeyFromXPath(const std::string &list, const std::st
  * @param name Meta name.
  * @return std::string Meta value.
  */
-const std::string getMetaValue(const ly::MetaCollection &meta, const std::string &name);
+const std::string getMetaValue(const ly::MetaCollection& meta, const std::string& name);
 
 /**
  * @brief Convert meta values list to a hash.
@@ -52,22 +59,18 @@ std::map<std::string, std::string> getMetaValuesHash(const ly::MetaCollection me
  *
  */
 template <PluginContext PluginContextType>
-void registerOperationalSubscriptions(sysrepo::Session &sess, PluginContextType &ctx,
-                                      std::unique_ptr<srpc::IModule<PluginContextType>> &mod)
+void registerOperationalSubscriptions(sysrepo::Session& sess, PluginContextType& ctx,
+    std::unique_ptr<srpc::IModule<PluginContextType>>& mod)
 {
     const auto oper_callbacks = mod->getOperationalCallbacks();
 
-    auto &sub_handle = ctx.getSubscriptionHandle();
+    auto& sub_handle = ctx.getSubscriptionHandle();
 
-    for (auto &cb : oper_callbacks)
-    {
+    for (auto& cb : oper_callbacks) {
         SRPLG_LOG_INF(ctx.getPluginName(), "Creating operational subscription for xpath %s", cb.XPath.c_str());
-        if (sub_handle.has_value())
-        {
+        if (sub_handle.has_value()) {
             sub_handle->onOperGet(cb.Module, cb.Callback, cb.XPath);
-        }
-        else
-        {
+        } else {
             sub_handle = sess.onOperGet(cb.Module, cb.Callback, cb.XPath);
         }
     }
@@ -82,22 +85,18 @@ void registerOperationalSubscriptions(sysrepo::Session &sess, PluginContextType 
  *
  */
 template <PluginContext PluginContextType>
-void registerModuleChangeSubscriptions(sysrepo::Session &sess, PluginContextType &ctx,
-                                       std::unique_ptr<srpc::IModule<PluginContextType>> &mod)
+void registerModuleChangeSubscriptions(sysrepo::Session& sess, PluginContextType& ctx,
+    std::unique_ptr<srpc::IModule<PluginContextType>>& mod)
 {
     const auto change_callbacks = mod->getModuleChangeCallbacks();
 
-    auto &sub_handle = ctx.getSubscriptionHandle();
+    auto& sub_handle = ctx.getSubscriptionHandle();
 
-    for (auto &cb : change_callbacks)
-    {
+    for (auto& cb : change_callbacks) {
         SRPLG_LOG_INF(ctx.getPluginName(), "Creating module change subscription for xpath %s", cb.XPath.c_str());
-        if (sub_handle.has_value())
-        {
+        if (sub_handle.has_value()) {
             sub_handle->onModuleChange(cb.Module, cb.Callback, cb.XPath);
-        }
-        else
-        {
+        } else {
             sub_handle = sess.onModuleChange(cb.Module, cb.Callback, cb.XPath);
         }
     }
@@ -112,22 +111,18 @@ void registerModuleChangeSubscriptions(sysrepo::Session &sess, PluginContextType
  *
  */
 template <PluginContext PluginContextType>
-void registerRpcSubscriptions(sysrepo::Session &sess, PluginContextType &ctx,
-                              std::unique_ptr<srpc::IModule<PluginContextType>> &mod)
+void registerRpcSubscriptions(sysrepo::Session& sess, PluginContextType& ctx,
+    std::unique_ptr<srpc::IModule<PluginContextType>>& mod)
 {
     const auto rpc_callbacks = mod->getRpcCallbacks();
 
-    auto &sub_handle = ctx.getSubscriptionHandle();
+    auto& sub_handle = ctx.getSubscriptionHandle();
 
-    for (auto &cb : rpc_callbacks)
-    {
+    for (auto& cb : rpc_callbacks) {
         SRPLG_LOG_INF(ctx.getPluginName(), "Creating RPC subscription for xpath %s", cb.XPath.c_str());
-        if (sub_handle.has_value())
-        {
+        if (sub_handle.has_value()) {
             sub_handle->onRPCAction(cb.XPath, cb.Callback);
-        }
-        else
-        {
+        } else {
             sub_handle = sess.onRPCAction(cb.XPath, cb.Callback);
         }
     }
