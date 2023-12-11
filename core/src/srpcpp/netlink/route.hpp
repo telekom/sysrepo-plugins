@@ -19,6 +19,11 @@ public:
     std::uint32_t getTable() const;
 
     /**
+     * @brief Returns the table name of the route.
+     */
+    std::string getTableName() const;
+
+    /**
      * @brief Sets the table ID of the route.
      */
     void setTable(std::uint32_t table);
