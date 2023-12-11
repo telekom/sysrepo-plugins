@@ -28,6 +28,18 @@ RouteRef::RouteRef(struct nl_object* route, struct nl_sock* socket)
 std::uint32_t RouteRef::getTable() const { return rtnl_route_get_table(m_route.get()); }
 
 /**
+ * @brief Returns the table name of the route.
+ */
+std::string RouteRef::getTableName() const
+{
+    char table_buffer[32];
+
+    rtnl_route_table2str(getTable(), table_buffer, sizeof(table_buffer));
+
+    return table_buffer;
+}
+
+/**
  * @brief Sets the table ID of the route.
  */
 void RouteRef::setTable(std::uint32_t table) { rtnl_route_set_table(m_route.get(), table); }

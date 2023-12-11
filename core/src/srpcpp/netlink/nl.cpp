@@ -11,6 +11,7 @@
 #include "interface.hpp"
 #include "address.hpp"
 #include "neighbor.hpp"
+#include "route.hpp"
 #include "cache.hpp"
 
 /**
@@ -395,3 +396,8 @@ CacheRef<RouteAddressRef> NlContext::getAddressCache() { return CacheRef<RouteAd
  * @brief Get the neighbors cache.
  */
 CacheRef<NeighborRef> NlContext::getNeighborCache() { return CacheRef<NeighborRef>(m_neighCache.get(), m_sock.get()); }
+
+/**
+ * @brief Get the routes cache.
+ */
+CacheRef<RouteRef> NlContext::getRouteCache() { return CacheRef<RouteRef>(m_routeCache.get(), m_sock.get()); }
