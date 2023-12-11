@@ -176,7 +176,50 @@ namespace sub::change {
     sr::ErrorCode V4RouteDestinationPrefixModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
-        sr::ErrorCode error = sr::ErrorCode::Ok;
+        sr::ErrorCode error = sr::ErrorCode::Unsupported;
+
+        std::string destination_prefix;
+        std::string next_hop_address;
+
+        auto& nl_ctx = m_ctx->getNetlinkContext();
+
+        switch (event) {
+        case sysrepo::Event::Change:
+            for (auto& change : session.getChanges(subXPath->data())) {
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified:
+                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
+                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
+                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value: %s", std::get<std::string>(change.node.asTerm().value()).c_str());
+                    destination_prefix = std::get<std::string>(change.node.asTerm().value());
+
+                    for (auto& nh_change : session.getChanges(change.node.parent()->path() + "/next-hop/next-hop-address")) {
+                        switch (nh_change.operation) {
+                        case sysrepo::ChangeOperation::Created:
+                        case sysrepo::ChangeOperation::Modified: {
+                            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
+                            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
+                            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value: %s", std::get<std::string>(change.node.asTerm().value()).c_str());
+                            break;
+                        }
+                        case sysrepo::ChangeOperation::Deleted:
+                            break;
+                        case sysrepo::ChangeOperation::Moved:
+                            break;
+                        }
+                    }
+                    break;
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                case sysrepo::ChangeOperation::Moved:
+                    break;
+                }
+            }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -1246,6 +1289,5 @@ namespace sub::change {
         sr::ErrorCode error = sr::ErrorCode::Ok;
         return error;
     }
-
 }
 }

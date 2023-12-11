@@ -6,6 +6,10 @@
 
 // module context
 #include "routing/context.hpp"
+#include "srpcpp/netlink/nl.hpp"
+
+// netlink context
+#include <srpcpp/netlink.hpp>
 
 /**
  * @brief Routing module.
@@ -61,4 +65,5 @@ private:
     std::shared_ptr<RoutingOperationalContext> m_operContext;
     std::shared_ptr<RoutingModuleChangesContext> m_changeContext;
     std::shared_ptr<RoutingRpcContext> m_rpcContext;
+    NlContext m_netlinkContext;
 };

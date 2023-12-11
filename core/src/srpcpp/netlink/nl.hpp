@@ -3,7 +3,6 @@
 #include <memory>
 #include <functional>
 #include <optional>
-#include <stdexcept>
 
 ///< Type used for deleting libnl allocated structs
 template <typename T>
@@ -28,6 +27,8 @@ enum class NeighborOperations {
     Modify,
     Delete,
 };
+
+// [TODO]: Make NlContext a singleton - one instance per plugin
 
 /**
  * @brief Netlink context using the libnl library. Used for updating system networking configuration.
