@@ -1,4 +1,7 @@
 #include "change.hpp"
+#include "plugin/modules/routing/common.hpp"
+
+#include <sysrepo.h>
 
 namespace ietf::rt {
 namespace sub::change {
@@ -121,6 +124,29 @@ namespace sub::change {
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change:
+            for (auto& change : session.getChanges(subXPath->data())) {
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
+                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                case sysrepo::ChangeOperation::Moved:
+                    break;
+                }
+            }
+            break;
+        default:
+            break;
+        }
+
         return error;
     }
 
