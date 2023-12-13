@@ -34,11 +34,17 @@ enum class NeighborOperations {
  * @brief Netlink context using the libnl library. Used for updating system networking configuration.
  */
 class NlContext {
-public:
+private:
     /**
      * @brief Default constructor. Allocates each member of the class.
      */
     NlContext();
+
+public:
+    /**
+     * @brief Returns the singleton instance.
+     */
+    static NlContext& getInstance();
 
     /**
      * @brief Refill each cache.
