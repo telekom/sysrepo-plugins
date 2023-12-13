@@ -33,7 +33,7 @@ sr::ErrorCode InterfaceNameModuleChangeCb::operator()(sr::Session session, uint3
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
     // use netlink context to
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         // update cache
@@ -175,7 +175,7 @@ sr::ErrorCode InterfaceTypeModuleChangeCb::operator()(sr::Session session, uint3
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
     // use netlink context to
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         // update cache
@@ -252,7 +252,7 @@ sr::ErrorCode InterfaceEnabledModuleChangeCb::operator()(sr::Session session, ui
 
             try {
                 // Netlink context
-                NlContext& nl_ctx = m_ctx->getNetlinkContext();
+                NlContext& nl_ctx = NlContext::getInstance();
                 nl_ctx.refillCache();
 
                 // get interface reference
@@ -274,6 +274,8 @@ sr::ErrorCode InterfaceEnabledModuleChangeCb::operator()(sr::Session session, ui
                 break;
             case sysrepo::ChangeOperation::Deleted:
                 // when deleting this node, the plugin will automaticaly modify this node to default value
+                break;
+            default:
                 break;
             }
         }
@@ -385,7 +387,7 @@ sr::ErrorCode Ipv4EnabledModuleChangeCb::operator()(sr::Session session, uint32_
             const auto& value = change.node.asTerm().value();
             const auto& enabled_value = std::get<bool>(value);
 
-            auto& ctx = m_ctx->getNetlinkContext();
+            auto& ctx = NlContext::getInstance();
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
             switch (change.operation) {
@@ -473,7 +475,7 @@ sr::ErrorCode Ipv4ForwardingModuleChangeCb::operator()(sr::Session session, uint
             const auto& forwarding_value = std::get<bool>(value);
 
             // Netlink context
-            NlContext& ctx = m_ctx->getNetlinkContext();
+            NlContext& ctx = NlContext::getInstance();
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
             // get interface reference
             std::optional<InterfaceRef> if_ref = ctx.getInterfaceByName(interface_name);
@@ -546,7 +548,7 @@ sr::ErrorCode Ipv4MtuModuleChangeCb::operator()(sr::Session session, uint32_t su
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
             // Netlink context
-            NlContext& nl_ctx = m_ctx->getNetlinkContext();
+            NlContext& nl_ctx = NlContext::getInstance();
 
             // get interface reference
             std::optional<InterfaceRef> if_ref = nl_ctx.getInterfaceByName(interface_name);
@@ -611,7 +613,7 @@ sr::ErrorCode Ipv4AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
             const auto& address_value = std::get<std::string>(value);
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
-            auto& ctx = m_ctx->getNetlinkContext();
+            auto& ctx = NlContext::getInstance();
 
             std::string prefix_len_xpath = "/ietf-interfaces:interfaces/interface[name='" + interface_name + "']/ietf-ip:ipv4/address[ip='"
                 + address_value + "']/prefix-length";
@@ -732,7 +734,7 @@ sr::ErrorCode Ipv4AddrPrefixLengthModuleChangeCb::operator()(sr::Session session
             const auto& ip_addr = srpc::extractListKeyFromXPath("address", "ip", change.node.path());
 
             // Netlink context
-            NlContext& nl_ctx = m_ctx->getNetlinkContext();
+            NlContext& nl_ctx = NlContext::getInstance();
 
             switch (change.operation) {
             case sysrepo::ChangeOperation::Modified:
@@ -928,7 +930,7 @@ sr::ErrorCode Ipv4NeighIpModuleChangeCb::operator()(sr::Session session, uint32_
             const auto& address_value = std::get<std::string>(value);
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
-            auto& ctx = m_ctx->getNetlinkContext();
+            auto& ctx = NlContext::getInstance();
 
             std::string lladdr_xpath = "/ietf-interfaces:interfaces/interface[name='" + interface_name + "']/ietf-ip:ipv4/neighbor[ip='"
                 + address_value + "']/link-layer-address";
@@ -1027,7 +1029,7 @@ sr::ErrorCode Ipv4NeighLinkLayerAddressModuleChangeCb::operator()(sr::Session se
             const auto& neigh_addr = srpc::extractListKeyFromXPath("neighbor", "ip", change.node.path());
 
             // Netlink context
-            NlContext& nl_ctx = m_ctx->getNetlinkContext();
+            NlContext& nl_ctx = NlContext::getInstance();
 
             switch (change.operation) {
             case sysrepo::ChangeOperation::Modified:
@@ -1151,7 +1153,7 @@ sr::ErrorCode Ipv6EnabledModuleChangeCb::operator()(sr::Session session, uint32_
             const auto& value = change.node.asTerm().value();
             const auto& enabled_value = std::get<bool>(value);
 
-            auto& ctx = m_ctx->getNetlinkContext();
+            auto& ctx = NlContext::getInstance();
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
             switch (change.operation) {
@@ -1354,7 +1356,7 @@ sr::ErrorCode Ipv6AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
             const auto& address_value = std::get<std::string>(value);
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
-            auto& ctx = m_ctx->getNetlinkContext();
+            auto& ctx = NlContext::getInstance();
 
             std::string prefix_len_xpath = "/ietf-interfaces:interfaces/interface[name='" + interface_name + "']/ietf-ip:ipv6/address[ip='"
                 + address_value + "']/prefix-length";
@@ -1471,7 +1473,7 @@ sr::ErrorCode Ipv6AddrPrefixLengthModuleChangeCb::operator()(sr::Session session
             const auto& ip_addr = srpc::extractListKeyFromXPath("address", "ip", change.node.path());
 
             // Netlink context
-            NlContext& nl_ctx = m_ctx->getNetlinkContext();
+            NlContext& nl_ctx = NlContext::getInstance();
 
             switch (change.operation) {
 
@@ -1583,7 +1585,7 @@ sr::ErrorCode Ipv6NeighIpModuleChangeCb::operator()(sr::Session session, uint32_
             const auto& address_value = std::get<std::string>(value);
             const auto& interface_name = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
 
-            auto& ctx = m_ctx->getNetlinkContext();
+            auto& ctx = NlContext::getInstance();
 
             std::string lladdr_xpath = "/ietf-interfaces:interfaces/interface[name='" + interface_name + "']/ietf-ip:ipv6/neighbor[ip='"
                 + address_value + "']/link-layer-address";
@@ -1680,7 +1682,7 @@ sr::ErrorCode Ipv6NeighLinkLayerAddressModuleChangeCb::operator()(sr::Session se
             const auto& neigh_addr = srpc::extractListKeyFromXPath("neighbor", "ip", change.node.path());
 
             // Netlink context
-            NlContext& nl_ctx = m_ctx->getNetlinkContext();
+            NlContext& nl_ctx = NlContext::getInstance();
 
             switch (change.operation) {
             case sysrepo::ChangeOperation::Modified:

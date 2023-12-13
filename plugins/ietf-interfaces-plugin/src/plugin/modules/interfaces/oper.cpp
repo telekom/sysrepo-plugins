@@ -190,7 +190,7 @@ sr::ErrorCode InterfaceAdminStatusOperGetCb::operator()(sr::Session session, uin
         { AdminStatus::Testing, "testing" },
     };
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -261,7 +261,7 @@ sr::ErrorCode InterfaceOperStatusOperGetCb::operator()(sr::Session session, uint
         { IF_OPER_UP, "up" },
     };
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -341,7 +341,7 @@ sr::ErrorCode InterfaceIfIndexOperGetCb::operator()(sr::Session session, uint32_
 
     std::stringstream ifindex_buffer;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -392,7 +392,7 @@ sr::ErrorCode InterfacePhysAddressOperGetCb::operator()(sr::Session session, uin
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -442,7 +442,7 @@ sr::ErrorCode InterfaceHigherLayerIfOperGetCb::operator()(sr::Session session, u
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -496,7 +496,7 @@ sr::ErrorCode InterfaceLowerLayerIfOperGetCb::operator()(sr::Session session, ui
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -555,7 +555,7 @@ sr::ErrorCode InterfaceSpeedOperGetCb::operator()(sr::Session session, uint32_t 
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
     std::stringstream speed_buffer;
 
     try {
@@ -998,7 +998,7 @@ sr::ErrorCode InterfaceStatsOperGetCb::operator()(sr::Session session, uint32_t 
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     auto buffer = std::stringstream();
 
@@ -1333,7 +1333,7 @@ sr::ErrorCode Ipv4AddrOperGetCb::operator()(sr::Session session, uint32_t subscr
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -1493,7 +1493,7 @@ sr::ErrorCode Ipv4NeighOperGetCb::operator()(sr::Session session, uint32_t subsc
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -1789,7 +1789,7 @@ sr::ErrorCode Ipv6AddrOperGetCb::operator()(sr::Session session, uint32_t subscr
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -2011,7 +2011,7 @@ sr::ErrorCode Ipv6NeighOperGetCb::operator()(sr::Session session, uint32_t subsc
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     try {
         auto interface_name = srpc::extractListKeyFromXPath("interface", "name", output->path());
@@ -2307,7 +2307,7 @@ sr::ErrorCode InterfaceOperGetCb::operator()(sr::Session session, uint32_t subsc
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
     // add all interfaces to the list
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
     auto link_names = nl_ctx.getLinkNames();
 
     for (auto& link_name : link_names) {
