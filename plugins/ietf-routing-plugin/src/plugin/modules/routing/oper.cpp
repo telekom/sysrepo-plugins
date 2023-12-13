@@ -83,7 +83,7 @@ sr::ErrorCode RoutingInterfacesOperGetCb::operator()(sr::Session session, uint32
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
     try {
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
         auto link_cache = nl_ctx.getLinkCache();
 
         for (auto& link : link_cache) {
@@ -126,7 +126,7 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    auto& nl_ctx = m_ctx->getNetlinkContext();
+    auto& nl_ctx = NlContext::getInstance();
 
     auto route_cache = nl_ctx.getRouteCache();
 

@@ -181,7 +181,7 @@ namespace sub::change {
         std::string destination_prefix;
         std::string next_hop_address;
 
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
 
         switch (event) {
         case sysrepo::Event::Change:

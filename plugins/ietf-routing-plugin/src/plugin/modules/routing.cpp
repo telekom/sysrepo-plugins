@@ -10,8 +10,8 @@
 RoutingModule::RoutingModule(ietf::rt::PluginContext& plugin_ctx)
     : srpc::IModule<ietf::rt::PluginContext>(plugin_ctx)
 {
-    m_operContext = std::make_shared<RoutingOperationalContext>(m_netlinkContext);
-    m_changeContext = std::make_shared<RoutingModuleChangesContext>(m_netlinkContext);
+    m_operContext = std::make_shared<RoutingOperationalContext>();
+    m_changeContext = std::make_shared<RoutingModuleChangesContext>();
 }
 
 /**
@@ -61,7 +61,7 @@ std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks()
         },
         srpc::ModuleChangeCallback {
             .Module = "ietf-routing",
-            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv4-unicast-routing:ipv4/route/destination-prefix.",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv4-unicast-routing:ipv4/route/destination-prefix",
             .Callback = ietf::rt::sub::change::V4RouteDestinationPrefixModuleChangeCb(m_changeContext),
         },
     };
