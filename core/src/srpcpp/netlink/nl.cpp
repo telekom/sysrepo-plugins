@@ -78,6 +78,15 @@ NlContext::NlContext()
 }
 
 /**
+ * @brief Returns the singleton instance.
+ */
+NlContext& NlContext::getInstance()
+{
+    static NlContext ctx;
+    return ctx;
+}
+
+/**
  * @brief Refill each cache.
  */
 void NlContext::refillCache(void)
