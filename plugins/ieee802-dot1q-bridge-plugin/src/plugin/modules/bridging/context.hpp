@@ -7,22 +7,22 @@
  * Operational context for the interfaces module.
  */
 class BridgingOperationalContext : public srpc::IModuleContext {
-public:
-    NlContext& getNetlinkContext() { return m_nlContext; }
+// public:
+//     NlContext& getNetlinkContext() { return m_nlContext; }
 
-private:
-    NlContext m_nlContext;
+// private:
+//     NlContext m_nlContext;
 };
 
 /**
  * Module changes context for the interfaces module.
  */
 class BridgingModuleChangesContext : public srpc::IModuleContext {
-public:
-    NlContext& getNetlinkContext() { return m_nlContext; }
+// public:
+//     NlContext& getNetlinkContext() { return m_nlContext; }
 
-private:
-    NlContext m_nlContext;
+// private:
+//     NlContext m_nlContext;
 };
 
 /**

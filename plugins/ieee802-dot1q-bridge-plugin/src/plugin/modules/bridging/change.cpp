@@ -36,7 +36,7 @@ namespace sub::change {
         sr::ErrorCode error = sr::ErrorCode::Ok;
 
         // get the Netlink context
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
 
         switch (event) {
         case sysrepo::Event::Change: {
@@ -127,7 +127,7 @@ namespace sub::change {
             for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/address")) {
 
                 // get the Netlink context
-                auto& nl_ctx = m_ctx->getNetlinkContext();
+                auto& nl_ctx = NlContext::getInstance();
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created:
@@ -475,7 +475,7 @@ namespace sub::change {
 
                 std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
 
-                auto& nl_ctx = m_ctx->getNetlinkContext();
+                auto& nl_ctx = NlContext::getInstance();
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created:
@@ -672,7 +672,7 @@ namespace sub::change {
 
                 std::unordered_map<std::string, std::string> filtering_entry = NlContext::getKeyValFromXpath("filtering-entry", change.node.path());
 
-                auto& nl_ctx = m_ctx->getNetlinkContext();
+                auto& nl_ctx = NlContext::getInstance();
                 // first check if this port-ref exists
                 // depricated method
                 std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
@@ -1441,7 +1441,7 @@ namespace sub::change {
 
                 const auto& port_ref = std::get<uint32_t>(value);
 
-                auto& nl_ctx = m_ctx->getNetlinkContext();
+                auto& nl_ctx = NlContext::getInstance();
 
                 nl_ctx.refillCache();
 
@@ -1740,7 +1740,7 @@ namespace sub::change {
                 case sysrepo::ChangeOperation::Modified: {
 
                     // here we have to modify <vlan-transmitted>
-                    auto& nl_ctx = m_ctx->getNetlinkContext();
+                    auto& nl_ctx = NlContext::getInstance();
                     nl_ctx.refillCache();
 
                     std::string value = change.node.asTerm().valueStr().data();
@@ -3760,7 +3760,7 @@ namespace sub::change {
 
                 const std::string bridge_val = change.node.asTerm().valueStr().data();
                 // get the netlink context
-                NlContext& nl_ctx = m_ctx->getNetlinkContext();
+                NlContext& nl_ctx = NlContext::getInstance();
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created:
