@@ -16,11 +16,11 @@ project(sysrepo-plugins)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
-option(BUILD_SYSTEM_PLUGIN "Build the ietf-system-plugin" ON)
-option(BUILD_INTERFACES_PLUGIN "Build the ietf-interfaces-plugin" ON)
-option(BUILD_ROUTING_PLUGIN "Build the ietf-routing-plugin" ON)
+option(BUILD_SYSTEM_PLUGIN "Build the ietf-system-plugin" OFF)
+option(BUILD_INTERFACES_PLUGIN "Build the ietf-interfaces-plugin" OFF)
+option(BUILD_ROUTING_PLUGIN "Build the ietf-routing-plugin" OFF)
 option(BUILD_BRIDGING_PLUGIN "Build the ieee802-dot1q-bridge-plugin" ON)
-option(BUILD_ACL_PLUGIN "Build the ietf-access-control-list-plugin" ON)
+option(BUILD_ACL_PLUGIN "Build the ietf-access-control-list-plugin" OFF)
 
 # build core first
 add_subdirectory(core)

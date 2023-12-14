@@ -62,7 +62,7 @@ namespace sub::oper {
 
         std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", output->path());
 
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
         nl_ctx.refillCache();
 
         // find the bridge
@@ -140,7 +140,7 @@ namespace sub::oper {
         sr::ErrorCode error = sr::ErrorCode::Ok;
         std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", output->path());
 
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
         nl_ctx.refillCache();
 
         // find the bridge
@@ -3849,7 +3849,7 @@ namespace sub::oper {
         sr::ErrorCode error = sr::ErrorCode::Ok;
 
         // first obtain the vids
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
         nl_ctx.refillCache();
 
         // get bridge name
@@ -4179,7 +4179,7 @@ namespace sub::oper {
     sr::ErrorCode BridgeOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
-        auto& nl_ctx = m_ctx->getNetlinkContext();
+        auto& nl_ctx = NlContext::getInstance();
 
         std::vector<BridgeRef> bridges = nl_ctx.getBridgeInterfaces();
 
