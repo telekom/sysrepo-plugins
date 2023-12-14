@@ -705,6 +705,67 @@ std::vector<BridgeVlanID> BridgeSlaveRef::getVlanList()
     return vids;
 }
 
+std::array<std::string,2> BridgeRef::parseVlanIDSToString(std::vector<BridgeVlanID> vlans)
+{
+
+    if (vlans.empty()) {
+        return {};
+        // return empty vector
+    };
+
+    // lambda for parsing
+    auto to_string = [](std::vector<BridgeVlanID> vlanids) {
+        std::string result = std::to_string(vlanids[0].getVid()); // Start with the first number
+        int count = 0;
+
+        for (int i = 1; i < vlanids.size(); ++i) {
+            if (vlanids[i].getVid() == vlanids[i - 1].getVid() + 1) {
+                count++;
+            } else {
+                if (count >= 2) {
+                    result += "-" + std::to_string(vlanids[i - 1].getVid());
+                } else if (count == 1) {
+                    result += "," + std::to_string(vlanids[i - 1].getVid());
+                }
+                result += "," + std::to_string(vlanids[i].getVid());
+                count = 0;
+            }
+        }
+
+        if (count >= 2) {
+            result += "-" + std::to_string(vlanids.back().getVid());
+        } else if (count == 1) {
+            result += "," + std::to_string(vlanids.back().getVid());
+        }
+
+        return result;
+    };
+
+    // split them by tagged/untagged to get consistant data
+    std::vector<BridgeVlanID> tagged;
+    std::vector<BridgeVlanID> untagged;
+    std::array<std::string,2> return_strings;
+
+    for (auto&& vlan : vlans) {
+        if (vlan.getUntaggedFlag()) {
+            untagged.push_back(vlan);
+        } else {
+            tagged.push_back(vlan);
+        }
+    }
+
+    // sort them
+    // they have < overloaded
+    std::sort(tagged.begin(), tagged.end());
+    std::sort(untagged.begin(), untagged.end());
+
+
+    return_strings.at(0) = to_string(tagged);
+    return_strings.at(1) = to_string(untagged);
+
+    return return_strings;
+};
+
 // BridgeVid helper class
 
 BridgeVlanID::BridgeVlanID(uint16_t vid, uint16_t flags)
@@ -725,3 +786,9 @@ uint16_t BridgeVlanID::getVid()
 {
     return this->vlan_id;
 }
+
+// overload  < for custom sorting classes
+bool BridgeVlanID::operator<(const BridgeVlanID& other) const
+{
+    return this->vlan_id < other.vlan_id;
+};

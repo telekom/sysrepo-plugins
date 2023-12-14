@@ -13,6 +13,13 @@
 namespace sr = sysrepo;
 
 /**
+ * @brief Initial system data fill.
+ *
+ * @param session Plugin session.
+ */
+inline void fillInitialDatastoreFromSystem(sysrepo::Session& session);
+
+/**
  * @brief Plugin init callback.
  *
  * @param session Plugin session.
@@ -35,6 +42,9 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     registry.registerModule<BridgingModule>(*ctx);
 
     auto& modules = registry.getRegisteredModules();
+
+    //fill initial ds from system
+    fillInitialDatastoreFromSystem(sess);
 
     // for all registered modules - apply startup datastore values
     // startup datastore values are coppied into the running datastore when the first connection with sysrepo is made
@@ -92,4 +102,36 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
     delete ctx;
 
     SRPLG_LOG_INF(plugin_name, "Plugin cleanup finished");
+}
+
+inline void fillInitialDatastoreFromSystem(sysrepo::Session& session){
+  // fill system data here
+  auto& nl_ctx = NlContext::getInstance();
+  
+  //lets go hierarchicly, first fill bridges, then go to lower levels
+  for (auto &&bridge : nl_ctx.getBridgeInterfaces())
+  {
+    std::string format_addr = bridge.getMacAddr();
+    std::replace(format_addr.begin(), format_addr.end(),':','-');
+    std::string bridge_name = bridge.getName();
+
+    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/bridge-type","customer-vlan-bridge");
+    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/address",format_addr);
+    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/component[name='"+bridge_name+"']/type","c-vlan-component");
+    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/component[name='"+bridge_name+"']/address",format_addr);
+    
+    auto slave_interfaces = bridge.getSlaveInterfaces();
+
+    if(!slave_interfaces.empty()){
+        //we have slave interfaces so we will fill the vlan registration entry
+
+        for (auto &&slave : slave_interfaces)
+        {
+            
+        }
+        
+    }
+  }
+  
+    session.applyChanges();
 }
