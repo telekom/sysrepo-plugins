@@ -3867,15 +3867,6 @@ namespace sub::oper {
         for (auto&& i : br_slave_ifs) {
 
             auto vlan_list = i.getVlanList();
-
-            //delete here
-            //parser tested, working fine
-            // auto tst = BridgeRef::parseVlanIDSToString(vlan_list);
-
-            // std::cout<<"Tagged"<<tst[0]<<std::endl;
-            // std::cout<<"UNTagged"<<tst[1]<<std::endl;
-            //delete here
-
             for (auto&& vlan : vlan_list) {
 
                 std::string untagged_egress = vlan.getUntaggedFlag() ? "untagged-ports" : "egress-ports";
