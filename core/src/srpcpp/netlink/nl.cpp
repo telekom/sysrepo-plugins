@@ -248,19 +248,21 @@ void NlContext::createInterface(std::string name, std::string type, bool enabled
  */
 void NlContext::deleteInterface(const std::string& name)
 {
-    struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
 
-    while (iter != nullptr) {
-        const char* link_name = rtnl_link_get_name(iter);
+    struct rtnl_link* bridge = NULL;
+    int err = 0;
 
-        if (name == std::string(link_name)) {
-            int error = rtnl_link_delete(m_sock.get(), iter);
-            error < 0 ? throw std::runtime_error(nl_geterror(error)) : NULL;
-            break;
-        }
+    err = rtnl_link_get_kernel(m_sock.get(), 0, name.c_str(), &bridge);
 
-        iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
-    };
+    if (err < 0) {
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    err = rtnl_link_delete(m_sock.get(), bridge);
+
+    if (err < 0) {
+        throw std::runtime_error(nl_geterror(err));
+    }
 }
 
 void NlContext::createBridgeInterface(std::string name, std::string address)

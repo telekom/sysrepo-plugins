@@ -46,29 +46,27 @@ namespace sub::change {
                 const auto& name_value = std::get<std::string>(value);
 
                 // before creating check if component exists, and/or are the same values
-                const auto& component_node = session.getData("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/component/name");
+                // const auto& component_node = session.getData("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/component/name");
 
-                if (component_node.has_value()) {
-                    // if it has value check if it is the same, otherwise just continue
+                // if (component_node.has_value()) {
+                //     // if it has value check if it is the same, otherwise just continue
 
-                    const std::string& comp_name_node = component_node->findXPath("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/component/name['" + name_value + "']").begin()->asTerm().valueStr().data();
-
-                    if (comp_name_node.compare(name_value) != 0) {
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent values for bridge/name and component/name");
-                        return sr::ErrorCode::CallbackFailed;
-                    }
-                }
+                //     const std::string& comp_name_node = component_node->findXPath("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/component/name['" + name_value + "']").begin()->asTerm().valueStr().data();
+                //     std::cout << "TEST::: " << comp_name_node << std::endl;
+                //     if (comp_name_node.compare(name_value) != 0) {
+                //         SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent values for bridge/name and component/name");
+                //         return sr::ErrorCode::CallbackFailed;
+                //     }
+                // }
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created: {
+                    // get address node
+                    auto ds_addr = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/address");
 
                     try {
-
                         nl_ctx.refillCache();
-                        // get address node
-                        auto ds_addr = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge/address");
                         nl_ctx.createBridgeInterface(name_value, ds_addr.asTerm().valueStr().data());
-
                     } catch (std::exception& e) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to create Bridge %s! reason: %s", name_value.c_str(), e.what());
                         error = sr::ErrorCode::CallbackFailed;
@@ -78,7 +76,12 @@ namespace sub::change {
                 }
                 case sysrepo::ChangeOperation::Deleted:
                     // delete the bridge interface
-                    nl_ctx.deleteInterface(name_value.data());
+                    try {
+                        nl_ctx.deleteInterface(name_value.data());
+                    } catch (std::runtime_error& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Error deleting bridge, reason: %s", e.what());
+                    }
+
                     break;
                 default:
                     break;
@@ -239,8 +242,10 @@ namespace sub::change {
 
                 // get bridge name (key) value
                 std::string bridge_name;
+
                 try {
-                    bridge_name = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge/name").asTerm().valueStr().data();
+                    // bridge_name = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/name").asTerm().valueStr().data();
+                    bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path().data())["name"];
                 } catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot get bridge name node, reason: %s", e.what());
                 }
@@ -249,12 +254,6 @@ namespace sub::change {
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created:
-                    // checks if component name is the same with the bridge name
-                    if (value.compare(bridge_name) != 0) {
-                        // bridge name and component name are different
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent value for bridge/name and component/name");
-                        error = sr::ErrorCode::CallbackFailed;
-                    }
                     break;
                 case sysrepo::ChangeOperation::Modified:
                     break;
@@ -370,26 +369,28 @@ namespace sub::change {
             for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/address")) {
 
                 // get bridge name (key) value
-                std::string bridge_address;
-                try {
-                    bridge_address = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge/address").asTerm().valueStr().data();
-                } catch (std::exception& e) {
-                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot get bridge name node, reason: %s", e.what());
-                }
-
                 const std::string& value = change.node.asTerm().valueStr().data();
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created:
-                case sysrepo::ChangeOperation::Modified:
-                    // checks if component addr is the same with the bridge addr
-                    if (value.compare(bridge_address) != 0) {
-                        // bridge address and component address are different
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent value for bridge/address and component/address");
-                        error = sr::ErrorCode::CallbackFailed;
-                    }
+                case sysrepo::ChangeOperation::Modified: {
 
-                    break;
+                    // std::string bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path().data())["name"];
+                    // std::string bridge_address;
+                    // try {
+                    //     bridge_address = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/address").asTerm().valueStr().data();
+                    // } catch (std::exception& e) {
+                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot get bridge name node, reason: %s", e.what());
+                    // }
+                    // // checks if component addr is the same with the bridge addr
+                    // if (value.compare(bridge_address) != 0) {
+                    //     // bridge address and component address are different
+                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent value for bridge/address and component/address");
+                    //     error = sr::ErrorCode::CallbackFailed;
+                    // }
+                }
+
+                break;
                 case sysrepo::ChangeOperation::Deleted:
                     break;
                 default:
