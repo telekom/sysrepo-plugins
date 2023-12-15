@@ -705,16 +705,16 @@ std::vector<BridgeVlanID> BridgeSlaveRef::getVlanList()
     return vids;
 }
 
-std::array<std::string,2> BridgeRef::parseVlanIDSToString(std::vector<BridgeVlanID> vlans)
+std::unordered_map<BridgeRef::BridgeVidParse, std::string> BridgeRef::parseVlanIDSToString(std::vector<BridgeVlanID> vlans)
 {
 
     if (vlans.empty()) {
-        return {};
         // return empty vector
+        return {};
     };
 
     // lambda for parsing
-    auto to_string = [](std::vector<BridgeVlanID> vlanids) {
+    auto to_string = [&](std::vector<BridgeVlanID> vlanids) {
         std::string result = std::to_string(vlanids[0].getVid()); // Start with the first number
         int count = 0;
 
@@ -744,7 +744,7 @@ std::array<std::string,2> BridgeRef::parseVlanIDSToString(std::vector<BridgeVlan
     // split them by tagged/untagged to get consistant data
     std::vector<BridgeVlanID> tagged;
     std::vector<BridgeVlanID> untagged;
-    std::array<std::string,2> return_strings;
+    std::unordered_map<BridgeVidParse, std::string> return_strings;
 
     for (auto&& vlan : vlans) {
         if (vlan.getUntaggedFlag()) {
@@ -759,9 +759,10 @@ std::array<std::string,2> BridgeRef::parseVlanIDSToString(std::vector<BridgeVlan
     std::sort(tagged.begin(), tagged.end());
     std::sort(untagged.begin(), untagged.end());
 
-
-    return_strings.at(0) = to_string(tagged);
-    return_strings.at(1) = to_string(untagged);
+    if (!tagged.empty())
+        return_strings[TAGGED] = to_string(tagged);
+    if (!untagged.empty())
+        return_strings[UNTAGGED] = to_string(untagged);
 
     return return_strings;
 };

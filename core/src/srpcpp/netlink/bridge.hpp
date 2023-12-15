@@ -37,7 +37,7 @@ public:
 
     uint16_t getVid();
 
-    //overload < operator for custom sorting
+    // overload < operator for custom sorting
     bool operator<(const BridgeVlanID& other) const;
 };
 
@@ -100,10 +100,15 @@ public:
     friend class NlContext;
     friend class BridgeSlaveRef;
 
+    enum BridgeVidParse {
+        UNTAGGED = false,
+        TAGGED = true
+    };
+
     static std::vector<uint16_t> parseStringToVlanIDS(const std::string& vlan_str);
 
-    //fixed size with 2, at pos 0 is tagged, at pos 1 is untagged
-    static std::array<std::string,2> parseVlanIDSToString(std::vector<BridgeVlanID> vlans);
+    // fixed size with 2, at pos 0 is tagged, at pos 1 is untagged
+    static std::unordered_map<BridgeVidParse, std::string> parseVlanIDSToString(std::vector<BridgeVlanID> vlans);
 
     std::string getName(void);
 

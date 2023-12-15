@@ -5,6 +5,8 @@
 #include <sysrepo-cpp/utils/utils.hpp>
 
 #include <srpcpp.hpp>
+#include <array>
+#include <string>
 
 #include "plugin/modules/bridging.hpp"
 
@@ -43,7 +45,8 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 
     auto& modules = registry.getRegisteredModules();
 
-    //fill initial ds from system
+    // fill initial ds from system
+    //first check if datastore is empty
     fillInitialDatastoreFromSystem(sess);
 
     // for all registered modules - apply startup datastore values
@@ -104,34 +107,44 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
     SRPLG_LOG_INF(plugin_name, "Plugin cleanup finished");
 }
 
-inline void fillInitialDatastoreFromSystem(sysrepo::Session& session){
-  // fill system data here
-  auto& nl_ctx = NlContext::getInstance();
-  
-  //lets go hierarchicly, first fill bridges, then go to lower levels
-  for (auto &&bridge : nl_ctx.getBridgeInterfaces())
-  {
-    std::string format_addr = bridge.getMacAddr();
-    std::replace(format_addr.begin(), format_addr.end(),':','-');
-    std::string bridge_name = bridge.getName();
+inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
+{
+    // fill system data here
+    auto& nl_ctx = NlContext::getInstance();
 
-    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/bridge-type","customer-vlan-bridge");
-    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/address",format_addr);
-    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/component[name='"+bridge_name+"']/type","c-vlan-component");
-    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/component[name='"+bridge_name+"']/address",format_addr);
-    
-    auto slave_interfaces = bridge.getSlaveInterfaces();
+    // lets go hierarchicly, first fill bridges, then go to lower levels
+    for (auto&& bridge : nl_ctx.getBridgeInterfaces()) {
+        std::string format_addr = bridge.getMacAddr();
+        std::replace(format_addr.begin(), format_addr.end(), ':', '-');
+        std::string bridge_name = bridge.getName();
 
-    if(!slave_interfaces.empty()){
-        //we have slave interfaces so we will fill the vlan registration entry
+        session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/bridge-type", "customer-vlan-bridge");
+        session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/address", format_addr);
+        session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/type", "c-vlan-component");
+        session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/address", format_addr);
 
-        for (auto &&slave : slave_interfaces)
-        {
-            
+        auto slave_interfaces = bridge.getSlaveInterfaces();
+
+        if (!slave_interfaces.empty()) {
+            // we have slave interfaces so we will fill the vlan registration entry
+
+            for (auto&& slave : slave_interfaces) {
+                const auto& vlans = slave.getVlanList();
+                auto vlan_map = BridgeRef::parseVlanIDSToString(vlans);
+
+                std::string tagged = vlan_map[BridgeRef::BridgeVidParse::TAGGED];
+                std::string untagged = vlan_map[BridgeRef::BridgeVidParse::UNTAGGED];
+
+                if (!tagged.empty()) {
+                    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/filtering-database/vlan-registration-entry[vids='" + tagged + "'][database-id='0']/port-map[port-ref='" + std::to_string(slave.getIfindex()) + "']/static-vlan-registration-entries/vlan-transmitted", "tagged");
+                }
+
+                if (!untagged.empty()) {
+                    session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/filtering-database/vlan-registration-entry[vids='" + untagged + "'][database-id='0']/port-map[port-ref='" + std::to_string(slave.getIfindex()) + "']/static-vlan-registration-entries/vlan-transmitted", "untagged");
+                }
+            }
         }
-        
     }
-  }
-  
+
     session.applyChanges();
 }
