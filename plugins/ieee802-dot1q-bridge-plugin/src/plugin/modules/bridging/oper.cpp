@@ -2197,6 +2197,23 @@ namespace sub::oper {
     sr::ErrorCode BridgeComponentFilteringDatabaseOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        std::string bridge_name = NlContext::getKeyValFromXpath("bridge",output->path())["name"];
+        
+        auto &nl_ctx = NlContext::getInstance();
+
+        nl_ctx.refillCache();
+
+        auto bridge = nl_ctx.getBridgeByName(bridge_name);
+
+        if(!bridge){
+            return sr::ErrorCode::NotFound;
+        }
+
+        uint32_t ageing_time = bridge->getAgeingTime();
+        
+        output->newPath("filtering-database/aging-time",std::to_string(ageing_time));
+
         return error;
     }
 
