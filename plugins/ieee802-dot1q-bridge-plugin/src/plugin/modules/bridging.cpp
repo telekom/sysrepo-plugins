@@ -66,8 +66,13 @@ std::list<srpc::OperationalCallback> BridgingModule::getOperationalCallbacks()
             "ieee802-dot1q-bridge",
             "/ieee802-dot1q-bridge:bridges/bridge/component/bridge-vlan",
             ieee::br::sub::oper::BridgeComponentBridgeVlanOperGetCb(this->m_operContext)
+        },
+        srpc::OperationalCallback {
+            "ieee802-dot1q-bridge",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database",
+            ieee::br::sub::oper::BridgeComponentFilteringDatabaseOperGetCb(this->m_operContext)
         }
-       
+
     };
 }
 
@@ -124,11 +129,9 @@ std::list<srpc::ModuleChangeCallback> BridgingModule::getModuleChangeCallbacks()
             ieee::br::sub::change::BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapStaticVlanRegistrationEntriesVlanTransmittedModuleChangeCb(this->m_changeContext),
         },
 
-        
-
         srpc::ModuleChangeCallback {
             "ieee802-dot1q-bridge",
-            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/aging-time",
+            "/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database",
             ieee::br::sub::change::BridgeComponentFilteringDatabaseAgingTimeModuleChangeCb(this->m_changeContext),
         },
 

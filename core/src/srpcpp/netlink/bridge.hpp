@@ -60,6 +60,8 @@ public:
     // [TODO] remove all at once
     void removeAllVlanIDS();
 
+    void getFilteringVids();
+
     void addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address);
 
     void removeAddressFromVids(const std::vector<uint16_t>& vlan_ids, const std::string& address);
@@ -131,6 +133,8 @@ public:
     void setMacAddr(std::string address);
 
     void setAgeingTime(uint32_t ageingTime);
+
+    uint32_t getAgeingTime();
 
 private:
     enum BridgeOperation {
