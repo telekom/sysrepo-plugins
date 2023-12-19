@@ -304,6 +304,7 @@ uint32_t BridgeRef::getAgeingTime()
 
     // send RTM_GETLINK message for the bridge
     error = rtnl_link_build_get_request(if_index, name, &msg);
+
     if (error) {
         clean();
         throw std::runtime_error("rtnl_link_build_get_request() failed!");
@@ -571,27 +572,113 @@ void BridgeSlaveRef::removeAllVlanIDS()
 
 void BridgeSlaveRef::getFilteringVids()
 {
-    nl_sock* socket = m_socket.get();
-    nl_cache* neigh_cache = NULL;
+
+    nl_sock* socket = nl_socket_alloc();
+
+    nl_connect(socket, NETLINK_ROUTE);
+    nl_addr* link_adr = NULL;
+    char link_addr[40] = { 0 };
     int err = 0;
 
     int slave_ifindex = rtnl_link_get_ifindex(m_link.get());
 
-    err = rtnl_neigh_alloc_cache(socket, &neigh_cache);
+    link_adr = rtnl_link_get_addr(m_link.get());
 
-    rtnl_neigh* iter = (rtnl_neigh*)nl_cache_get_first(neigh_cache);
+    nl_addr2str(link_adr, link_addr, sizeof(link_addr));
 
-    // std::cout << "START" << std::endl;
-    // while (iter) {
+    std::cout << "IFINDEX " << slave_ifindex << " ADDR: " << link_addr << std::endl;
 
-    //     if (slave_ifindex == rtnl_neigh_get_ifindex(iter)) {
-    //         std::cout << "NEIGH: " << rtnl_neigh_get_type(iter) << std::endl;
-    //     }
+    // here
 
-    //     iter = (rtnl_neigh*)nl_cache_get_next((nl_object*)iter);
-    // };
+    struct nl_msg* msg = NULL;
+    unsigned char* msg_buf = NULL;
+    int error = 0;
+    int len = 0;
+    struct sockaddr_nl nla = { 0 };
+    nlmsghdr* hdr = NULL;
+    ndmsg neigh_msg = { 0 };
 
-    nl_cache_put(neigh_cache);
+    auto clean = [&]() {
+        if (msg)
+            nlmsg_free(msg);
+    };
+
+    // send RTM_GETLINK message for the bridge
+
+    msg = nlmsg_alloc_simple(RTM_GETNEIGH, NLM_F_ACK | NLM_F_DUMP);
+
+    neigh_msg = {
+        .ndm_family = AF_BRIDGE,
+        .ndm_ifindex = slave_ifindex,
+        .ndm_type = RTM_NEWNEIGH
+    };
+
+    nlmsg_append(msg, &neigh_msg, sizeof(neigh_msg), nlmsg_padlen(sizeof(neigh_msg)));
+
+    if (!msg) {
+        clean();
+        throw std::runtime_error("nlmsg_alloc_simple() failed!");
+    }
+
+    len = nl_send_auto(socket, msg);
+    if (len < 0) {
+        clean();
+        throw std::runtime_error("getAgeingTime(), nl_send_auto() failed!");
+    }
+
+    // wait for kernel response and ack
+    len = nl_recv(socket, &nla, &msg_buf, NULL);
+    if (len <= 0) {
+        clean();
+        throw std::runtime_error("getAgeingTime(), nl_recv() failed!");
+    }
+
+    // validate message type
+    hdr = (struct nlmsghdr*)msg_buf;
+    if (hdr->nlmsg_type != RTM_NEWNEIGH) {
+        clean();
+        throw std::runtime_error("getAgeingTime(), header validation failed!");
+    }
+
+
+    // int proto_header_len = sizeof(struct ndmsg);
+
+    // nlattr* ifla_linkinfo = nlmsg_find_attr(hdr, proto_header_len, NDA_LLADDR);
+
+    // if (ifla_linkinfo == NULL) {
+    //     clean();
+    //     throw std::runtime_error("getAgeingTime(),IFLA_LINKINFO not found!");
+    // }
+
+    // struct nlattr* ifla_info_data = nla_find((nlattr*)nla_data(ifla_linkinfo), nla_len(ifla_linkinfo), NDA_VLAN);
+    // if (ifla_info_data == NULL) {
+    //     clean();
+    //     throw std::runtime_error("getAgeingTime(), IFLA_INFO_DATA not found!");
+    // }
+
+    int remaining = sizeof(ndmsg);
+
+    std::cout << "RECEIVED " << len << std::endl;
+
+    // while (nla_ok(ifla_linkinfo, remaining)) {
+
+    //     std::cout << "WHILE LPP " << nla_get_string(ifla_linkinfo) << std::endl;
+
+    //     nla_next(ifla_linkinfo, &remaining);
+    // }
+
+    // struct nlattr* ifla_info_data = nla_find((nlattr*)nla_data(ifla_linkinfo), nla_len(ifla_linkinfo), IFLA_INFO_DATA);
+    // if (ifla_info_data == NULL) {
+    //     clean();
+    //     throw std::runtime_error("getAgeingTime(), IFLA_INFO_DATA not found!");
+    // }
+    // struct nlattr* br_vlan_filtering = nla_find((nlattr*)nla_data(ifla_info_data), nla_len(ifla_info_data), IFLA_BR_AGEING_TIME);
+    // if (br_vlan_filtering == NULL) {
+    //     clean();
+    //     throw std::runtime_error("getAgeingTime(), IFLA_BR_AGEING_TIME not found!");
+    // }
+
+    clean();
 }
 
 void BridgeSlaveRef::addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address)
