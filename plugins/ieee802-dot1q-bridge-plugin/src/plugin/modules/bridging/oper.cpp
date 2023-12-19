@@ -3883,6 +3883,10 @@ namespace sub::oper {
 
         for (auto&& i : br_slave_ifs) {
 
+            //testcode
+           // i.getFilteringVids();
+            //testcode
+
             auto vlan_list = i.getVlanList();
             for (auto&& vlan : vlan_list) {
 

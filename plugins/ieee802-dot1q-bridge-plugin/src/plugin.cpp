@@ -46,8 +46,11 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     auto& modules = registry.getRegisteredModules();
 
     // fill initial ds from system
-    //first check if datastore is empty
-    fillInitialDatastoreFromSystem(sess);
+    // first check if datastore is empty
+
+    if (!sess.getData("/ieee802-dot1q-bridge:bridges")->child().has_value()) {
+        fillInitialDatastoreFromSystem(sess);
+    }
 
     // for all registered modules - apply startup datastore values
     // startup datastore values are coppied into the running datastore when the first connection with sysrepo is made
