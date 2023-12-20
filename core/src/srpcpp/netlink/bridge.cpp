@@ -570,40 +570,44 @@ void BridgeSlaveRef::removeAllVlanIDS()
     this->removeVlanIDS(vlan_list);
 }
 
-void BridgeSlaveRef::getFilteringVids()
+std::vector<BridgeFDBEntry> BridgeSlaveRef::getFilteringVids()
 {
 
-    nl_sock* socket = nl_socket_alloc();
-
-    nl_connect(socket, NETLINK_ROUTE);
+    nl_sock* socket = NULL;
     nl_addr* link_adr = NULL;
-    char link_addr[40] = { 0 };
-    int err = 0;
-
-    int slave_ifindex = rtnl_link_get_ifindex(m_link.get());
-
-    link_adr = rtnl_link_get_addr(m_link.get());
-
-    nl_addr2str(link_adr, link_addr, sizeof(link_addr));
-
-    std::cout << "IFINDEX " << slave_ifindex << " ADDR: " << link_addr << std::endl;
-
-    // here
-
-    struct nl_msg* msg = NULL;
+    nl_msg* msg = NULL;
+    int slave_ifindex = 0;
+    nlmsghdr* hdr = NULL;
+    sockaddr_nl nla = { 0 };
+    ndmsg neigh_msg = { 0 };
     unsigned char* msg_buf = NULL;
     int error = 0;
     int len = 0;
-    struct sockaddr_nl nla = { 0 };
-    nlmsghdr* hdr = NULL;
-    ndmsg neigh_msg = { 0 };
+    uint8_t mac[7] = { 0 };
+
+    std::vector<BridgeFDBEntry> entries;
 
     auto clean = [&]() {
         if (msg)
             nlmsg_free(msg);
+        if (socket)
+            nl_socket_free(socket);
     };
 
-    // send RTM_GETLINK message for the bridge
+    socket = nl_socket_alloc();
+
+    if (!socket) {
+        throw std::runtime_error("getFilteringVids() failed to alloc socket!");
+    }
+
+    error = nl_connect(socket, NETLINK_ROUTE);
+
+    if (error) {
+        clean();
+        throw std::runtime_error("getFilteringVids() failed to connect to socket!");
+    }
+
+    slave_ifindex = rtnl_link_get_ifindex(m_link.get());
 
     msg = nlmsg_alloc_simple(RTM_GETNEIGH, NLM_F_ACK | NLM_F_DUMP);
 
@@ -617,68 +621,83 @@ void BridgeSlaveRef::getFilteringVids()
 
     if (!msg) {
         clean();
-        throw std::runtime_error("nlmsg_alloc_simple() failed!");
+        throw std::runtime_error("getFilteringVids(), nlmsg_alloc_simple() failed!");
     }
 
     len = nl_send_auto(socket, msg);
     if (len < 0) {
         clean();
-        throw std::runtime_error("getAgeingTime(), nl_send_auto() failed!");
+        throw std::runtime_error("getFilteringVids(), nl_send_auto() failed!");
     }
 
-    // wait for kernel response and ack
     len = nl_recv(socket, &nla, &msg_buf, NULL);
     if (len <= 0) {
         clean();
-        throw std::runtime_error("getAgeingTime(), nl_recv() failed!");
+        throw std::runtime_error("getFilteringVids(), nl_recv() failed!");
     }
 
     // validate message type
     hdr = (struct nlmsghdr*)msg_buf;
     if (hdr->nlmsg_type != RTM_NEWNEIGH) {
         clean();
-        throw std::runtime_error("getAgeingTime(), header validation failed!");
+        throw std::runtime_error("getFilteringVids(), header validation failed!");
     }
 
+    int proto_header_len = sizeof(struct ndmsg);
 
-    // int proto_header_len = sizeof(struct ndmsg);
+    for (hdr = (nlmsghdr*)msg_buf; NLMSG_OK(hdr, len); hdr = NLMSG_NEXT(hdr, len)) {
 
-    // nlattr* ifla_linkinfo = nlmsg_find_attr(hdr, proto_header_len, NDA_LLADDR);
+        if (hdr->nlmsg_type == NLMSG_DONE)
+            break;
 
-    // if (ifla_linkinfo == NULL) {
-    //     clean();
-    //     throw std::runtime_error("getAgeingTime(),IFLA_LINKINFO not found!");
-    // }
+        if (hdr->nlmsg_type == NLMSG_ERROR) {
+            clean();
+            throw std::runtime_error("getFilteringVids(), NLMSG_ERROR!");
+        }
 
-    // struct nlattr* ifla_info_data = nla_find((nlattr*)nla_data(ifla_linkinfo), nla_len(ifla_linkinfo), NDA_VLAN);
-    // if (ifla_info_data == NULL) {
-    //     clean();
-    //     throw std::runtime_error("getAgeingTime(), IFLA_INFO_DATA not found!");
-    // }
+        // first get the ifindex from header
+        nlattr* hdr_ifindex = (nlattr*)nlmsg_data(hdr);
+        if (hdr_ifindex == NULL) {
+            clean();
+            throw std::runtime_error("getFilteringVids(), HDR_IFINDEX error!");
+        }
 
-    int remaining = sizeof(ndmsg);
+        int ifindex = nla_get_u16(hdr_ifindex);
+        if (ifindex != slave_ifindex) {
+            // ifindexes dont match, continue to next
+            continue;
+        }
 
-    std::cout << "RECEIVED " << len << std::endl;
+        struct nlattr* vlan = nlmsg_find_attr(hdr, proto_header_len, NDA_VLAN);
+        if (vlan == NULL) {
+            // there is no vlan found, so continue
+            continue;
+        }
 
-    // while (nla_ok(ifla_linkinfo, remaining)) {
+        struct nlattr* ifla_info_data = nlmsg_find_attr(hdr, proto_header_len, NDA_LLADDR);
+        if (ifla_info_data == NULL) {
+            clean();
+            throw std::runtime_error("getFilteringVids(), NDA_ADDR error!");
+        }
 
-    //     std::cout << "WHILE LPP " << nla_get_string(ifla_linkinfo) << std::endl;
+        const char* addr = nla_get_string(ifla_info_data);
+        int vlan_num = nla_get_u16(vlan);
 
-    //     nla_next(ifla_linkinfo, &remaining);
-    // }
+        // 48 bytes, 6 bytes mac addr
+        memcpy(mac, addr, 6);
 
-    // struct nlattr* ifla_info_data = nla_find((nlattr*)nla_data(ifla_linkinfo), nla_len(ifla_linkinfo), IFLA_INFO_DATA);
-    // if (ifla_info_data == NULL) {
-    //     clean();
-    //     throw std::runtime_error("getAgeingTime(), IFLA_INFO_DATA not found!");
-    // }
-    // struct nlattr* br_vlan_filtering = nla_find((nlattr*)nla_data(ifla_info_data), nla_len(ifla_info_data), IFLA_BR_AGEING_TIME);
-    // if (br_vlan_filtering == NULL) {
-    //     clean();
-    //     throw std::runtime_error("getAgeingTime(), IFLA_BR_AGEING_TIME not found!");
-    // }
+        std::array<uint8_t, 6> mac_addr_arr;
+
+        for (int i = 0; i < 6; i++) {
+            mac_addr_arr[i] = addr[i];
+        }
+
+        entries.push_back(BridgeFDBEntry(mac_addr_arr, vlan_num, ifindex));
+    }
 
     clean();
+
+    return entries;
 }
 
 void BridgeSlaveRef::addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address)
@@ -982,3 +1001,59 @@ bool BridgeVlanID::operator<(const BridgeVlanID& other) const
 {
     return this->vlan_id < other.vlan_id;
 };
+
+BridgeFDBEntry::BridgeFDBEntry(std::array<uint8_t, 6> mac, uint16_t vid, int ifindex)
+{
+    this->mac = mac;
+    this->vid = vid;
+    this->ifindex = ifindex;
+
+    // parse string mac on costruction
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (int i = 0; i < 6; ++i) {
+        oss << std::setw(2) << static_cast<int>(mac[i]);
+        if (i < 5) {
+            oss << ":";
+        }
+    }
+
+    this->mac_string = oss.str();
+}
+
+bool BridgeFDBEntry::isEqualTo(const BridgeFDBEntry& other) const
+{
+    // compare by the raw data, not the strings
+    for (int i = 0; i < mac.size(); i++) {
+        if (mac[i] != other.mac[i]) {
+            return false;
+        }
+    }
+
+    return other.ifindex == this->ifindex && other.vid == this->vid;
+}
+
+std::array<uint8_t, 6> BridgeFDBEntry::getRawMAC()
+{
+    return mac;
+}
+
+std::string BridgeFDBEntry::getStringMAC()
+{
+    return mac_string;
+}
+
+uint16_t BridgeFDBEntry::getVID()
+{
+    return vid;
+}
+
+int BridgeFDBEntry::getIfindex()
+{
+    return this->ifindex;
+}
+
+bool BridgeFDBEntry::operator==(const BridgeFDBEntry& other) const
+{
+    return isEqualTo(other);
+}
