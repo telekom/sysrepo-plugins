@@ -16,7 +16,36 @@
 #include <linux/if_arp.h>
 
 #include <map>
+#include <sstream>
+#include <iomanip>
 #include <iostream>
+
+// helper class for FilteredVid
+class BridgeFDBEntry {
+
+private:
+    friend class BridgeSlaveRef;
+
+    std::array<uint8_t, 6> mac;
+    uint16_t vid;
+    int ifindex;
+    std::string mac_string;
+
+    // private constructor
+    BridgeFDBEntry(std::array<uint8_t, 6> mac, uint16_t vid, int ifindex);
+
+public:
+    BridgeFDBEntry() = delete;
+
+    bool isEqualTo(const BridgeFDBEntry& other) const;
+
+    std::array<uint8_t, 6> getRawMAC();
+    std::string getStringMAC();
+    uint16_t getVID();
+    int getIfindex();
+
+    bool operator==(const BridgeFDBEntry& other) const;
+};
 
 // Helper class for the vlans
 class BridgeVlanID {
@@ -60,7 +89,7 @@ public:
     // [TODO] remove all at once
     void removeAllVlanIDS();
 
-    void getFilteringVids();
+    std::vector<BridgeFDBEntry> getFilteringVids();
 
     void addAddressToVids(const std::vector<uint16_t>& vlan_ids, const std::string& address);
 

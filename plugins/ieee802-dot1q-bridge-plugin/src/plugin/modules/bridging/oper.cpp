@@ -3884,7 +3884,13 @@ namespace sub::oper {
         for (auto&& i : br_slave_ifs) {
 
             //testcode
-           // i.getFilteringVids();
+            const auto& fdb = i.getFilteringVids();
+
+            for (auto il : fdb)
+            {
+                std::cout<<"MAC: "<<il.getStringMAC()<<" IF: "<<il.getIfindex()<<" VID: "<<il.getVID()<<std::endl;
+            }
+            
             //testcode
 
             auto vlan_list = i.getVlanList();
