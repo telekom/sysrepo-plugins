@@ -133,6 +133,8 @@ inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
 
             for (auto&& slave : slave_interfaces) {
                 const auto& vlans = slave.getVlanList();
+                const auto& fdb = slave.getFilteringVids();
+
                 auto vlan_map = BridgeRef::parseVlanIDSToString(vlans);
 
                 std::string tagged = vlan_map[BridgeRef::BridgeVidParse::TAGGED];
@@ -144,6 +146,29 @@ inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
 
                 if (!untagged.empty()) {
                     session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/filtering-database/vlan-registration-entry[vids='" + untagged + "'][database-id='0']/port-map[port-ref='" + std::to_string(slave.getIfindex()) + "']/static-vlan-registration-entries/vlan-transmitted", "untagged");
+                }
+
+                if (!fdb.empty()) {
+
+                    std::unordered_map<std::string, std::vector<uint16_t>> parsed_by_mac;
+
+                    // group them by mac addr
+                    for (auto i : fdb) {
+
+                        if (i.isFiltered()) {
+                            std::string formatted_mac_string = i.getStringMAC();
+                            std::replace(formatted_mac_string.begin(), formatted_mac_string.end(), ':', '-');
+                            parsed_by_mac[formatted_mac_string].push_back(i.getVID());
+                        }
+                    }
+
+                    for (auto&& fdb_mac_ftd : parsed_by_mac) {
+
+                        const auto& mac_string = fdb_mac_ftd.first;
+                        const auto& filtered_vids = BridgeRef::rawNumParser(fdb_mac_ftd.second);
+                        session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/filtering-database/filtering-entry[vids='" + filtered_vids + "'][database-id='0'][address='" + mac_string + "']/port-map[port-ref='" + std::to_string(slave.getIfindex()) + "']/static-filtering-entries/control-element", "forward");
+                        session.setItem("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/component[name='" + bridge_name + "']/filtering-database/filtering-entry[vids='" + filtered_vids + "'][database-id='0'][address='" + mac_string + "']/entry-type", "static");
+                    }
                 }
             }
         }
