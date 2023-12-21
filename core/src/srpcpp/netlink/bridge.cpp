@@ -572,7 +572,6 @@ void BridgeSlaveRef::removeAllVlanIDS()
 
 std::vector<BridgeFDBEntry> BridgeSlaveRef::getFilteringVids()
 {
-
     nl_sock* socket = NULL;
     nl_msg* msg = NULL;
     int slave_ifindex = 0;
@@ -688,7 +687,6 @@ std::vector<BridgeFDBEntry> BridgeSlaveRef::getFilteringVids()
 
         const char* addr = nla_get_string(ifla_info_data);
         int vlan_num = nla_get_u16(vlan);
-
         std::array<uint8_t, 6> mac_addr_arr;
 
         // 48 bytes, 6 bytes mac addr

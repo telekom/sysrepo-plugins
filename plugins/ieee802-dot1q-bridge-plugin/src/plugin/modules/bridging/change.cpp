@@ -482,7 +482,6 @@ namespace sub::change {
                 case sysrepo::ChangeOperation::Created:
                     break;
                 case sysrepo::ChangeOperation::Modified: {
-
                     auto bridge = nl_ctx.getBridgeByName(bridge_name);
 
                     if (!bridge) {
@@ -757,15 +756,26 @@ namespace sub::change {
                         }
                     }
 
-                    // if (keys.empty()) {
-                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot check if delete vids correspond to subset!");
-                    //     return sr::ErrorCode::OperationFailed;
-                    // }
+                    uint32_t delete_port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", keys)["port-ref"]);
+
+                    // now check if the port ref contains the vids
+                    auto delete_cb_slave = bridge_opt->getSlaveByIfindex(delete_port_ref);
+
+                    if (!delete_cb_slave.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Filtering entry slave does not exist! %d!", port_ref);
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    std::vector<uint16_t> deletion_vids;
+
+                    for (auto&& i : delete_cb_slave->getVlanList()) {
+                        deletion_vids.push_back(i.getVid());
+                    }
 
                     auto str_vids_create = NlContext::getKeyValFromXpath("filtering-entry", keys)["vids"];
                     auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);
                     // and now check if array is a subset
-                    if (!BridgeSlaveRef::isSubset(vids_from_upper, vec_str_vids_create)) {
+                    if (!BridgeSlaveRef::isSubset(deletion_vids, vec_str_vids_create)) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "Filtering entry vids are not subset of all vids on port-ref %d!", port_ref);
                         return sr::ErrorCode::CallbackFailed;
                     }

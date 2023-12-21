@@ -1567,6 +1567,7 @@ namespace sub::oper {
     sr::ErrorCode BridgeComponentFilteringDatabaseFilteringEntryOperGetCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
         return error;
     }
 
@@ -2213,6 +2214,43 @@ namespace sub::oper {
         uint32_t ageing_time = bridge->getAgeingTime();
 
         output->newPath("filtering-database/aging-time", std::to_string(ageing_time));
+
+        // handle the /filtering entry node
+
+        auto slave_interfaces = bridge->getSlaveInterfaces();
+
+        if (slave_interfaces.empty())
+            // no slave interfaces so return current node
+            return sr::ErrorCode::Ok;
+
+        for (auto&& slave : slave_interfaces) {
+            // loop over slaves and combine the logic
+            const auto& fdb = slave.getFilteringVids();
+            if (!fdb.empty()) {
+
+                std::unordered_map<std::string, std::vector<uint16_t>> parsed_by_mac;
+
+                // group them by mac addr
+                for (auto i : fdb) {
+
+                    if (i.isFiltered()) {
+                        std::string formatted_mac_string = i.getStringMAC();
+                        std::replace(formatted_mac_string.begin(), formatted_mac_string.end(), ':', '-');
+                        parsed_by_mac[formatted_mac_string].push_back(i.getVID());
+                    }
+                }
+
+                for (auto&& fdb_mac_ftd : parsed_by_mac) {
+
+                    const auto& mac_string = fdb_mac_ftd.first;
+                    const auto& filtered_vids = BridgeRef::rawNumParser(fdb_mac_ftd.second);
+
+                    output->newPath("filtering-database/filtering-entry[vids='" + filtered_vids + "'][database-id='0'][address='" + mac_string + "']/port-map[port-ref='" + std::to_string(slave.getIfindex()) + "']/static-filtering-entries/control-element", "forward");
+                    output->newPath("filtering-database/filtering-entry[vids='" + filtered_vids + "'][database-id='0'][address='" + mac_string + "']/entry-type", "static");
+                    
+                }
+            }
+        }
 
         return error;
     }
