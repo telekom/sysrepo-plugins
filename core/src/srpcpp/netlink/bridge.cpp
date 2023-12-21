@@ -574,16 +574,22 @@ std::vector<BridgeFDBEntry> BridgeSlaveRef::getFilteringVids()
 {
 
     nl_sock* socket = NULL;
-    nl_addr* link_adr = NULL;
     nl_msg* msg = NULL;
     int slave_ifindex = 0;
     nlmsghdr* hdr = NULL;
+    nl_addr* local_addr = NULL;
     sockaddr_nl nla = { 0 };
     ndmsg neigh_msg = { 0 };
     unsigned char* msg_buf = NULL;
     int error = 0;
     int len = 0;
-    uint8_t mac[7] = { 0 };
+    std::array<uint8_t, 6> slave_mac_addr;
+
+    // get the binary mac addr of the slave
+    local_addr = rtnl_link_get_addr(m_link.get());
+    const uint8_t* binary_addr = (uint8_t*)nl_addr_get_binary_addr(local_addr);
+    memcpy(slave_mac_addr.data(), binary_addr, 6);
+    nl_addr_put(local_addr);
 
     std::vector<BridgeFDBEntry> entries;
 
@@ -683,16 +689,12 @@ std::vector<BridgeFDBEntry> BridgeSlaveRef::getFilteringVids()
         const char* addr = nla_get_string(ifla_info_data);
         int vlan_num = nla_get_u16(vlan);
 
-        // 48 bytes, 6 bytes mac addr
-        memcpy(mac, addr, 6);
-
         std::array<uint8_t, 6> mac_addr_arr;
 
-        for (int i = 0; i < 6; i++) {
-            mac_addr_arr[i] = addr[i];
-        }
+        // 48 bytes, 6 bytes mac addr
+        memcpy(mac_addr_arr.data(), addr, 6);
 
-        entries.push_back(BridgeFDBEntry(mac_addr_arr, vlan_num, ifindex));
+        entries.push_back(BridgeFDBEntry(mac_addr_arr, slave_mac_addr, vlan_num, ifindex));
     }
 
     clean();
@@ -973,6 +975,35 @@ std::unordered_map<BridgeRef::BridgeVidParse, std::string> BridgeRef::parseVlanI
         return_strings[UNTAGGED] = to_string(untagged);
 
     return return_strings;
+}
+std::string BridgeRef::rawNumParser(std::vector<uint16_t> nums)
+{
+
+    std::sort(nums.begin(), nums.end());
+    std::string result = std::to_string(nums[0]); // Start with the first number
+    int count = 0;
+
+    for (int i = 1; i < nums.size(); ++i) {
+        if (nums[i] == nums[i - 1] + 1) {
+            count++;
+        } else {
+            if (count >= 2) {
+                result += "-" + std::to_string(nums[i - 1]);
+            } else if (count == 1) {
+                result += "," + std::to_string(nums[i - 1]);
+            }
+            result += "," + std::to_string(nums[i]);
+            count = 0;
+        }
+    }
+
+    if (count >= 2) {
+        result += "-" + std::to_string(nums.back());
+    } else if (count == 1) {
+        result += "," + std::to_string(nums.back());
+    }
+
+    return result;
 };
 
 // BridgeVid helper class
@@ -1002,11 +1033,12 @@ bool BridgeVlanID::operator<(const BridgeVlanID& other) const
     return this->vlan_id < other.vlan_id;
 };
 
-BridgeFDBEntry::BridgeFDBEntry(std::array<uint8_t, 6> mac, uint16_t vid, int ifindex)
+BridgeFDBEntry::BridgeFDBEntry(std::array<uint8_t, 6> mac, std::array<uint8_t, 6> slave_mac, uint16_t vid, int ifindex)
 {
     this->mac = mac;
     this->vid = vid;
     this->ifindex = ifindex;
+    this->slave_mac = slave_mac;
 
     // parse string mac on costruction
     std::ostringstream oss;
@@ -1051,6 +1083,13 @@ uint16_t BridgeFDBEntry::getVID()
 int BridgeFDBEntry::getIfindex()
 {
     return this->ifindex;
+}
+
+bool BridgeFDBEntry::isFiltered()
+{
+    // if the mac is the same as the slave_adddress,
+    // then this vid is filtered
+    return mac != slave_mac;
 }
 
 bool BridgeFDBEntry::operator==(const BridgeFDBEntry& other) const

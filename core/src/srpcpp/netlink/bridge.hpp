@@ -27,12 +27,13 @@ private:
     friend class BridgeSlaveRef;
 
     std::array<uint8_t, 6> mac;
+    std::array<uint8_t, 6> slave_mac;
     uint16_t vid;
     int ifindex;
     std::string mac_string;
 
     // private constructor
-    BridgeFDBEntry(std::array<uint8_t, 6> mac, uint16_t vid, int ifindex);
+    BridgeFDBEntry(std::array<uint8_t, 6> mac, std::array<uint8_t, 6> slave_mac, uint16_t vid, int ifindex);
 
 public:
     BridgeFDBEntry() = delete;
@@ -43,6 +44,7 @@ public:
     std::string getStringMAC();
     uint16_t getVID();
     int getIfindex();
+    bool isFiltered();
 
     bool operator==(const BridgeFDBEntry& other) const;
 };
@@ -140,6 +142,8 @@ public:
 
     // fixed size with 2, at pos 0 is tagged, at pos 1 is untagged
     static std::unordered_map<BridgeVidParse, std::string> parseVlanIDSToString(std::vector<BridgeVlanID> vlans);
+
+    static std::string rawNumParser(std::vector<uint16_t> nums);
 
     std::string getName(void);
 

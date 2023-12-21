@@ -2198,21 +2198,21 @@ namespace sub::oper {
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
 
-        std::string bridge_name = NlContext::getKeyValFromXpath("bridge",output->path())["name"];
-        
-        auto &nl_ctx = NlContext::getInstance();
+        std::string bridge_name = NlContext::getKeyValFromXpath("bridge", output->path())["name"];
+
+        auto& nl_ctx = NlContext::getInstance();
 
         nl_ctx.refillCache();
 
         auto bridge = nl_ctx.getBridgeByName(bridge_name);
 
-        if(!bridge){
+        if (!bridge) {
             return sr::ErrorCode::NotFound;
         }
 
         uint32_t ageing_time = bridge->getAgeingTime();
-        
-        output->newPath("filtering-database/aging-time",std::to_string(ageing_time));
+
+        output->newPath("filtering-database/aging-time", std::to_string(ageing_time));
 
         return error;
     }
@@ -3882,16 +3882,6 @@ namespace sub::oper {
         std::vector<BridgeSlaveRef> br_slave_ifs = bridge->getSlaveInterfaces();
 
         for (auto&& i : br_slave_ifs) {
-
-            //testcode
-            const auto& fdb = i.getFilteringVids();
-
-            for (auto il : fdb)
-            {
-                std::cout<<"MAC: "<<il.getStringMAC()<<" IF: "<<il.getIfindex()<<" VID: "<<il.getVID()<<std::endl;
-            }
-            
-            //testcode
 
             auto vlan_list = i.getVlanList();
             for (auto&& vlan : vlan_list) {
