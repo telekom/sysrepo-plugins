@@ -1,0 +1,9 @@
+<routing xmlns="urn:ietf:params:xml:ns:yang:ietf-routing">
+  <control-plane-protocols>
+      <control-plane-protocol>
+          <type xmlns:rt="urn:ietf:params:xml:ns:yang:ietf-routing">rt:direct</type>
+          <name>unspec</name>
+          <description>unspecified protocol</description>
+      </control-plane-protocol>
+  </control-plane-protocols>
+</routing>

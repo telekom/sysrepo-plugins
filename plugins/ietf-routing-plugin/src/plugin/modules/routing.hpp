@@ -7,6 +7,9 @@
 // module context
 #include "routing/context.hpp"
 
+// netlink context
+#include <srpcpp/netlink.hpp>
+
 /**
  * @brief Routing module.
  */

@@ -7,11 +7,6 @@
  * Operational context for the routing module.
  */
 class RoutingOperationalContext : public srpc::IModuleContext {
-public:
-    NlContext& getNetlinkContext() { return m_nlContext; }
-
-private:
-    NlContext m_nlContext;
 };
 
 /**

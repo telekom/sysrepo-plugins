@@ -1,5 +1,7 @@
 #include "routing.hpp"
 
+#include "plugin/modules/routing/change.hpp"
+#include "plugin/modules/routing/context.hpp"
 #include "routing/oper.hpp"
 
 /**
@@ -9,6 +11,7 @@ RoutingModule::RoutingModule(ietf::rt::PluginContext& plugin_ctx)
     : srpc::IModule<ietf::rt::PluginContext>(plugin_ctx)
 {
     m_operContext = std::make_shared<RoutingOperationalContext>();
+    m_changeContext = std::make_shared<RoutingModuleChangesContext>();
 }
 
 /**
@@ -48,7 +51,21 @@ std::list<srpc::OperationalCallback> RoutingModule::getOperationalCallbacks()
 /**
  * Get all module change callbacks which the module should use.
  */
-std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks() { return {}; }
+std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks()
+{
+    return {
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/description",
+            .Callback = ietf::rt::sub::change::ControlPlaneProtocolDescriptionModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv4-unicast-routing:ipv4/route/destination-prefix",
+            .Callback = ietf::rt::sub::change::V4RouteDestinationPrefixModuleChangeCb(m_changeContext),
+        },
+    };
+}
 
 /**
  * Get all RPC callbacks which the module should use.
