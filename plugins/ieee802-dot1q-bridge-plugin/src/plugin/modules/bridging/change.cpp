@@ -1,4 +1,8 @@
 #include "change.hpp"
+#include "common.hpp"
+#include <sysrepo-cpp/Enum.hpp>
+#include <sysrepo.h>
+#include <unordered_set>
 
 namespace ieee::br {
 namespace sub::change {
@@ -30,6 +34,65 @@ namespace sub::change {
     sr::ErrorCode BridgeNameModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        // get the Netlink context
+        auto& nl_ctx = NlContext::getInstance();
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/name")) {
+
+                const auto& value = change.node.asTerm().value();
+                const auto& name_value = std::get<std::string>(value);
+
+                // before creating check if component exists, and/or are the same values
+                // const auto& component_node = session.getData("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/component/name");
+
+                // if (component_node.has_value()) {
+                //     // if it has value check if it is the same, otherwise just continue
+
+                //     const std::string& comp_name_node = component_node->findXPath("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/component/name['" + name_value + "']").begin()->asTerm().valueStr().data();
+                //     std::cout << "TEST::: " << comp_name_node << std::endl;
+                //     if (comp_name_node.compare(name_value) != 0) {
+                //         SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent values for bridge/name and component/name");
+                //         return sr::ErrorCode::CallbackFailed;
+                //     }
+                // }
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created: {
+                    // get address node
+                    auto ds_addr = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='" + name_value + "']/address");
+
+                    try {
+                        nl_ctx.refillCache();
+                        nl_ctx.createBridgeInterface(name_value, ds_addr.asTerm().valueStr().data());
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to create Bridge %s! reason: %s", name_value.c_str(), e.what());
+                        error = sr::ErrorCode::CallbackFailed;
+                    };
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    // delete the bridge interface
+                    try {
+                        nl_ctx.deleteInterface(name_value.data());
+                    } catch (std::runtime_error& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Error deleting bridge, reason: %s", e.what());
+                    }
+
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
@@ -61,6 +124,54 @@ namespace sub::change {
     sr::ErrorCode BridgeAddressModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/address")) {
+
+                // get the Netlink context
+                auto& nl_ctx = NlContext::getInstance();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                    break;
+                case sysrepo::ChangeOperation::Modified: {
+
+                    // get bridge name (key) value
+                    std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                    const std::string addr_value = change.node.asTerm().valueStr().data();
+                    // refill netlink cache
+                    nl_ctx.refillCache();
+
+                    auto bridge = nl_ctx.getBridgeByName(bridge_name);
+
+                    if (!bridge.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot find bridge %s", bridge_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    try {
+                        bridge->setMacAddr(addr_value);
+                    } catch (std::runtime_error& e) {
+                        error = sr::ErrorCode::CallbackFailed;
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to modify MAC address %s on bridge %s! reason: %s", addr_value.c_str(), bridge_name.c_str(), e.what());
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
@@ -123,6 +234,41 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentNameModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/name")) {
+
+                // get bridge name (key) value
+                std::string bridge_name;
+
+                try {
+                    // bridge_name = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/name").asTerm().valueStr().data();
+                    bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path().data())["name"];
+                } catch (std::exception& e) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot get bridge name node, reason: %s", e.what());
+                }
+
+                const std::string& value = change.node.asTerm().valueStr().data();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                    break;
+                case sysrepo::ChangeOperation::Modified:
+                    break;
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
@@ -216,6 +362,48 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentAddressModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/address")) {
+
+                // get bridge name (key) value
+                const std::string& value = change.node.asTerm().valueStr().data();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    // std::string bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path().data())["name"];
+                    // std::string bridge_address;
+                    // try {
+                    //     bridge_address = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/address").asTerm().valueStr().data();
+                    // } catch (std::exception& e) {
+                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot get bridge name node, reason: %s", e.what());
+                    // }
+                    // // checks if component addr is the same with the bridge addr
+                    // if (value.compare(bridge_address) != 0) {
+                    //     // bridge address and component address are different
+                    //     SRPLG_LOG_ERR(getModuleLogPrefix(), "Diferent value for bridge/address and component/address");
+                    //     error = sr::ErrorCode::CallbackFailed;
+                    // }
+                }
+
+                break;
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -278,6 +466,46 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseAgingTimeModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/aging-time")) {
+
+                const uint32_t ageing_value = std::get<uint32_t>(change.node.asTerm().value());
+
+                std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                auto& nl_ctx = NlContext::getInstance();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                    break;
+                case sysrepo::ChangeOperation::Modified: {
+                    auto bridge = nl_ctx.getBridgeByName(bridge_name);
+
+                    if (!bridge) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s does not exist!", bridge_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    };
+                    bridge->setAgeingTime(ageing_value);
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    // not clear if there is default value
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -433,6 +661,144 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseFilteringEntryPortMapPortRefModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            sysrepo::ChangeCollection collection = session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/filtering-entry/port-map/port-ref");
+
+            for (sysrepo::Change change : collection) {
+
+                uint32_t port_ref = std::get<uint32_t>(change.node.asTerm().value());
+
+                std::unordered_map<std::string, std::string> filtering_entry = NlContext::getKeyValFromXpath("filtering-entry", change.node.path());
+
+                auto& nl_ctx = NlContext::getInstance();
+                // first check if this port-ref exists
+                // depricated method
+                std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+                if (!bridge_opt) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s not present!", bridge_name);
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                auto slave_opt = bridge_opt->getSlaveByIfindex(port_ref);
+
+                if (!slave_opt) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot set port-ref to %d !", port_ref);
+                    return sr::ErrorCode::CallbackFailed;
+                }
+                // bridge and slave ok, continue
+
+                std::string vids_str = filtering_entry["vids"];
+                std::string address = filtering_entry["address"];
+
+                std::vector<uint16_t> vids = BridgeRef::parseStringToVlanIDS(vids_str);
+
+                // check if the <filtering-entry> vids are a subset <vlan-registration-entry> vids
+                // nodes for <vlan-registration-entry> needed
+                auto set_vlan = session.getData("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry");
+
+                if (!set_vlan) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "<vlan-registration-entry> does not exist!");
+                    return sr::ErrorCode::OperationFailed;
+                }
+
+                auto vlans_set = set_vlan->findXPath("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/port-ref");
+
+                std::string vids_node_string;
+                for (libyang::DataNode node : vlans_set) {
+                    if (std::stoi(NlContext::getKeyValFromXpath("port-map", node.path())["port-ref"]) == port_ref) {
+                        if (!vids_node_string.empty()) {
+                            vids_node_string.push_back(',');
+                        }
+                        vids_node_string.append(NlContext::getKeyValFromXpath("vlan-registration-entry", node.path())["vids"]);
+                    };
+                }
+
+                std::vector<uint16_t> vids_from_upper = BridgeRef::parseStringToVlanIDS(vids_node_string);
+
+                // avoiding duplicates
+                std::unordered_set<uint16_t> set(vids_from_upper.begin(), vids_from_upper.end());
+                vids_from_upper.assign(set.begin(), set.end());
+
+                // and now check if array is a subset
+                if (!BridgeSlaveRef::isSubset(vids_from_upper, vids)) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Filtering entry vids are not subset of all vids on port-ref %d!", port_ref);
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    try {
+                        slave_opt->addAddressToVids(vids, address);
+                    } catch (std::runtime_error& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
+                        return sr::ErrorCode::OperationFailed;
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted: {
+
+                    // since first cb is delete, check if the create vids are subset of all vids on specific port ref
+
+                    std::string keys;
+
+                    for (sysrepo::Change change : collection) {
+                        if (change.operation == sysrepo::ChangeOperation::Created || change.operation == sysrepo::ChangeOperation::Modified) {
+                            keys = change.node.path();
+                            break;
+                        }
+                    }
+
+                    uint32_t delete_port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", keys)["port-ref"]);
+
+                    // now check if the port ref contains the vids
+                    auto delete_cb_slave = bridge_opt->getSlaveByIfindex(delete_port_ref);
+
+                    if (!delete_cb_slave.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Filtering entry slave does not exist! %d!", port_ref);
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    std::vector<uint16_t> deletion_vids;
+
+                    for (auto&& i : delete_cb_slave->getVlanList()) {
+                        deletion_vids.push_back(i.getVid());
+                    }
+
+                    auto str_vids_create = NlContext::getKeyValFromXpath("filtering-entry", keys)["vids"];
+                    auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);
+                    // and now check if array is a subset
+                    if (!BridgeSlaveRef::isSubset(deletion_vids, vec_str_vids_create)) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Filtering entry vids are not subset of all vids on port-ref %d!", port_ref);
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    try {
+                        slave_opt->removeAddressFromVids(vids, address);
+                    } catch (std::runtime_error& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
+                        return sr::ErrorCode::OperationFailed;
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
@@ -960,6 +1326,29 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseVlanRegistrationEntryDatabaseIdModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/database-id")) {
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                    break;
+                case sysrepo::ChangeOperation::Modified:
+                    break;
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -1053,6 +1442,151 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapPortRefModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/port-ref")) {
+
+                const auto& value = change.node.asTerm().value();
+
+                const auto& port_ref = std::get<uint32_t>(value);
+
+                auto& nl_ctx = NlContext::getInstance();
+
+                nl_ctx.refillCache();
+
+                std::string bridge_name = srpc::extractListKeyFromXPath("bridge", "name", change.node.path());
+
+                auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+                if (!bridge_opt.has_value()) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s does not exist!", bridge_name.c_str());
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                BridgeRef& bridge = bridge_opt.value();
+
+                std::map<int, std::string> slave_interfaces = bridge.getSlaveInterfacesIfindexName();
+
+                if (slave_interfaces.find(port_ref) == slave_interfaces.end()) {
+                    // port ref not found
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Port ref not found!");
+                    return sr::ErrorCode::CallbackFailed;
+                }
+                // all legit with existing port ref, continue with vids
+
+                auto slave_bridge_ref_opt = bridge.getSlaveByIfindex(port_ref);
+
+                if (!slave_bridge_ref_opt.has_value()) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge slave %s not found!", slave_interfaces.at(port_ref).c_str());
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    // get vids node and parse it
+                    // Deleted and Created vids node with previous values must be taken from the session changes.
+                    std::string vids_data;
+
+                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+
+                        switch (change.operation) {
+                        case sr::ChangeOperation::Created: {
+                            // vids node
+                            vids_data = change.node.asTerm().valueStr().data();
+                            break;
+                        }
+                        }
+                    }
+
+                    if (vids_data.empty()) {
+                        // SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                        // return sr::ErrorCode::CallbackFailed;
+
+                        // get data from datastore
+                        // since vids are keys, easy-parse
+
+                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                    }
+
+                    std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
+
+                    // //handle flags
+                    std::string path = change.node.parent()->path();
+
+                    // get the tagged/untagged flag
+                    path.append("/static-vlan-registration-entries/vlan-transmitted");
+
+                    const auto& flags_node = change.node.findPath(path);
+
+                    uint16_t flags = 0;
+
+                    if (flags_node.has_value()) {
+                        std::string vlan_flags = flags_node->asTerm().valueStr().data();
+
+                        if (vlan_flags.compare("untagged") == 0) {
+                            flags = BRIDGE_VLAN_INFO_UNTAGGED;
+                        }
+                    }
+
+                    // and finaly modify vlans
+                    slave_bridge_ref_opt->addVlanIDS(parsed_vids, flags);
+                    break;
+                }
+
+                case sysrepo::ChangeOperation::Deleted: {
+
+                    // get vids node and parse it
+                    // Deleted and Created vids node with previous values must be taken from the session changes.
+                    std::string vids_data;
+
+                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+
+                        switch (change.operation) {
+                        case sr::ChangeOperation::Deleted: {
+                            // vids node
+                            vids_data = change.node.asTerm().valueStr().data();
+                            break;
+                        }
+                        }
+                    }
+
+                    if (vids_data.empty()) {
+                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                    }
+
+                    if (vids_data.empty()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Empty vids value for deletion!");
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
+
+                    // and finaly modify vlans
+                    slave_bridge_ref_opt->removeVlanIDS(parsed_vids);
+
+                    // // ***BIG FIX*** no point of parsing since now we can delete all for bigger data consistancy
+                    // this will not work, since it will delete all of the vids for continuouts vlan-registration-entry if
+                    // they exist multiple
+                    //
+                    // slave_bridge_ref_opt->removeAllVlanIDS();
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -1208,6 +1742,63 @@ namespace sub::change {
     sr::ErrorCode BridgeComponentFilteringDatabaseVlanRegistrationEntryPortMapStaticVlanRegistrationEntriesVlanTransmittedModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/port-map/static-vlan-registration-entries/vlan-transmitted")) {
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Modified: {
+
+                    // here we have to modify <vlan-transmitted>
+                    auto& nl_ctx = NlContext::getInstance();
+                    nl_ctx.refillCache();
+
+                    std::string value = change.node.asTerm().valueStr().data();
+
+                    std::string vids = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                    int port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", change.node.path())["port-ref"]);
+                    std::string bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path())["name"];
+
+                    auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
+
+                    if (!bridge_opt) {
+                        throw std::runtime_error("Cannot find bridge " + bridge_name);
+                    }
+
+                    auto vids_vec = BridgeRef::parseStringToVlanIDS(vids);
+
+                    auto bridge_slave_ref = bridge_opt->getSlaveByIfindex(port_ref);
+
+                    if (!bridge_slave_ref) {
+                        throw std::runtime_error("Bridge slave at index " + std::to_string(port_ref) + " not found!");
+                    }
+
+                    bridge_slave_ref->removeVlanIDS(vids_vec);
+
+                    // untagged
+
+                    uint16_t flags = 0;
+
+                    if (value.compare("untagged") == 0) {
+                        flags = BRIDGE_VLAN_INFO_UNTAGGED;
+                    }
+
+                    bridge_slave_ref->addVlanIDS(vids_vec, flags);
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -3161,6 +3752,82 @@ namespace sub::change {
     sr::ErrorCode BridgesModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        return error;
+    }
+
+    InterfaceBridgePortComponentNameModuleChangeCb::InterfaceBridgePortComponentNameModuleChangeCb(std::shared_ptr<BridgingModuleChangesContext> ctx)
+    {
+        m_ctx = ctx;
+    }
+
+    sr::ErrorCode InterfaceBridgePortComponentNameModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
+    {
+        sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ietf-interfaces:interfaces/interface/bridge-port/component-name")) {
+
+                const std::string bridge_val = change.node.asTerm().valueStr().data();
+                // get the netlink context
+                NlContext& nl_ctx = NlContext::getInstance();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    nl_ctx.refillCache();
+
+                    const std::string name_val = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
+
+                    std::optional<BridgeRef> bridge_opt = nl_ctx.getBridgeByName(bridge_val);
+
+                    if (!bridge_opt.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot find bridge %s", bridge_val.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+                    try {
+                        bridge_opt->addInterfaceToBridge(name_val);
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot bridge interface %s, reason: %s", name_val.c_str(), e.what());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted: {
+
+                    nl_ctx.refillCache();
+
+                    const std::string name_val = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
+
+                    std::optional<BridgeRef> bridge_opt = nl_ctx.getBridgeByName(bridge_val);
+
+                    if (!bridge_opt.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot find bridge %s", bridge_val.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+                    try {
+                        bridge_opt->removeInterfaceFromBridge(name_val);
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot remove bridge interface %s, reason: %s", name_val.c_str(), e.what());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 

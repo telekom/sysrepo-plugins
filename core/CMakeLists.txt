@@ -33,6 +33,7 @@ SET(
     src/srpcpp/netlink/interface.cpp
     src/srpcpp/netlink/route.cpp
     src/srpcpp/netlink/nexthop.cpp
+    src/srpcpp/netlink/bridge.cpp
 )
 
 find_package(LIBYANG REQUIRED)

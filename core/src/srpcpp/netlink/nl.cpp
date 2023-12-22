@@ -5,6 +5,7 @@
 #include <netlink/route/link.h>
 #include <netlink/route/route.h>
 #include <netlink/route/neighbour.h>
+#include <netlink/route/link/bridge.h>
 #include <linux/if.h>
 #include <new>
 #include <stdexcept>
@@ -16,6 +17,7 @@
 #include "route.hpp"
 #include "cache.hpp"
 #include "netlink/route/nexthop.h"
+#include "bridge.hpp"
 
 /**
  * @brief Default constructor. Allocates each member of the class.
@@ -99,11 +101,11 @@ void NlContext::refillCache(void)
         throw std::runtime_error("Unable to refill links cache");
     }
 
-    if (nl_cache_refill(m_sock.get(), m_addressCache.get())) {
+    if (nl_cache_refill(m_sock.get(), m_addressCache.get()) < 0) {
         throw std::runtime_error("Unable to refill address cache");
     }
 
-    if (nl_cache_refill(m_sock.get(), m_neighCache.get())) {
+    if (nl_cache_refill(m_sock.get(), m_neighCache.get()) < 0) {
         throw std::runtime_error("Unable to refill neighbors cache");
     }
 
@@ -168,6 +170,44 @@ std::optional<InterfaceRef> NlContext::getInterfaceByIndex(const uint32_t index)
 }
 
 /**
+ * @brief Get Bridge Interfaces.
+ */
+std::vector<BridgeRef> NlContext::getBridgeInterfaces()
+{
+    std::vector<BridgeRef> bridges;
+    struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
+
+    while (iter != nullptr) {
+
+        if (rtnl_link_is_bridge(iter)) {
+            bridges.push_back(BridgeRef(iter, m_sock.get()));
+        };
+
+        iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
+    }
+
+    return bridges;
+}
+
+/**
+ * @brief Get Bridge Interface by name.
+ */
+std::optional<BridgeRef> NlContext::getBridgeByName(std::string name)
+{
+    struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
+
+    while (iter != nullptr) {
+
+        if (rtnl_link_is_bridge(iter) && (std::string(rtnl_link_get_name(iter)).compare(name) == 0)) {
+            return BridgeRef(iter, m_sock.get());
+        };
+
+        iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
+    }
+    return std::nullopt;
+}
+
+/**
  * @brief Create interface.
  */
 void NlContext::createInterface(std::string name, std::string type, bool enabled)
@@ -208,20 +248,75 @@ void NlContext::createInterface(std::string name, std::string type, bool enabled
  */
 void NlContext::deleteInterface(const std::string& name)
 {
-    refillCache();
-    struct rtnl_link* iter = (struct rtnl_link*)nl_cache_get_first(m_linkCache.get());
 
-    while (iter != nullptr) {
-        const char* link_name = rtnl_link_get_name(iter);
+    struct rtnl_link* bridge = NULL;
+    int err = 0;
 
-        if (name == std::string(link_name)) {
-            int error = rtnl_link_delete(m_sock.get(), iter);
-            error < 0 ? throw std::runtime_error(nl_geterror(error)) : NULL;
-            break;
-        }
+    err = rtnl_link_get_kernel(m_sock.get(), 0, name.c_str(), &bridge);
 
-        iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
+    if (err < 0) {
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    err = rtnl_link_delete(m_sock.get(), bridge);
+
+    if (err < 0) {
+        throw std::runtime_error(nl_geterror(err));
+    }
+}
+
+void NlContext::createBridgeInterface(std::string name, std::string address)
+{
+    // name cannot be more than 15 characters
+    if (name.size() > 15)
+        throw std::runtime_error("Name to long!");
+
+    nl_addr* addr = NULL;
+    rtnl_link* link = NULL;
+    std::string new_addr = address;
+    int err = 0;
+
+    auto clean = [&]() {
+        if (link != NULL)
+            rtnl_link_put(link);
+        if (addr != NULL)
+            nl_addr_put(addr);
     };
+
+    std::replace(new_addr.begin(), new_addr.end(), '-', ':');
+
+    err = nl_addr_parse(new_addr.c_str(), 0, &addr);
+
+    if (err < 0) {
+        clean();
+        throw std::runtime_error(nl_geterror(err));
+    }
+
+    // allocate link
+    link = rtnl_link_alloc();
+    if (link == NULL)
+        throw std::runtime_error("link alloc error!");
+
+    // set name to link
+    rtnl_link_set_name(link, name.c_str());
+
+    // set type to link
+    if (rtnl_link_set_type(link, "bridge") < 0) {
+        clean();
+        throw std::runtime_error("rtnl_link_set_type error");
+    };
+    rtnl_link_set_flags(link, IFF_UP);
+
+    // set the mac addr
+    rtnl_link_set_addr(link, addr);
+
+    // add link to socket
+    if (rtnl_link_add(m_sock.get(), link, NLM_F_CREATE) < 0) {
+        clean();
+        throw std::runtime_error("rtnl_link_add error");
+    };
+
+    clean();
 }
 
 /**
@@ -482,3 +577,46 @@ CacheRef<NeighborRef> NlContext::getNeighborCache() { return CacheRef<NeighborRe
  * @brief Get the routes cache.
  */
 CacheRef<RouteRef> NlContext::getRouteCache() { return CacheRef<RouteRef>(m_routeCache.get(), m_sock.get()); }
+std::unordered_map<std::string, std::string> NlContext::getKeyValFromXpath(const std::string& list_name, const std::string& xpath)
+{
+
+    std::unordered_map<std::string, std::string> map;
+
+    std::istringstream chunkStream(xpath);
+    std::string chunk;
+
+    while (std::getline(chunkStream, chunk, '/')) {
+        int pos = chunk.find(list_name);
+
+        // it should be at the begin of chunk so its 0
+        if (pos == 0) {
+            int begin = chunk.find('[');
+            int end = chunk.find(']');
+            // list is found, continue
+
+            while (begin != std::string::npos || end != std::string::npos) {
+
+                std::string mapstr(++chunk.begin() + begin, chunk.begin() + end);
+                chunk.erase(begin, ++end - begin);
+
+                // now split it by '=' in key value
+
+                int eq_pos = mapstr.find('=');
+
+                if (eq_pos == std::string::npos) {
+                    throw std::runtime_error("Failed to parse '=' sympol");
+                }
+
+                std::string key(mapstr.begin(), mapstr.begin() + eq_pos);
+                // value shrink by one place begin to end to eliminate ' '
+                std::string value(mapstr.begin() + eq_pos + 2, --mapstr.end());
+
+                map.insert(std::make_pair(key, value));
+
+                begin = chunk.find('[');
+                end = chunk.find(']');
+            }
+        }
+    }
+    return map;
+}

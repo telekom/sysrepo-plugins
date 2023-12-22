@@ -3,6 +3,8 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <stdexcept>
+#include <unordered_map>
 
 ///< Type used for deleting libnl allocated structs
 template <typename T>
@@ -22,6 +24,7 @@ class AddressRef;
 class RouteAddressRef;
 class NeighborRef;
 class RouteRef;
+class BridgeRef;
 enum class AddressFamily;
 template <typename T>
 class CacheRef;
@@ -73,9 +76,25 @@ public:
     std::optional<InterfaceRef> getInterfaceByIndex(const uint32_t index);
 
     /**
+     * @brief Get Bridge interfaces.
+     */
+    std::vector<BridgeRef> getBridgeInterfaces();
+
+    /**
+     * @brief Get Bridge Interface by name.
+     */
+    std::optional<BridgeRef> getBridgeByName(std::string name);
+
+    /**
      * @brief Create interface.
      */
     void createInterface(std::string name, std::string type, bool enabled);
+
+    /**
+     * @brief Create interface.
+     * 
+     */
+    void createBridgeInterface(std::string name, std::string address);
 
     /**
      * @brief Create new address.
@@ -126,6 +145,7 @@ public:
      * @brief Get the routes cache.
      */
     CacheRef<RouteRef> getRouteCache();
+    static std::unordered_map<std::string,std::string> getKeyValFromXpath(const std::string& list_name, const std::string& xpath);
 
 private:
     NlUniquePtr<struct nl_sock> m_sock; ///< Netlink socket.
