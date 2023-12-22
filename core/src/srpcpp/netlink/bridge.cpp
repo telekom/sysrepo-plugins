@@ -362,6 +362,78 @@ uint32_t BridgeRef::getAgeingTime()
     return ageing_time;
 }
 
+void BridgeRef::setSTP(bool stp)
+{
+    nl_msg* msg = NULL;
+    nlattr* link_info = NULL;
+    nlattr* info_data = NULL;
+    rtnl_link* link = m_link.get();
+    int error = 0;
+    int len = 0;
+
+    auto clean = [&]() {
+        if (msg)
+            nlmsg_free(msg);
+    };
+
+    error = rtnl_link_build_add_request(link, 0, &msg);
+
+    if (error) {
+        clean();
+        throw std::runtime_error("setSTP(), rtnl_link_build_add_request failed!");
+    }
+
+    link_info = nla_nest_start(msg, IFLA_LINKINFO);
+
+    if (link_info == NULL) {
+        clean();
+        throw std::runtime_error("setSTP(), IFLA_LINKINFO failed!");
+    }
+    error = nla_put_string(msg, IFLA_INFO_KIND, "bridge");
+
+    if (error) {
+        clean();
+        throw std::runtime_error("setSTP(), nla_put_string(msg, IFLA_INFO_KIND) failed!");
+    }
+
+    info_data = nla_nest_start(msg, IFLA_INFO_DATA);
+
+    if (info_data == NULL) {
+        clean();
+        throw std::runtime_error("setSTP(), IFLA_INFO_DATA failed!");
+    }
+
+    error = nla_put_u32(msg, IFLA_BR_STP_STATE, stp);
+
+    if (error) {
+        clean();
+        throw std::runtime_error("setSTP(), IFLA_BR_STP_STATE set failed!");
+    }
+
+    error = nla_nest_end(msg, info_data);
+
+    if (error) {
+        clean();
+        throw std::runtime_error("setSTP(), IFLA_INFO_DATA nest_end failed!");
+    }
+
+    error = nla_nest_end(msg, link_info);
+
+    if (error) {
+        clean();
+        throw std::runtime_error("setSTP(), LINK_INFO nest_end failed!");
+    }
+
+    len = nl_send(m_socket.get(), msg);
+
+    if (len <= 0) {
+        clean();
+        throw std::runtime_error("setSTP(), nl_send_auto failed!");
+    }
+
+    clean();
+}
+
 void BridgeSlaveRef::add_or_remove_bridge_vlan_ids(std::vector<bridge_vlan_info> vlan_ids, uint8_t oper)
 {
 

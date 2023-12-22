@@ -169,6 +169,10 @@ public:
 
     uint32_t getAgeingTime();
 
+    bool getSTP();
+
+    void setSTP(bool stp);
+
 private:
     enum BridgeOperation {
         BRIDGE_ADD,
