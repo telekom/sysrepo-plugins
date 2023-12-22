@@ -1,6 +1,7 @@
 #pragma once
 
 #include <srpcpp.hpp>
+#include <srpcpp/netlink.hpp>
 
 /**
  * Operational context for the routing module.

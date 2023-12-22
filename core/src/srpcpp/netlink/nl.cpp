@@ -6,12 +6,16 @@
 #include <netlink/route/route.h>
 #include <netlink/route/neighbour.h>
 #include <linux/if.h>
+#include <new>
+#include <stdexcept>
 
 // include types
 #include "interface.hpp"
 #include "address.hpp"
 #include "neighbor.hpp"
+#include "route.hpp"
 #include "cache.hpp"
+#include "netlink/route/nexthop.h"
 
 /**
  * @brief Default constructor. Allocates each member of the class.
@@ -31,7 +35,7 @@ NlContext::NlContext()
     }
 
     // connect to netlink route and get all links and addresses
-    m_sock = std::unique_ptr<struct nl_sock, NlDeleter<struct nl_sock>>(sock, nl_socket_free);
+    m_sock = NlUniquePtr<struct nl_sock>(sock, nl_socket_free);
 
     error = nl_connect(m_sock.get(), NETLINK_ROUTE);
     if (error != 0) {
@@ -43,28 +47,28 @@ NlContext::NlContext()
         throw std::runtime_error("Unable to alloc link cache");
     }
 
-    m_linkCache = std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>>(link_cache, nl_cache_free);
+    m_linkCache = NlUniquePtr<struct nl_cache>(link_cache, nl_cache_free);
 
     error = rtnl_addr_alloc_cache(m_sock.get(), &addr_cache);
     if (error != 0) {
         throw std::runtime_error("Unable to alloc addr cache");
     }
 
-    m_addressCache = std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>>(addr_cache, nl_cache_free);
+    m_addressCache = NlUniquePtr<struct nl_cache>(addr_cache, nl_cache_free);
 
     error = rtnl_neigh_alloc_cache(m_sock.get(), &neigh_cache);
     if (error != 0) {
         throw std::runtime_error("Unable to alloc neighbor cache");
     }
 
-    m_neighCache = std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>>(neigh_cache, nl_cache_free);
+    m_neighCache = NlUniquePtr<struct nl_cache>(neigh_cache, nl_cache_free);
 
     error = rtnl_route_alloc_cache(m_sock.get(), AF_UNSPEC, 0, &route_cache);
     if (error != 0) {
         throw std::runtime_error("Unable to alloc route cache");
     }
 
-    m_routeCache = std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>>(route_cache, nl_cache_free);
+    m_routeCache = NlUniquePtr<struct nl_cache>(route_cache, nl_cache_free);
 
     error = rtnl_route_read_table_names("/etc/iproute2/rt_tables");
     if (error != 0) {
@@ -75,6 +79,15 @@ NlContext::NlContext()
     if (error != 0) {
         throw std::runtime_error("Unable to read routing protocol names");
     }
+}
+
+/**
+ * @brief Returns the singleton instance.
+ */
+NlContext& NlContext::getInstance()
+{
+    static NlContext ctx;
+    return ctx;
 }
 
 /**
@@ -92,6 +105,10 @@ void NlContext::refillCache(void)
 
     if (nl_cache_refill(m_sock.get(), m_neighCache.get())) {
         throw std::runtime_error("Unable to refill neighbors cache");
+    }
+
+    if (nl_cache_refill(m_sock.get(), m_routeCache.get())) {
+        throw std::runtime_error("Unable to refill route cache");
     }
 }
 
@@ -205,6 +222,71 @@ void NlContext::deleteInterface(const std::string& name)
 
         iter = (struct rtnl_link*)nl_cache_get_next((struct nl_object*)iter);
     };
+}
+
+/**
+ * @brief Create a new route.
+ */
+void NlContext::createRoute(const std::string& destination_prefix, const std::string& outgoing_interface, const std::string& next_hop_address)
+{
+    int error = 0;
+    struct nl_addr* destination_addr_ptr = nullptr;
+    struct nl_addr* next_hop_addr_ptr = nullptr;
+
+    error = nl_addr_parse(destination_prefix.c_str(), AF_UNSPEC, &destination_addr_ptr);
+    if (error != 0) {
+        throw std::runtime_error("Unable to parse destination prefix");
+    }
+
+    error = nl_addr_parse(next_hop_address.c_str(), AF_UNSPEC, &next_hop_addr_ptr);
+    if (error != 0) {
+        throw std::runtime_error("Unable to parse next hop address");
+    }
+
+    auto destination_addr = NlUniquePtr<struct nl_addr>(destination_addr_ptr, nl_addr_put);
+    auto next_hop_addr = NlUniquePtr<struct nl_addr>(next_hop_addr_ptr, nl_addr_put);
+
+    // get interface by the given name
+    auto interface = getInterfaceByName(outgoing_interface);
+    if (interface.has_value()) {
+        // create next hop data
+        auto next_hop = NlUniquePtr<struct rtnl_nexthop>(rtnl_route_nh_alloc(), rtnl_route_nh_free);
+        if (!next_hop.get()) {
+            throw std::bad_alloc();
+        }
+
+        // set interface and next hop
+        rtnl_route_nh_set_ifindex(next_hop.get(), interface->getIndex());
+        rtnl_route_nh_set_gateway(next_hop.get(), next_hop_addr.get());
+
+        // got all data -> create a route
+        auto route = NlUniquePtr<struct rtnl_route>(rtnl_route_alloc(), rtnl_route_put);
+        if (!route.get()) {
+            throw std::bad_alloc();
+        }
+
+        // set basic info
+        rtnl_route_set_table(route.get(), RT_TABLE_MAIN);
+        rtnl_route_set_protocol(route.get(), RTPROT_STATIC);
+
+        // set address info
+        rtnl_route_set_dst(route.get(), destination_addr.get());
+        rtnl_route_add_nexthop(route.get(), next_hop.get());
+
+        // guess the scope
+        rtnl_route_set_scope(route.get(), (uint8_t)rtnl_route_guess_scope(route.get()));
+
+        // add address to netlink
+        error = rtnl_route_add(m_sock.get(), route.get(), NLM_F_CREATE);
+        if (error != 0) {
+            throw std::runtime_error("Unable to add route to the system");
+        }
+
+        // route was added to the system - refill the cache
+        refillCache();
+    } else {
+        throw std::runtime_error("Invalid outgoing interface provided");
+    }
 }
 
 /**
@@ -395,3 +477,8 @@ CacheRef<RouteAddressRef> NlContext::getAddressCache() { return CacheRef<RouteAd
  * @brief Get the neighbors cache.
  */
 CacheRef<NeighborRef> NlContext::getNeighborCache() { return CacheRef<NeighborRef>(m_neighCache.get(), m_sock.get()); }
+
+/**
+ * @brief Get the routes cache.
+ */
+CacheRef<RouteRef> NlContext::getRouteCache() { return CacheRef<RouteRef>(m_routeCache.get(), m_sock.get()); }

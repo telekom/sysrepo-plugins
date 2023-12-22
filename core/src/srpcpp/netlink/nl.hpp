@@ -3,11 +3,14 @@
 #include <memory>
 #include <functional>
 #include <optional>
-#include <stdexcept>
 
 ///< Type used for deleting libnl allocated structs
 template <typename T>
 using NlDeleter = std::function<void(T*)>;
+
+///< Type used for deleting libnl allocated structs
+template <typename T>
+using NlUniquePtr = std::unique_ptr<T, NlDeleter<T>>;
 
 ///< Empty deleter which does nothing with the type. Used for storing shared pointers.
 template <typename T>
@@ -29,15 +32,23 @@ enum class NeighborOperations {
     Delete,
 };
 
+// [TODO]: Make NlContext a singleton - one instance per plugin
+
 /**
  * @brief Netlink context using the libnl library. Used for updating system networking configuration.
  */
 class NlContext {
-public:
+private:
     /**
      * @brief Default constructor. Allocates each member of the class.
      */
     NlContext();
+
+public:
+    /**
+     * @brief Returns the singleton instance.
+     */
+    static NlContext& getInstance();
 
     /**
      * @brief Refill each cache.
@@ -72,6 +83,11 @@ public:
     void createAddress(std::string interface_name, std::string address, int prefix_length, AddressFamily fam);
 
     /**
+     * @brief Create a new route.
+     */
+    void createRoute(const std::string& destination_prefix, const std::string& outgoing_interface, const std::string& next_hop_address);
+
+    /**
      * @brief Delete existing interface, if not existant, throws an exception.
      */
     void deleteInterface(const std::string& name);
@@ -80,6 +96,11 @@ public:
      * @brief Delete existing Address, if not existant, throws an exception.
      */
     void deleteAddress(std::string interface_name, std::string address, int prefix_length, AddressFamily fam);
+
+    /**
+     * @brief Delete a route.
+     */
+    void deleteRoute(const std::string& destination_prefix);
 
     /**
      * @brief Create Neighbor
@@ -101,10 +122,15 @@ public:
      */
     CacheRef<NeighborRef> getNeighborCache();
 
+    /**
+     * @brief Get the routes cache.
+     */
+    CacheRef<RouteRef> getRouteCache();
+
 private:
-    std::unique_ptr<struct nl_sock, NlDeleter<struct nl_sock>> m_sock; ///< Netlink socket.
-    std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_linkCache; ///< Links cache.
-    std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_addressCache; ///< Addresses cache.
-    std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_neighCache; ///< Neighbors cache.
-    std::unique_ptr<struct nl_cache, NlDeleter<struct nl_cache>> m_routeCache; ///< Routes cache.
+    NlUniquePtr<struct nl_sock> m_sock; ///< Netlink socket.
+    NlUniquePtr<struct nl_cache> m_linkCache; ///< Links cache.
+    NlUniquePtr<struct nl_cache> m_addressCache; ///< Addresses cache.
+    NlUniquePtr<struct nl_cache> m_neighCache; ///< Neighbors cache.
+    NlUniquePtr<struct nl_cache> m_routeCache; ///< Routes cache.
 };
