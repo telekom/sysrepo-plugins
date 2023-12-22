@@ -1,6 +1,8 @@
 #include "change.hpp"
 #include "plugin/modules/routing/common.hpp"
+#include "sysrepo-cpp/Enum.hpp"
 
+#include <stdexcept>
 #include <sysrepo.h>
 
 namespace ietf::rt {
@@ -176,50 +178,7 @@ namespace sub::change {
     sr::ErrorCode V4RouteDestinationPrefixModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
-        sr::ErrorCode error = sr::ErrorCode::Unsupported;
-
-        std::string destination_prefix;
-        std::string next_hop_address;
-
-        auto& nl_ctx = NlContext::getInstance();
-
-        switch (event) {
-        case sysrepo::Event::Change:
-            for (auto& change : session.getChanges(subXPath->data())) {
-                switch (change.operation) {
-                case sysrepo::ChangeOperation::Created:
-                case sysrepo::ChangeOperation::Modified:
-                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
-                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
-                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Value: %s", std::get<std::string>(change.node.asTerm().value()).c_str());
-                    destination_prefix = std::get<std::string>(change.node.asTerm().value());
-
-                    for (auto& nh_change : session.getChanges(change.node.parent()->path() + "/next-hop/next-hop-address")) {
-                        switch (nh_change.operation) {
-                        case sysrepo::ChangeOperation::Created:
-                        case sysrepo::ChangeOperation::Modified: {
-                            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.path().c_str());
-                            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value of %s modified.", change.node.schema().name().data());
-                            SRPLG_LOG_DBG(getModuleLogPrefix(), "Value: %s", std::get<std::string>(change.node.asTerm().value()).c_str());
-                            break;
-                        }
-                        case sysrepo::ChangeOperation::Deleted:
-                            break;
-                        case sysrepo::ChangeOperation::Moved:
-                            break;
-                        }
-                    }
-                    break;
-                case sysrepo::ChangeOperation::Deleted:
-                    break;
-                case sysrepo::ChangeOperation::Moved:
-                    break;
-                }
-            }
-        default:
-            break;
-        }
-
+        sr::ErrorCode error = sr::ErrorCode::Ok;
         return error;
     }
 
@@ -576,7 +535,51 @@ namespace sub::change {
     sr::ErrorCode V4RouteModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
-        sr::ErrorCode error = sr::ErrorCode::Ok;
+        sr::ErrorCode error = sr::ErrorCode::Unsupported;
+
+        auto& nl_ctx = NlContext::getInstance();
+
+        switch (event) {
+        case sysrepo::Event::Change:
+            for (auto& route_change : session.getChanges(subXPath->data())) {
+                switch (route_change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+                    auto& route_node = route_change.node;
+                    auto destination_prefix_node = route_change.node.findPath("destination-prefix");
+                    auto next_hop_node = route_node.findPath("next-hop/next-hop-address");
+                    auto outgoing_interface_node = route_node.findPath("next-hop/outgoing-interface");
+
+                    if (!destination_prefix_node.has_value()) {
+                        return sr::ErrorCode::InvalidArgument;
+                    }
+
+                    auto destination_prefix = std::get<std::string>(destination_prefix_node->asTerm().value());
+
+                    if (next_hop_node.has_value() && outgoing_interface_node.has_value()) {
+                        // able to create a new route
+                        auto next_hop = std::get<std::string>(next_hop_node->asTerm().value());
+                        auto outgoing_interface = std::get<std::string>(outgoing_interface_node->asTerm().value());
+
+                        try {
+                            NlContext::getInstance().createRoute(destination_prefix, next_hop, outgoing_interface);
+                        } catch (std::runtime_error& ex) {
+                            SRPLG_LOG_ERR(getModuleLogPrefix(), "Unable to create a new route on the system: %s", ex.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                    }
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                case sysrepo::ChangeOperation::Moved:
+                    break;
+                }
+            }
+        default:
+            break;
+        }
+
         return error;
     }
 
