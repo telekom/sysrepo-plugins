@@ -147,7 +147,7 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
         rib_node->newPath("default-rib", rib_object.isDefault() ? "true" : "false");
 
         // address family
-        rib_node->newPath("address-family", rib_object.getFamily() == AddressFamily::V4 ? "ietf-ipv4-unicast-routing:ipv4-unicast" : "ietf-ipv6-unicast-routing:ipv6-unicast");
+        rib_node->newPath("address-family", rib_object.getFamily() == AddressFamily::V4 ? "ipv4" : "ipv6");
 
         for (auto& route : routes) {
             std::stringstream pref_buffer, ifname_buffer, ip_buffer;
