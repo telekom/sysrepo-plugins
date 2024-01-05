@@ -68,3 +68,18 @@ NextHop& Route::getNextHop()
     return m_nextHop;
 }
 }
+
+NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
+    : m_address(address)
+    , m_ifindex(ifindex)
+{
+}
+
+int NextHopHelper::getIfindex()
+{
+    return m_ifindex;
+}
+std::string NextHopHelper::getAddress()
+{
+    return m_address;
+};

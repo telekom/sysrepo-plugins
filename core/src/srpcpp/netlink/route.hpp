@@ -8,6 +8,19 @@
 class AddressRef;
 class NextHopRef;
 
+class NextHopHelper {
+private:
+    int m_ifindex;
+    std::string m_address;
+
+public:
+    NextHopHelper(const std::string& address, int ifindex);
+
+    int getIfindex();
+
+    std::string getAddress();
+};
+
 class RouteRef {
 public:
     friend class NlContext; ///< Allow NlContext to use the private constructor.

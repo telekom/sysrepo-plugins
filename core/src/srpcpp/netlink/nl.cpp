@@ -558,6 +558,81 @@ void NlContext::neighbor(std::string interface_name, std::string address, std::s
     clean();
 }
 
+void NlContext::createRoute(std::string destination_prefix, const std::vector<NextHopHelper>& next_hops)
+{
+    int error = 0;
+    nl_addr* destination_addr_ptr = NULL;
+    nl_addr* next_hop_addr_ptr = NULL;
+    rtnl_nexthop* next_hop = NULL;
+    rtnl_route* route = NULL;
+
+    auto clean = [&]() {
+        if (destination_addr_ptr != NULL)
+            nl_addr_put(destination_addr_ptr);
+        if (next_hop_addr_ptr != NULL)
+            nl_addr_put(next_hop_addr_ptr);
+        if (route != NULL)
+            rtnl_route_put(route);
+    };
+
+    error = nl_addr_parse(destination_prefix.c_str(), AF_INET, &destination_addr_ptr);
+    if (error < 0) {
+        throw std::runtime_error("Unable to parse destination prefix");
+    }
+
+    route = rtnl_route_alloc();
+
+    if (route == NULL) {
+        clean();
+        throw std::bad_alloc();
+    }
+
+    // set basic info
+    rtnl_route_set_table(route, RT_TABLE_MAIN);
+    rtnl_route_set_protocol(route, RTPROT_STATIC);
+
+    // set address info
+    error = rtnl_route_set_dst(route, destination_addr_ptr);
+    if (error < 0) {
+        clean();
+        throw std::runtime_error("rtnl_route_set_dst() Failed! ");
+    };
+    rtnl_route_set_family(route, AF_INET);
+
+    for (auto nh : next_hops) {
+        // set interface and next hop
+        std::string addr = nh.getAddress();
+        next_hop = rtnl_route_nh_alloc();
+
+        if (next_hop == NULL) {
+            clean();
+            throw std::bad_alloc();
+        }
+        error = nl_addr_parse(addr.c_str(), AF_INET, &next_hop_addr_ptr);
+        if (error < 0) {
+            clean();
+            throw std::runtime_error("Unable to parse destination prefix");
+        }
+
+        rtnl_route_nh_set_ifindex(next_hop, nh.getIfindex());
+        rtnl_route_nh_set_gateway(next_hop, next_hop_addr_ptr);
+
+        rtnl_route_add_nexthop(route, next_hop);
+    }
+
+    // guess the scope
+    rtnl_route_set_scope(route, (uint8_t)rtnl_route_guess_scope(route));
+
+    // add address to netlink
+    error = rtnl_route_add(m_sock.get(), route, NLM_F_CREATE | NLM_F_REPLACE);
+    if (error < 0) {
+        clean();
+        throw std::runtime_error("Unable to add route to the system , " + std::string(nl_geterror(error)));
+    }
+
+    clean();
+}
+
 /**
  * @brief Get the links cache.
  */
@@ -577,5 +652,3 @@ CacheRef<NeighborRef> NlContext::getNeighborCache() { return CacheRef<NeighborRe
  * @brief Get the routes cache.
  */
 CacheRef<RouteRef> NlContext::getRouteCache() { return CacheRef<RouteRef>(m_routeCache.get(), m_sock.get()); }
-
-

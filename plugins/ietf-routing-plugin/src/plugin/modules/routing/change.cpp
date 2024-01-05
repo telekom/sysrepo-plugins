@@ -479,13 +479,19 @@ namespace sub::change {
 
                     auto base = RoutingInformationBase(route_cache);
 
-                    for (auto &&i : base)
-                    {
-                        std::cout<<"First: "<<i.first<<std::endl;
-                                                
+                    for (auto&& i : base) {
+                        std::cout << "First: " << i.first << std::endl;
                     }
-                    
+
                     std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+
+                    std::vector<NextHopHelper> nhs;
+
+                    nhs.push_back(NextHopHelper("192.168.0.120", 2));
+                    nhs.push_back(NextHopHelper("192.168.0.130", 2));
+                    nhs.push_back(NextHopHelper("192.168.0.110", 2));
+
+                    nl_ctx.createRoute("10.10.10.0/24", nhs);
 
                     break;
                 }

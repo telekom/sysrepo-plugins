@@ -25,6 +25,7 @@ class RouteAddressRef;
 class NeighborRef;
 class RouteRef;
 class BridgeRef;
+class NextHopHelper;
 enum class AddressFamily;
 template <typename T>
 class CacheRef;
@@ -92,7 +93,7 @@ public:
 
     /**
      * @brief Create interface.
-     * 
+     *
      */
     void createBridgeInterface(std::string name, std::string address);
 
@@ -125,6 +126,11 @@ public:
      * @brief Create Neighbor
      */
     void neighbor(std::string interface_name, std::string address, std::string ll_addr, AddressFamily fam, NeighborOperations oper);
+
+    /**
+     * @brief Create Route with multiple nextHops
+     */
+    void createRoute(std::string destination_prefix, const std::vector<NextHopHelper>& next_hops);
 
     /**
      * @brief Get the links cache.
