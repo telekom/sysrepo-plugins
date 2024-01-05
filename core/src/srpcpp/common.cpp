@@ -44,41 +44,39 @@ std::unordered_map<std::string, std::string> extractListKeysFromXpath(const std:
 {
     std::unordered_map<std::string, std::string> keys_map;
 
-    std::istringstream chunkStream(xpath);
-    std::string chunk;
+    int starting_point = xpath.find(list + "[");
+    
+    std::string chunk(xpath.begin() + starting_point, xpath.end());
+    
+    int ending_point = chunk.find("]/");
+    
+    chunk.erase(chunk.begin() + ending_point + 1, chunk.end());
+    
+    int begin = chunk.find('[');
+    int end = chunk.find(']');
+    // list is found, continue
 
-    while (std::getline(chunkStream, chunk, '/')) {
-        int pos = chunk.find(list);
+    while (begin != std::string::npos || end != std::string::npos) {
 
-        // it should be at the begin of chunk so its 0
-        if (pos == 0) {
-            int begin = chunk.find('[');
-            int end = chunk.find(']');
-            // list is found, continue
+        std::string mapstr(++chunk.begin() + begin, chunk.begin() + end);
+        chunk.erase(begin, ++end - begin);
 
-            while (begin != std::string::npos || end != std::string::npos) {
+        // now split it by '=' in key value
 
-                std::string mapstr(++chunk.begin() + begin, chunk.begin() + end);
-                chunk.erase(begin, ++end - begin);
+        int eq_pos = mapstr.find('=');
 
-                // now split it by '=' in key value
-
-                int eq_pos = mapstr.find('=');
-
-                if (eq_pos == std::string::npos) {
-                    throw std::runtime_error("Failed to parse '=' sympol");
-                }
-
-                std::string key(mapstr.begin(), mapstr.begin() + eq_pos);
-                // value shrink by one place begin to end to eliminate ' '
-                std::string value(mapstr.begin() + eq_pos + 2, --mapstr.end());
-
-                keys_map.insert(std::make_pair(key, value));
-
-                begin = chunk.find('[');
-                end = chunk.find(']');
-            }
+        if (eq_pos == std::string::npos) {
+            throw std::runtime_error("Failed to parse '=' sympol");
         }
+
+        std::string key(mapstr.begin(), mapstr.begin() + eq_pos);
+        // value shrink by one place begin to end to eliminate ' '
+        std::string value(mapstr.begin() + eq_pos + 2, --mapstr.end());
+
+        keys_map.insert(std::make_pair(key, value));
+
+        begin = chunk.find('[');
+        end = chunk.find(']');
     }
 
     return keys_map;
