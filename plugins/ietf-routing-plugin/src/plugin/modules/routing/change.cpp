@@ -474,29 +474,38 @@ namespace sub::change {
                 case sysrepo::ChangeOperation::Modified: {
 
                     auto& nl_ctx = NlContext::getInstance();
-
                     auto route_cache = nl_ctx.getRouteCache();
-
                     auto base = RoutingInformationBase(route_cache);
-
-                    for (auto&& i : base) {
-                        std::cout << "First: " << i.first << std::endl;
-                    }
-
                     std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
 
-                    std::vector<NextHopHelper> nhs;
+                    std::cout << "change: " << change.node.path() << std::endl;
+                    std::cout << "DEST PREFIX: " << destination_prefix << std::endl;
 
-                    nhs.push_back(NextHopHelper("192.168.0.120", 2));
-                    nhs.push_back(NextHopHelper("192.168.0.130", 2));
-                    nhs.push_back(NextHopHelper("192.168.0.110", 2));
+                    std::string interface_name;
+                    std::string nh_addr;
 
-                    nl_ctx.createRoute("10.10.10.0/24", nhs);
+                    for (libyang::DataNode&& i : change.node.childrenDfs()) {
+
+                        if (i.schema().name().compare("outgoing-interface") == 0) {
+                            interface_name = i.asTerm().valueStr();
+                        } else if (i.schema().name().compare("next-hop-address") == 0) {
+                            nh_addr = i.asTerm().valueStr();
+                        }
+                    }
+
+                    std::cout << "NEXT HOP: " << nh_addr << std::endl;
+                    std::cout << "INTERFACE: " << interface_name << std::endl;
+
+                    auto route_opt = nl_ctx.findRoute("172.17.0.0/16");
+
+                    if (route_opt.has_value()) {
+                        std::cout << "IT HAS VAL" <<route_opt->getSource().toString() << std::endl;
+                    }
 
                     break;
                 }
                 case sysrepo::ChangeOperation::Deleted:
-                    std::cout << "DELETED: " << change.node.asTerm().valueStr().data() << std::endl;
+                    std::cout << "DELETED: " << change.node.path() << std::endl;
                     break;
                 case sysrepo::ChangeOperation::Moved:
                     break;

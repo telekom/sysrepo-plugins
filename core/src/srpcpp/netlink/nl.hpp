@@ -133,6 +133,11 @@ public:
     void createRoute(std::string destination_prefix, const std::vector<NextHopHelper>& next_hops);
 
     /**
+     * @brief Find Route by address and prefix-len
+     */
+    std::optional<RouteRef> findRoute(const std::string& destination_addres);
+
+    /**
      * @brief Get the links cache.
      */
     CacheRef<InterfaceRef> getLinkCache();

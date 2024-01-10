@@ -633,6 +633,52 @@ void NlContext::createRoute(std::string destination_prefix, const std::vector<Ne
     clean();
 }
 
+std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addres)
+{
+
+    nl_cache* route_cache = NULL;
+    rtnl_route* iter = NULL;
+    nl_addr* route_addr = NULL;
+    nl_addr* dst_addr = NULL;
+    rtnl_route* route = NULL;
+    char buff[100] = { 0 };
+    int err = 0;
+
+    err = rtnl_route_alloc_cache(m_sock.get(), AF_ROUTE, 0, &route_cache);
+
+    if (err < 0) {
+        throw std::runtime_error("Failed to allocate cache in findRoute()");
+    }
+
+    err = nl_addr_parse(destination_addres.c_str(), AF_INET, &dst_addr);
+
+    if (err < 0) {
+        nl_cache_put(route_cache);
+        throw std::runtime_error("Failed to parse address, findRoute()");
+    }
+
+    iter = (rtnl_route*)nl_cache_get_first(route_cache);
+
+    while (iter) {
+
+        route_addr = rtnl_route_get_dst(iter);
+
+        if (nl_addr_cmp(route_addr, dst_addr) == 0) {
+            route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+            break;
+        }
+
+        iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    nl_cache_put(route_cache);
+
+    if (route != NULL) {
+        return RouteRef(route, m_sock.get());
+    } else
+        return std::nullopt;
+}
+
 /**
  * @brief Get the links cache.
  */
