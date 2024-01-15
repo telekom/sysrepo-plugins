@@ -467,51 +467,74 @@ namespace sub::change {
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
         switch (event) {
-        case sysrepo::Event::Change:
-            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
-                switch (change.operation) {
-                case sysrepo::ChangeOperation::Created:
-                case sysrepo::ChangeOperation::Modified: {
+        case sysrepo::Event::Change: {
 
-                    auto& nl_ctx = NlContext::getInstance();
-                    auto route_cache = nl_ctx.getRouteCache();
-                    auto base = RoutingInformationBase(route_cache);
-                    std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+            // std::vector<NextHopHelper> next_hops_create;
+            // std::vector<NextHopHelper> next_hops_delete;
 
-                    std::cout << "change: " << change.node.path() << std::endl;
-                    std::cout << "DEST PREFIX: " << destination_prefix << std::endl;
+            // std::string interface_name;
+            // std::string nh_addr;
 
-                    std::string interface_name;
-                    std::string nh_addr;
+            // auto& nl_ctx = NlContext::getInstance();
 
-                    for (libyang::DataNode&& i : change.node.childrenDfs()) {
+            // for (sysrepo::Change change : session.getChanges(subXPath->data())) {
 
-                        if (i.schema().name().compare("outgoing-interface") == 0) {
-                            interface_name = i.asTerm().valueStr();
-                        } else if (i.schema().name().compare("next-hop-address") == 0) {
-                            nh_addr = i.asTerm().valueStr();
-                        }
-                    }
+            //     switch (change.operation) {
+            //     case sysrepo::ChangeOperation::Created: {
+            //         std::cout << "NEXT HOP created" << std::endl;
 
-                    std::cout << "NEXT HOP: " << nh_addr << std::endl;
-                    std::cout << "INTERFACE: " << interface_name << std::endl;
+            //         for (libyang::DataNode&& i : change.node.childrenDfs()) {
 
-                    auto route_opt = nl_ctx.findRoute("172.17.0.0/16");
+            //             if (i.schema().name().compare("outgoing-interface") == 0) {
+            //                 interface_name = i.asTerm().valueStr();
+            //             } else if (i.schema().name().compare("next-hop-address") == 0) {
+            //                 nh_addr = i.asTerm().valueStr();
+            //             }
+            //         }
 
-                    if (route_opt.has_value()) {
-                        std::cout << "IT HAS VAL" <<route_opt->getSource().toString() << std::endl;
-                    }
+            //         // name 2 ifindex needed here!
+            //         next_hops_create.push_back(NextHopHelper(nh_addr, 2));
 
-                    break;
-                }
-                case sysrepo::ChangeOperation::Deleted:
-                    std::cout << "DELETED: " << change.node.path() << std::endl;
-                    break;
-                case sysrepo::ChangeOperation::Moved:
-                    break;
-                }
-            }
+            //         break;
+            //     }
+            //     case sysrepo::ChangeOperation::Modified: {
+
+            //         // auto& nl_ctx = NlContext::getInstance();
+            //         std::cout << "NEXT HOP modified" << std::endl;
+
+            //         break;
+            //     }
+            //     case sysrepo::ChangeOperation::Deleted:
+            //         std::cout << "NEXT HOP deleted" << std::endl;
+
+            //         for (libyang::DataNode&& i : change.node.childrenDfs()) {
+
+            //             if (i.schema().name().compare("outgoing-interface") == 0) {
+            //                 interface_name = i.asTerm().valueStr();
+            //             } else if (i.schema().name().compare("next-hop-address") == 0) {
+            //                 nh_addr = i.asTerm().valueStr();
+            //             }
+            //         }
+
+            //         next_hops_delete.push_back(NextHopHelper(nh_addr, 2));
+            //         break;
+            //     case sysrepo::ChangeOperation::Moved:
+            //         break;
+            //     }
+            // }
+
+            // std::cout << "FOR CREATE: " << std::endl;
+            // for (auto&& i : next_hops_create) {
+            //     std::cout << "-----" << i.getAddress() << std::endl;
+            // }
+
+            // std::cout << "FOR DELETE: " << std::endl;
+            // for (auto&& i : next_hops_delete) {
+            //     std::cout << "-----" << i.getAddress() << std::endl;
+            // }
+
             break;
+        }
         default:
             break;
         }
@@ -607,49 +630,73 @@ namespace sub::change {
     sr::ErrorCode V4RouteModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
-        sr::ErrorCode error = sr::ErrorCode::Unsupported;
-
-        auto& nl_ctx = NlContext::getInstance();
+        sr::ErrorCode error = sr::ErrorCode::Ok;
 
         switch (event) {
-        case sysrepo::Event::Change:
-            for (auto& route_change : session.getChanges(subXPath->data())) {
+        case sysrepo::Event::Change: {
+            auto& nl_ctx = NlContext::getInstance();
+            for (sysrepo::Change route_change : session.getChanges(subXPath->data())) {
                 switch (route_change.operation) {
-                case sysrepo::ChangeOperation::Created:
-                case sysrepo::ChangeOperation::Modified: {
+                case sysrepo::ChangeOperation::Created: {
+                    std::cout << "MAIN ROUTE CREATED" << std::endl;
+                    std::vector<NextHopHelper> create_nh;
 
-                    std::cout << route_change.node.path() << std::endl;
-                    // auto& route_node = route_change.node;
-                    // auto destination_prefix_node = route_change.node.findPath("destination-prefix");
-                    // auto next_hop_node = route_node.findPath("next-hop/next-hop-address");
-                    // auto outgoing_interface_node = route_node.findPath("next-hop/outgoing-interface");
+                    std::string route = srpc::extractListKeysFromXpath("route", route_change.node.path())["destination-prefix"];
 
-                    // if (!destination_prefix_node.has_value()) {
-                    //     return sr::ErrorCode::InvalidArgument;
-                    // }
+                    for (sysrepo::Change change : session.getChanges(route_change.node.path() + "/next-hop/next-hop-list/next-hop")) {
+                        switch (change.operation) {
+                        case sysrepo::ChangeOperation::Created: {
+                            std::cout << "NH CREATED " << std::endl;
 
-                    // auto destination_prefix = std::get<std::string>(destination_prefix_node->asTerm().value());
+                            std::string interface_name;
+                            std::string nh_addr;
 
-                    // if (next_hop_node.has_value() && outgoing_interface_node.has_value()) {
-                    //     // able to create a new route
-                    //     auto next_hop = std::get<std::string>(next_hop_node->asTerm().value());
-                    //     auto outgoing_interface = std::get<std::string>(outgoing_interface_node->asTerm().value());
+                            for (auto&& i : change.node.childrenDfs()) {
+                                if (i.schema().name().compare("outgoing-interface") == 0) {
+                                    interface_name = i.asTerm().valueStr();
+                                } else if (i.schema().name().compare("next-hop-address") == 0) {
+                                    nh_addr = i.asTerm().valueStr();
+                                }
+                            }
 
-                    //     try {
-                    //         NlContext::getInstance().createRoute(destination_prefix, next_hop, outgoing_interface);
-                    //     } catch (std::runtime_error& ex) {
-                    //         SRPLG_LOG_ERR(getModuleLogPrefix(), "Unable to create a new route on the system: %s", ex.what());
-                    //         return sr::ErrorCode::CallbackFailed;
-                    //     }
-                    // }
+                            create_nh.push_back(NextHopHelper(nh_addr, 2));
+
+                            break;
+                        }
+                        case sysrepo::ChangeOperation::Deleted:
+                            /*
+                            this case will never be used since on creating new route,
+                            there is nothing to delete
+                            */
+                            break;
+
+                        default:
+                            break;
+                        }
+                    }
+
+                    try {
+                        nl_ctx.createRoute(route, create_nh);
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Error creating route! reason %s", e.what());
+                        error = sr::ErrorCode::CallbackFailed;
+                    };
+
                     break;
                 }
-                case sysrepo::ChangeOperation::Deleted:
+
+                case sysrepo::ChangeOperation::Deleted: {
+                    std::cout << "MAIN ROUTE DELETED" << std::endl;
+                    // just delete the route, the nhs will automaticaly delete
+                    std::string del_route = srpc::extractListKeysFromXpath("route",route_change.node.path())["destination-prefix"];
+                    nl_ctx.deleteRoute(del_route);  
                     break;
+                }
                 case sysrepo::ChangeOperation::Moved:
                     break;
                 }
             }
+        }
         default:
             break;
         }

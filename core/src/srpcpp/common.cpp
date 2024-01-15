@@ -49,6 +49,11 @@ std::unordered_map<std::string, std::string> extractListKeysFromXpath(const std:
     std::string chunk(xpath.begin() + starting_point, xpath.end());
     
     int ending_point = chunk.find("]/");
+
+    if(ending_point == std::string::npos){
+        //this means it can be last
+        ending_point = chunk.find_last_of(']');
+    }
     
     chunk.erase(chunk.begin() + ending_point + 1, chunk.end());
     

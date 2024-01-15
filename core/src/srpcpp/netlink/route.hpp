@@ -141,6 +141,11 @@ public:
      */
     std::list<NextHopRef> getNextHops();
 
+    /**
+     * @brief Remove selected next-hop.
+     */
+    void removeNextHop(const std::string& nh_address);
+
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.
     using RtnlRouteDeleter = NlDeleter<RtnlRoute>; ///< Deleter type alias.

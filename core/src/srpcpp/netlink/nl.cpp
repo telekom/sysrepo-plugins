@@ -625,12 +625,55 @@ void NlContext::createRoute(std::string destination_prefix, const std::vector<Ne
 
     // add address to netlink
     error = rtnl_route_add(m_sock.get(), route, NLM_F_CREATE | NLM_F_REPLACE);
+
     if (error < 0) {
         clean();
         throw std::runtime_error("Unable to add route to the system , " + std::string(nl_geterror(error)));
     }
 
     clean();
+}
+
+void NlContext::deleteRoute(const std::string& destination_prefix)
+{
+    nl_addr* dest_addr = NULL;
+    rtnl_route* iter = NULL;
+    rtnl_route* route = NULL;
+    nl_cache* cache = m_routeCache.get();
+    int err = 0;
+
+    err = nl_addr_parse(destination_prefix.c_str(), AF_UNSPEC, &dest_addr);
+    if (err < 0)
+        throw std::runtime_error("deleteRoute(), Failed to parse address!");
+
+    err = nl_cache_refill(m_sock.get(), cache);
+    if (err < 0)
+        throw std::runtime_error("deleteRoute(), Failed to refill cache!");
+
+    iter = (rtnl_route*)nl_cache_get_first(cache);
+
+    while (iter) {
+
+        nl_addr* sys_addr = rtnl_route_get_dst(iter);
+
+        if (nl_addr_cmp(sys_addr, dest_addr) == 0) {
+            route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+        }
+
+        iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    if (route == NULL) {
+        throw std::runtime_error("deleteRoute(), Route not found!");
+    } else {
+        err = rtnl_route_delete(m_sock.get(), route, 0);
+
+        if (err < 0) {
+            rtnl_route_put(route);
+            throw std::runtime_error("deleteRoute(),Failed to delete route, reason: + " + std::string(nl_geterror(err)));
+        }
+        rtnl_route_put(route);
+    }
 }
 
 std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addres)

@@ -187,3 +187,50 @@ std::list<NextHopRef> RouteRef::getNextHops()
 
     return nhs;
 }
+
+void RouteRef::removeNextHop(const std::string& nh_address)
+{
+
+    struct Args {
+        nl_addr* address;
+        rtnl_route* route;
+        bool found_nh;
+    } arguments {
+        .address = NULL,
+        .route = m_route.get(),
+        .found_nh = false
+    };
+
+    int err = 0;
+
+    err = nl_addr_parse(nh_address.c_str(), AF_UNSPEC, &arguments.address);
+
+    if (err < 0) {
+        throw std::runtime_error("removeNextHop(), Failed to parse next-hop address!");
+    }
+
+    auto nexthop_callback = [](rtnl_nexthop* nh, void* args) {
+        char addr_buff[50] = { 0 };
+        nl_addr* addr = NULL;
+
+        addr = rtnl_route_nh_get_gateway(nh);
+
+        Args* in_args = (Args*)args;
+
+        if (nl_addr_cmp(addr, in_args->address) == 0) {
+            rtnl_route_remove_nexthop(in_args->route, nh);
+            in_args->found_nh = true;
+        }
+    };
+
+    rtnl_route_foreach_nexthop(m_route.get(), nexthop_callback, (void*)&arguments);
+
+    if (!arguments.found_nh) {
+        throw std::runtime_error("removeNextHop(), next-hop not found!");
+    }
+    err = rtnl_route_add(m_socket.get(), m_route.get(), NLM_F_REPLACE);
+
+    if (err < 0) {
+        throw std::runtime_error("removeNextHop(), Failed replace route!");
+    }
+}
