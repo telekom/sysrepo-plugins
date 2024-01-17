@@ -399,6 +399,40 @@ namespace sub::change {
         std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sr::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
+
+                std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+                std::string path = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv4-unicast-routing:ipv4/route[destination-prefix='" + destination_prefix + "']";
+                auto changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                std::string index = srpc::extractListKeysFromXpath("next-hop", change.node.path())["index"];
+
+                path.append("/next-hop/next-hop-list/next-hop[index='" + index + "']");
+
+                changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                // you cannot modify the interface that you are on
+                error = sr::ErrorCode::Unsupported;
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -433,6 +467,85 @@ namespace sub::change {
         std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sr::Event::Change:
+
+            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
+
+                // handle upper callbacks
+
+                // 1. check if destination-prefix has change
+                // 2. check if route cb has change
+
+                std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+                std::string path = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv4-unicast-routing:ipv4/route[destination-prefix='" + destination_prefix + "']";
+
+                auto changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                std::string index = srpc::extractListKeysFromXpath("next-hop", change.node.path())["index"];
+
+                path.append("/next-hop/next-hop-list/next-hop[index='" + index + "']");
+
+                changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                switch (change.operation) {
+
+                case sr::ChangeOperation::Modified: {
+                    auto& nl_ctx = NlContext::getInstance();
+                    // cannot modify nh, just delete and create new
+
+                    // first we need the interface, that is the first sibiling of the tree
+                    std::string xpath = change.node.parent()->path();
+                    xpath.append("/outgoing-interface");
+
+                    auto if_name_node = session.getOneNode(xpath);
+
+                    std::string if_name = if_name_node.asTerm().valueStr().data();
+
+                    std::string new_value = change.node.asTerm().valueStr().data();
+                    std::string old_value = change.previousValue->data();
+
+                    try {
+                        int ifindex = nl_ctx.nameToIfindex(if_name);
+
+                        auto route = nl_ctx.findRoute(destination_prefix);
+
+                        route->addAndRemoveNextHops(
+                            {
+                                NextHopHelper(new_value, ifindex),
+                            },
+                            {
+                                NextHopHelper(old_value, ifindex),
+                            });
+
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
+                        error = sr::ErrorCode::CallbackFailed;
+                    }
+
+                    break;
+                }
+                case sr::ChangeOperation::Deleted:
+                    // delete address should be unsupported
+                    return sr::ErrorCode::Unsupported;
+                    break;
+                }
+            }
+
+            break;
+
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -499,7 +612,7 @@ namespace sub::change {
                     // it means that container is not empty
                     // there are changes there, so break the loop
                     // that node will create the whole route with nh's
-                    break;
+                    continue;
                 };
 
                 // get the route
@@ -533,13 +646,11 @@ namespace sub::change {
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created: {
-                    std::cout << "NEXT HOP created" << std::endl;
                     route_map[destination_prefix][NextHopOperations::TO_CREATE].push_back(NextHopHelper(next_hop_address, ifindex));
                     break;
                 }
 
                 case sysrepo::ChangeOperation::Deleted:
-                    std::cout << "NEXT HOP deleted" << std::endl;
                     route_map[destination_prefix][NextHopOperations::TO_DELETE].push_back(NextHopHelper(next_hop_address, ifindex));
                     break;
                 }
@@ -669,7 +780,6 @@ namespace sub::change {
             for (sysrepo::Change route_change : session.getChanges(subXPath->data())) {
                 switch (route_change.operation) {
                 case sysrepo::ChangeOperation::Created: {
-                    std::cout << "MAIN ROUTE CREATED" << std::endl;
                     std::vector<NextHopHelper> create_nh;
 
                     std::string route = srpc::extractListKeysFromXpath("route", route_change.node.path())["destination-prefix"];
@@ -677,7 +787,6 @@ namespace sub::change {
                     for (sysrepo::Change change : session.getChanges(route_change.node.path() + "/next-hop/next-hop-list/next-hop")) {
                         switch (change.operation) {
                         case sysrepo::ChangeOperation::Created: {
-                            std::cout << "NH CREATED " << std::endl;
 
                             std::string interface_name;
                             std::string nh_addr;
@@ -726,7 +835,6 @@ namespace sub::change {
                 }
 
                 case sysrepo::ChangeOperation::Deleted: {
-                    std::cout << "MAIN ROUTE DELETED" << std::endl;
                     // just delete the route, the nhs will automaticaly delete
                     std::string del_route = srpc::extractListKeysFromXpath("route", route_change.node.path())["destination-prefix"];
                     // try catch here!!
@@ -1033,6 +1141,7 @@ namespace sub::change {
         std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
         return error;
     }
 

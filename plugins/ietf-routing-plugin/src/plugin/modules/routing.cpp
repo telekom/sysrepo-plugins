@@ -69,6 +69,17 @@ std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks()
             .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv4/route/next-hop/next-hop-list/next-hop",
             .Callback = ietf::rt::sub::change::V4RouteNextHopNextHopListNextHopModuleChangeCb(m_changeContext),
         },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv4/route/next-hop/next-hop-list/next-hop/next-hop-address",
+            .Callback = ietf::rt::sub::change::V4RouteNextHopNextHopListNextHopNextHopAddressModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv4/route/next-hop/next-hop-list/next-hop/outgoing-interface",
+            .Callback = ietf::rt::sub::change::V4RouteNextHopNextHopListNextHopOutgoingInterfaceModuleChangeCb(m_changeContext),
+        },
+
     };
 }
 
