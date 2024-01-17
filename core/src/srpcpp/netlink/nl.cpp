@@ -114,6 +114,22 @@ void NlContext::refillCache(void)
     }
 }
 
+int NlContext::nameToIfindex(const std::string& name)
+{
+    rtnl_link* link = NULL;
+    int ifindex = 0;
+
+    int err = rtnl_link_get_kernel(m_sock.get(), 0, name.c_str(), &link);
+
+    if (err < 0) {
+        throw std::runtime_error("nameToIfindex(), Cannot obtain link!");
+    };
+
+    ifindex = rtnl_link_get_ifindex(link);
+    rtnl_link_put(link);
+    return ifindex;
+}
+
 /**
  * @brief Return names of all links found in the link cache.
  *

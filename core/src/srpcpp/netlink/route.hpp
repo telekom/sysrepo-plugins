@@ -143,8 +143,15 @@ public:
 
     /**
      * @brief Remove selected next-hop.
+     * @deprecated Better use is addAndRemoveNextHops() with an empty std::vectot<NextHopHelper> = {} for addition
      */
-    void removeNextHop(const std::string& nh_address);
+    void removeNextHop(NextHopHelper& nh_obj);
+
+    /**
+     * @brief Add and remove next-hops to existing route.
+     * @details Method is structured like this so if it gives an error, it will not add one or more routes, so its all or none
+     */
+    void addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, const std::vector<NextHopHelper>& nhs_delete);
 
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.

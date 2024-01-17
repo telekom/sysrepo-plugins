@@ -60,6 +60,11 @@ public:
     void refillCache(void);
 
     /**
+     * @brief Returns the ifindex of specific link name.
+     */
+    int nameToIfindex(const std::string& name);
+
+    /**
      * @brief Return names of all links found in the link cache.
      *
      * @return Names of links in the cache.
