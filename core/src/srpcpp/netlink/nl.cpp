@@ -130,6 +130,22 @@ int NlContext::nameToIfindex(const std::string& name)
     return ifindex;
 }
 
+std::string NlContext::ifindexToName(const uint32_t& ifindex)
+{
+    rtnl_link* link = NULL;
+
+    int err = rtnl_link_get_kernel(m_sock.get(), ifindex, NULL, &link);
+
+    const char* name = rtnl_link_get_name(link);
+
+    if (err < 0) {
+        throw std::runtime_error("nameToIfindex(), Cannot obtain link!");
+    };
+
+    rtnl_link_put(link);
+    return std::string(name);
+}
+
 /**
  * @brief Return names of all links found in the link cache.
  *
@@ -702,6 +718,12 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
     rtnl_route* route = NULL;
     char buff[100] = { 0 };
     int err = 0;
+    bool is_zero = false;
+
+    // handle the zero address case
+    if (destination_addres.rfind("0.0.0.0", 0) == 0) {
+        is_zero = true;
+    };
 
     err = rtnl_route_alloc_cache(m_sock.get(), AF_ROUTE, 0, &route_cache);
 
@@ -709,7 +731,7 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
         throw std::runtime_error("Failed to allocate cache in findRoute()");
     }
 
-    err = nl_addr_parse(destination_addres.c_str(), AF_INET, &dst_addr);
+    err = nl_addr_parse(destination_addres.c_str(), AF_UNSPEC, &dst_addr);
 
     if (err < 0) {
         nl_cache_put(route_cache);
@@ -722,9 +744,17 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
 
         route_addr = rtnl_route_get_dst(iter);
 
-        if (nl_addr_cmp(route_addr, dst_addr) == 0) {
-            route = (rtnl_route*)nl_object_clone((nl_object*)iter);
-            break;
+        if (!is_zero) {
+
+            if (nl_addr_cmp(route_addr, dst_addr) == 0) {
+                route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+                break;
+            }
+        } else {
+            if (nl_addr_iszero(route_addr)) {
+                route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+                break;
+            }
         }
 
         iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
@@ -736,6 +766,45 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
         return RouteRef(route, m_sock.get());
     } else
         return std::nullopt;
+}
+
+/**
+ * @brief Get the routing map grouping by RIB, Family and Route.
+ *
+ * ---- table ----ipv4------route
+ * -------------------------route
+ * -------------------------route
+ * ---------------ipv6------route
+ * -------------------------route
+ * -------------------------route
+ *
+ */
+std::unordered_map<uint32_t, std::map<RouteFamily, std::vector<RouteRef>>> NlContext::getRoutingMap()
+{
+
+    std::unordered_map<uint32_t, std::map<RouteFamily, std::vector<RouteRef>>> route_data;
+    nl_cache* route_cache = m_routeCache.get();
+    nl_sock* socket = m_sock.get();
+    rtnl_route* iter = NULL;
+    int err = 0;
+
+    err = nl_cache_refill(socket, route_cache);
+
+    if (err < 0) {
+        throw std::runtime_error("getRoutingMap(), Failed to refill cache!");
+    }
+
+    iter = (rtnl_route*)nl_cache_get_first(route_cache);
+
+    while (iter) {
+
+        // push all routes to get them grouped by
+        route_data[rtnl_route_get_table(iter)][(RouteFamily)rtnl_route_get_family(iter)].push_back(RouteRef(iter, socket));
+
+        iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    return route_data;
 }
 
 /**

@@ -153,6 +153,16 @@ public:
      */
     void addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, const std::vector<NextHopHelper>& nhs_delete);
 
+    /**
+     * @brief get the name of the table.
+     */
+    static std::string tableToString(const uint32_t& table);
+
+    /**
+     * @brief get the Address in a string format.
+     */
+    std::string getDestinationString();
+
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.
     using RtnlRouteDeleter = NlDeleter<RtnlRoute>; ///< Deleter type alias.

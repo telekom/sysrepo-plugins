@@ -177,7 +177,7 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
                 // add gateway
                 if (gateway != "none" && addr_module.has_value()) {
-                    nh_node->newPath(addr_module.value() + ":next-hop-address", gateway);
+                    // nh_node->newPath(addr_module.value() + ":next-hop-address", gateway);
                 }
             } else if (std::holds_alternative<NextHopList>(next_hop)) {
                 auto next_hop_list = std::get<NextHopList>(next_hop);

@@ -5,6 +5,7 @@
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
+#include <map>
 
 ///< Type used for deleting libnl allocated structs
 template <typename T>
@@ -36,6 +37,11 @@ enum class NeighborOperations {
     Delete,
 };
 
+enum class RouteFamily {
+    RT_INET = 2,
+    RT_INET6 = 10,
+};
+
 // [TODO]: Make NlContext a singleton - one instance per plugin
 
 /**
@@ -63,6 +69,11 @@ public:
      * @brief Returns the ifindex of specific link name.
      */
     int nameToIfindex(const std::string& name);
+
+    /**
+     * @brief Returns the name of specific ifindex.
+     */
+    std::string ifindexToName(const uint32_t& ifindex);
 
     /**
      * @brief Return names of all links found in the link cache.
@@ -161,6 +172,11 @@ public:
      * @brief Get the routes cache.
      */
     CacheRef<RouteRef> getRouteCache();
+
+    /**
+     * @brief Get routing map with ribs.
+     */
+    std::unordered_map<uint32_t, std::map<RouteFamily, std::vector<RouteRef>>> getRoutingMap();
 
 private:
     NlUniquePtr<struct nl_sock> m_sock; ///< Netlink socket.

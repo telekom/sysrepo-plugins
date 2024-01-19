@@ -89,6 +89,11 @@ std::string AddressRef::toString() const
         throw std::runtime_error("Unable to convert address to text format");
     }
 
+    if(strcmp(buffer,"none") == 0){
+        //handle zero address case
+        return("0.0.0.0");
+    }
+
     return std::string(buffer);
 }
 

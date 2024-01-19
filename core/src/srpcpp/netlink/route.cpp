@@ -3,6 +3,7 @@
 #include "nexthop.hpp"
 #include <netlink/route/route.h>
 #include <stdexcept>
+#include <iostream>
 /**
  * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of members.
  */
@@ -267,7 +268,7 @@ void RouteRef::addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, c
                 next_hops_to_remove.push_back(next_hop);
             }
         };
-        
+
         // first we obtain and then delete the nexthops, since otherwise it messes in-loop deletion
         for (rtnl_nexthop* nh : next_hops_to_remove) {
             rtnl_route_remove_nexthop(current_route, nh);
@@ -298,4 +299,28 @@ void RouteRef::addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, c
     if (error < 0) {
         throw std::runtime_error(nl_geterror(error));
     }
+}
+
+std::string RouteRef::getDestinationString()
+{
+
+    char buffer[100] = { 0 };
+    void* error = 0;
+    nl_addr* addr = rtnl_route_get_dst(m_route.get());
+
+    if (nl_addr_iszero(addr)) {
+        return (std::string("0.0.0.0/" + std::to_string(nl_addr_get_prefixlen(addr))));
+    }
+
+    error = nl_addr2str(addr, buffer, sizeof(buffer));
+    if (error == nullptr) {
+        throw std::runtime_error("Unable to convert address to text format");
+    }
+
+    std::string buf_str(buffer);
+    if (buf_str.find("/") == std::string::npos) {
+        buf_str.append("/" + std::to_string(nl_addr_get_prefixlen(addr)));
+    }
+
+    return buf_str;
 }
