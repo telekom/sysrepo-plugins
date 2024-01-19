@@ -2,6 +2,7 @@
 #include "plugin/modules/routing/api/nexthop.hpp"
 #include "plugin/modules/routing/api/rib.hpp"
 #include "srpcpp/netlink/address.hpp"
+#include "srpcpp/netlink/route.hpp"
 #include "sysrepo.h"
 #include "common.hpp"
 #include <optional>
@@ -128,70 +129,33 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
 
     auto& nl_ctx = NlContext::getInstance();
 
-    auto route_cache = nl_ctx.getRouteCache();
+    auto route_map = nl_ctx.getRoutingMap();
 
-    auto base = RoutingInformationBase(route_cache);
+    auto ribs_node = output->newPath("ribs");
 
-    for (auto& rib_iter : base) {
-        auto& rib_name = rib_iter.first;
-        auto& rib_object = rib_iter.second;
-        auto& routes = rib_object.getRoutes();
+    for (auto&& rib : route_map) {
 
-        std::stringstream rib_path_buffer;
-
-        rib_path_buffer << "rib[name=\'" << rib_name << "\']";
-        auto rib_node = output->newPath(rib_path_buffer.str());
+        std::string table_family_name = RouteRef::tableToString(rib.first);
+        auto rib_node = ribs_node->newPath("rib[name='" + (table_family_name + "-ipv4") + "']");
         auto routes_node = rib_node->newPath("routes");
 
-        // default
-        rib_node->newPath("default-rib", rib_object.isDefault() ? "true" : "false");
-
-        // address family
-        rib_node->newPath("address-family", rib_object.getFamily() == AddressFamily::V4 ? "ipv4" : "ipv6");
-
-        for (auto& route : routes) {
-            std::stringstream pref_buffer, ifname_buffer, ip_buffer;
+        // ipv4 routes
+        for (auto&& ipv4_routes : rib.second[RouteFamily::RT_INET]) {
             auto route_node = routes_node->newPath("route");
-            auto nh_node = route_node->newPath("next-hop");
+            route_node->newPath("ietf-ipv4-unicast-routing:destination-prefix", ipv4_routes.getDestinationString());
+            auto next_hop_node = route_node->newPath("next-hop");
+            auto next_hop_list_node = next_hop_node->newPath("next-hop-list");
+            for (auto&& nhs : ipv4_routes.getNextHops()) {
 
-            pref_buffer << route.getPreference();
-
-            // route-preference
-            route_node->newPath("route-preference", pref_buffer.str());
-
-            // route-metadata
-            route_node->newPath("source-protocol", route.getMetadata().source_protocol);
-
-            // next-hop data
-            auto& next_hop = route.getNextHop();
-            if (std::holds_alternative<NextHopSimple>(next_hop)) {
-                auto next_hop_simple = std::get<NextHopSimple>(next_hop);
-
-                auto if_index = next_hop_simple.getInterfaceIndex();
-                auto gateway = next_hop_simple.getGateway();
-                auto interface = nl_ctx.getInterfaceByIndex((uint32_t)if_index);
-
-                nh_node->newPath("outgoing-interface", interface->getName());
-
-                auto addr_module = getUnicastModuleForAddressFamily(rib_object.getFamily());
-
-                // add gateway
-                if (gateway != "none" && addr_module.has_value()) {
-                    // nh_node->newPath(addr_module.value() + ":next-hop-address", gateway);
-                }
-            } else if (std::holds_alternative<NextHopList>(next_hop)) {
-                auto next_hop_list = std::get<NextHopList>(next_hop);
-            } else if (std::holds_alternative<NextHopSpecial>(next_hop)) {
-                auto next_hop_spec = std::get<NextHopSpecial>(next_hop);
-
-                // special-next-hop
-                nh_node->newPath("special-next-hop", next_hop_spec.getValue());
-            } else {
-                // invalid next-hop
+                auto next_hop_inside_node = next_hop_list_node->newPath("next-hop");
+                next_hop_inside_node->newPath("outgoing-interface", nl_ctx.ifindexToName(nhs.getInterfaceIndex()));
+                next_hop_inside_node->newPath("ietf-ipv4-unicast-routing:address", nhs.getGateway().toString());
             }
-
-            // SRPLG_LOG_INF(getModuleLogPrefix(), "Route: %d, %s", route.getPreference(), route.getMetadata().source_protocol.c_str());
         }
+
+        // // ipv6 routes
+        // for (auto&& ipv4_routes : rib.second[RouteFamily::RT_INET6]) {
+        // }
     }
 
     return error;

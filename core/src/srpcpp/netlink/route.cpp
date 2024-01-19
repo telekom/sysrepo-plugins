@@ -3,7 +3,6 @@
 #include "nexthop.hpp"
 #include <netlink/route/route.h>
 #include <stdexcept>
-#include <iostream>
 /**
  * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of members.
  */
@@ -299,6 +298,20 @@ void RouteRef::addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, c
     if (error < 0) {
         throw std::runtime_error(nl_geterror(error));
     }
+}
+
+std::string RouteRef::tableToString(const uint32_t& table)
+{
+
+    char buffer[50] = { 0 };
+    void* error = NULL;
+    error = rtnl_route_table2str(table, buffer, sizeof(buffer));
+
+    if (error == NULL) {
+        throw std::runtime_error("Cannot find name of Table in RIB table!");
+    }
+
+    return std::string(buffer);
 }
 
 std::string RouteRef::getDestinationString()

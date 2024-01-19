@@ -42,7 +42,7 @@ std::list<srpc::OperationalCallback> RoutingModule::getOperationalCallbacks()
         },
         srpc::OperationalCallback {
             .Module = "ietf-routing",
-            .XPath = "/ietf-routing:routing/ribs/rib",
+            .XPath = "/ietf-routing:routing/ribs",
             .Callback = ietf::rt::sub::oper::RoutingRibOperGetCb(m_operContext),
         },
     };
