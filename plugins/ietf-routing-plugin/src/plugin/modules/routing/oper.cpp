@@ -9,6 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <variant>
+#include <iostream>
 
 namespace ietf::rt::sub::oper {
 
@@ -147,15 +148,31 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
             auto next_hop_list_node = next_hop_node->newPath("next-hop-list");
             for (auto&& nhs : ipv4_routes.getNextHops()) {
 
+                // handle the zero case of the address
+                std::string nh_addr = nhs.getGateway().toString() == "none" ? "0.0.0.0" : nhs.getGateway().toString();
+
                 auto next_hop_inside_node = next_hop_list_node->newPath("next-hop");
                 next_hop_inside_node->newPath("outgoing-interface", nl_ctx.ifindexToName(nhs.getInterfaceIndex()));
-                next_hop_inside_node->newPath("ietf-ipv4-unicast-routing:address", nhs.getGateway().toString());
+                next_hop_inside_node->newPath("ietf-ipv4-unicast-routing:address", nh_addr);
             }
         }
 
-        // // ipv6 routes
-        // for (auto&& ipv4_routes : rib.second[RouteFamily::RT_INET6]) {
-        // }
+        // ipv6 routes
+        for (auto&& ipv6_routes : rib.second[RouteFamily::RT_INET6]) {
+            auto route_node = routes_node->newPath("route");
+            route_node->newPath("ietf-ipv6-unicast-routing:destination-prefix", ipv6_routes.getDestinationString());
+            auto next_hop_node = route_node->newPath("next-hop");
+            auto next_hop_list_node = next_hop_node->newPath("next-hop-list");
+            for (auto&& nhs : ipv6_routes.getNextHops()) {
+
+                // handle the zero case of the address
+                std::string nh_addr = nhs.getGateway().toString() == "none" ? "::" : nhs.getGateway().toString();
+
+                auto next_hop_inside_node = next_hop_list_node->newPath("next-hop");
+                next_hop_inside_node->newPath("outgoing-interface", nl_ctx.ifindexToName(nhs.getInterfaceIndex()));
+                next_hop_inside_node->newPath("ietf-ipv6-unicast-routing:address", nh_addr);
+            }
+        }
     }
 
     return error;
