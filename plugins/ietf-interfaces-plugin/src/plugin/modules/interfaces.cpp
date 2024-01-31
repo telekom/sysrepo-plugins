@@ -160,11 +160,11 @@ std::list<srpc::ModuleChangeCallback> InterfacesModule::getModuleChangeCallbacks
             "/ietf-interfaces:interfaces/interface/ipv4/address/prefix-length",
             Ipv4AddrPrefixLengthModuleChangeCb(this->m_changeContext),
         },
-        srpc::ModuleChangeCallback {
-            "ietf-interfaces",
-            "/ietf-interfaces:interfaces/interface/ipv4/address/netmask",
-            Ipv4AddrNetmaskModuleChangeCb(this->m_changeContext),
-        },
+        // srpc::ModuleChangeCallback {
+        //     "ietf-interfaces",
+        //     "/ietf-interfaces:interfaces/interface/ipv4/address/netmask",
+        //     Ipv4AddrNetmaskModuleChangeCb(this->m_changeContext),
+        // },
         srpc::ModuleChangeCallback {
             "ietf-interfaces",
             "/ietf-interfaces:interfaces/interface/ipv4/neighbor/ip",
@@ -220,21 +220,21 @@ std::list<srpc::ModuleChangeCallback> InterfacesModule::getModuleChangeCallbacks
             "/ietf-interfaces:interfaces/interface/ipv6/autoconf/create-global-addresses",
             Ipv6AutoconfCreateGlobalAddressesModuleChangeCb(this->m_changeContext),
         },
-        srpc::ModuleChangeCallback {
-            "ietf-interfaces",
-            "/ietf-interfaces:interfaces/interface/ipv6/autoconf/create-temporary-addresses",
-            Ipv6AutoconfCreateTemporaryAddressesModuleChangeCb(this->m_changeContext),
-        },
-        srpc::ModuleChangeCallback {
-            "ietf-interfaces",
-            "/ietf-interfaces:interfaces/interface/ipv6/autoconf/temporary-valid-lifetime",
-            Ipv6AutoconfTemporaryValidLifetimeModuleChangeCb(this->m_changeContext),
-        },
-        srpc::ModuleChangeCallback {
-            "ietf-interfaces",
-            "/ietf-interfaces:interfaces/interface/ipv6/autoconf/temporary-preferred-lifetime",
-            Ipv6AutoconfTemporaryPreferredLifetimeModuleChangeCb(this->m_changeContext),
-        },
+        // srpc::ModuleChangeCallback {
+        //     "ietf-interfaces",
+        //     "/ietf-interfaces:interfaces/interface/ipv6/autoconf/create-temporary-addresses",
+        //     Ipv6AutoconfCreateTemporaryAddressesModuleChangeCb(this->m_changeContext),
+        // },
+        // srpc::ModuleChangeCallback {
+        //     "ietf-interfaces",
+        //     "/ietf-interfaces:interfaces/interface/ipv6/autoconf/temporary-valid-lifetime",
+        //     Ipv6AutoconfTemporaryValidLifetimeModuleChangeCb(this->m_changeContext),
+        // },
+        // srpc::ModuleChangeCallback {
+        //     "ietf-interfaces",
+        //     "/ietf-interfaces:interfaces/interface/ipv6/autoconf/temporary-preferred-lifetime",
+        //     Ipv6AutoconfTemporaryPreferredLifetimeModuleChangeCb(this->m_changeContext),
+        // },
 
     };
 }
