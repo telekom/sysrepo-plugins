@@ -756,6 +756,10 @@ namespace sub::change {
                         }
                     }
 
+                    if (keys.empty()){
+                        keys = change.node.path().data();
+                    }
+
                     uint32_t delete_port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", keys)["port-ref"]);
 
                     // now check if the port ref contains the vids
