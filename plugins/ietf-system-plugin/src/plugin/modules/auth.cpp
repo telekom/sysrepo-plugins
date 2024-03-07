@@ -49,22 +49,24 @@ void AuthorizedKeyList::loadFromSystem(const std::string& username)
         ssh_dir = fs::path("/home/" + username + "/.ssh");
     }
 
-    for (const auto& entry : fs::directory_iterator(ssh_dir)) {
-        if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".pub") {
-            std::ifstream file(entry.path());
-            std::string algorithm, data;
+    if (fs::exists(ssh_dir)) {
+        for (const auto& entry : fs::directory_iterator(ssh_dir)) {
+            if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".pub") {
+                std::ifstream file(entry.path());
+                std::string algorithm, data;
 
-            if (file.is_open()) {
-                // read algorithm and key-data
-                file >> algorithm >> data;
-                keys.push_back(AuthorizedKey { .Name = entry.path().filename(),
-                    .Algorithm = algorithm,
-                    .Data = data });
-            } else {
-                throw std::runtime_error("Failed to open authorized key file.");
+                if (file.is_open()) {
+                    // read algorithm and key-data
+                    file >> algorithm >> data;
+                    keys.push_back(AuthorizedKey { .Name = entry.path().filename(),
+                        .Algorithm = algorithm,
+                        .Data = data });
+                } else {
+                    throw std::runtime_error("Failed to open authorized key file.");
+                }
+
+                file.close();
             }
-
-            file.close();
         }
     }
 
