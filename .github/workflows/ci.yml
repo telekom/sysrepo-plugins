@@ -79,8 +79,7 @@ jobs:
         run: |
           git clone https://github.com/cesnet/libyang
           cd libyang
-          git checkout devel
-          CC=${{matrix.config.cc}} cmake -B build
+          CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build
           sudo cmake --install build
           sudo ldconfig
@@ -100,8 +99,7 @@ jobs:
         run: |
           git clone https://github.com/sysrepo/sysrepo
           cd sysrepo 
-          git checkout devel
-          CC=${{matrix.config.cc}} cmake -B build
+          CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build
           sudo cmake --install build
           sudo ldconfig
