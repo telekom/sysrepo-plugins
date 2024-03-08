@@ -2144,11 +2144,11 @@ sr::ErrorCode InterfaceModuleChangeCb::operator()(sr::Session session, uint32_t 
             switch (change.operation) {
             case sysrepo::ChangeOperation::Created:
             case sysrepo::ChangeOperation::Modified:
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Interface: %d", value.c_str());
+                SRPLG_LOG_DBG(getModuleLogPrefix(), "Interface: %s", value.c_str());
                 break;
             case sysrepo::ChangeOperation::Deleted:
                 // delete interface with 'name' = 'name_value'
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Deleted Interface: %d", value.c_str());
+                SRPLG_LOG_DBG(getModuleLogPrefix(), "Deleted Interface: %s", value.c_str());
                 break;
             default:
                 // other options not needed
