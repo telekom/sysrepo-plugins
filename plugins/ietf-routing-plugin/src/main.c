@@ -5,7 +5,7 @@
 volatile int exit_application = 0;
 
 // extern needed data to build the plugin executable
-const char* PLUGIN_NAME = "ietf-system-interfaces";
+const char* PLUGIN_NAME = "ietf-routing-plugin";
 
 extern int sr_plugin_init_cb(sr_session_ctx_t* session, void** private_data);
 extern void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* private_data);

@@ -1,5 +1,5 @@
 /*
- * telekom / sysrepo-plugin-system
+ * telekom / ietf-access-control-list-plugin
  *
  * This program is made available under the terms of the
  * BSD 3-Clause license which is available at
@@ -17,7 +17,7 @@
 volatile int exit_application = 0;
 
 // extern needed data to build the plugin executable
-const char* PLUGIN_NAME = "ietf-system-plugin";
+const char* PLUGIN_NAME = "ietf-access-control-list-plugin";
 
 extern int sr_plugin_init_cb(sr_session_ctx_t* session, void** private_data);
 extern void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* private_data);
