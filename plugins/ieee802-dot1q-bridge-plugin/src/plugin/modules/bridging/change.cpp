@@ -680,7 +680,7 @@ namespace sub::change {
                 auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
 
                 if (!bridge_opt) {
-                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s not present!", bridge_name);
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Bridge %s not present!", bridge_name.c_str());
                     return sr::ErrorCode::CallbackFailed;
                 }
 
