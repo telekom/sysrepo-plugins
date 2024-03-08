@@ -52,10 +52,9 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
         fillInitialDatastoreFromSystem(sess);
     }
 
-    // for all registered modules - apply startup datastore values
-    // startup datastore values are coppied into the running datastore when the first connection with sysrepo is made
+    // for all registered modules - apply running datastore values
     for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Applying startup values for module %s", mod->getName());
+        SRPLG_LOG_INF(ctx->getPluginName(), "Applying running datastore values for module %s", mod->getName());
         for (auto& applier : mod->getValueAppliers()) {
             try {
                 applier->applyDatastoreValues(sess);
