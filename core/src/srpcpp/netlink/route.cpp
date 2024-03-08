@@ -195,7 +195,7 @@ void RouteRef::removeNextHop(NextHopHelper& nh_obj)
         rtnl_route* route;
         int ifindex;
         bool found_nh;
-    } arguments {
+    } arguments{
         .address = NULL,
         .route = m_route.get(),
         .ifindex = nh_obj.getIfindex(),
@@ -222,7 +222,7 @@ void RouteRef::removeNextHop(NextHopHelper& nh_obj)
             rtnl_route_remove_nexthop(in_args->route, nh);
             in_args->found_nh = true;
         }
-    };
+        };
 
     rtnl_route_foreach_nexthop(m_route.get(), nexthop_callback, (void*)&arguments);
 
@@ -337,3 +337,17 @@ std::string RouteRef::getDestinationString()
 
     return buf_str;
 }
+
+
+NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
+    : m_address(address)
+    , m_ifindex(ifindex)
+{}
+
+int NextHopHelper::getIfindex() {
+    return m_ifindex;
+}
+
+std::string NextHopHelper::getAddress() {
+    return m_address;
+};
