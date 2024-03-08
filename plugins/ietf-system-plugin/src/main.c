@@ -1,5 +1,5 @@
 /*
- * telekom / sysrepo-plugin-system
+ * telekom / ietf-system-plugin
  *
  * This program is made available under the terms of the
  * BSD 3-Clause license which is available at
