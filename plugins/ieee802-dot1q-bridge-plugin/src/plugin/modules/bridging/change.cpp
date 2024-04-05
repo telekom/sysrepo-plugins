@@ -756,12 +756,12 @@ namespace sub::change {
                         }
                     }
 
-
                     uint32_t delete_port_ref = std::stoi(srpc::extractListKeysFromXpath("port-map", keys)["port-ref"]);
 
                     if (keys.empty()){
                         keys = change.node.path().data();
                     }
+
 
                     // now check if the port ref contains the vids
                     auto delete_cb_slave = bridge_opt->getSlaveByIfindex(delete_port_ref);
