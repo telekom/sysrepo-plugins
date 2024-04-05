@@ -8,6 +8,19 @@
 class AddressRef;
 class NextHopRef;
 
+class NextHopHelper {
+private:
+    int m_ifindex;
+    std::string m_address;
+
+public:
+    NextHopHelper(const std::string& address, int ifindex);
+
+    int getIfindex();
+
+    std::string getAddress();
+};
+
 class RouteRef {
 public:
     friend class NlContext; ///< Allow NlContext to use the private constructor.
@@ -127,6 +140,28 @@ public:
      * @brief Returns the list of next-hops for the given route.
      */
     std::list<NextHopRef> getNextHops();
+
+    /**
+     * @brief Remove selected next-hop.
+     * @deprecated Better use is addAndRemoveNextHops() with an empty std::vectot<NextHopHelper> = {} for addition
+     */
+    void removeNextHop(NextHopHelper& nh_obj);
+
+    /**
+     * @brief Add and remove next-hops to existing route.
+     * @details Method is structured like this so if it gives an error, it will not add one or more routes, so its all or none
+     */
+    void addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, const std::vector<NextHopHelper>& nhs_delete);
+
+    /**
+     * @brief get the name of the table.
+     */
+    static std::string tableToString(const uint32_t& table);
+
+    /**
+     * @brief get the Address in a string format.
+     */
+    std::string getDestinationString();
 
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.

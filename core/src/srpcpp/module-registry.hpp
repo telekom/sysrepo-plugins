@@ -7,7 +7,6 @@
 #include <map>
 #include <memory>
 #include <list>
-#include <iostream>
 
 namespace srpc
 {

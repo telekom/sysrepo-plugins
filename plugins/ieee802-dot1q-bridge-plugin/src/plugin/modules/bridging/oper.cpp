@@ -2199,7 +2199,7 @@ namespace sub::oper {
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
 
-        std::string bridge_name = NlContext::getKeyValFromXpath("bridge", output->path())["name"];
+        std::string bridge_name = srpc::extractListKeysFromXpath("bridge", output->path())["name"];
 
         auto& nl_ctx = NlContext::getInstance();
 
@@ -3908,7 +3908,7 @@ namespace sub::oper {
         nl_ctx.refillCache();
 
         // get bridge name
-        std::string br_name = NlContext::getKeyValFromXpath("bridge", output->path())["name"];
+        std::string br_name = srpc::extractListKeysFromXpath("bridge", output->path())["name"];
 
         auto bridge = nl_ctx.getBridgeByName(br_name);
 

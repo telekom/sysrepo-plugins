@@ -9,8 +9,11 @@
 #include "plugin/modules/routing.hpp"
 
 #include "sysrepo.h"
+#include "sysrepo-cpp/utils/exception.hpp"
 
 namespace sr = sysrepo;
+
+inline void fillInitialRunninDS(sysrepo::Session& sess);
 
 /**
  * @brief Plugin init callback.
@@ -36,7 +39,22 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 
     auto& modules = registry.getRegisteredModules();
 
-    // for all registered modules - apply running datastore values
+    sess.switchDatastore(sysrepo::Datastore::Running);
+
+    // this is the check where we check if running is full or empty
+    auto data_cp_opt = sess.getData("/ietf-routing:routing/control-plane-protocols")->child()->child();
+    auto data_ribs_opt = sess.getData("/ietf-routing:routing/ribs")->child()->child();
+
+    if (!data_cp_opt && !data_ribs_opt) {
+        try {
+            fillInitialRunninDS(sess);
+        } catch (sysrepo::ErrorWithCode& e) {
+            SRPLG_LOG_ERR(ctx->getPluginName(), "Unable to fill running Datastore, Possible error is matching interfaces in interfaces plugin, Err: %s", e.what());
+        }
+    }
+
+    // for all registered modules - apply startup datastore values
+    // startup datastore values are coppied into the running datastore when the first connection with sysrepo is made
     for (auto& mod : modules) {
         SRPLG_LOG_INF(ctx->getPluginName(), "Applying running datastore values for module %s", mod->getName());
         for (auto& applier : mod->getValueAppliers()) {
@@ -91,4 +109,31 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
     delete ctx;
 
     SRPLG_LOG_INF(plugin_name, "Plugin cleanup finished");
+}
+
+inline void fillInitialRunninDS(sysrepo::Session& m_sess)
+{
+    auto& nl_ctx = NlContext::getInstance();
+
+    m_sess.switchDatastore(sr::Datastore::Running);
+
+    auto route_map = nl_ctx.getRoutingMap();
+
+    for (auto&& main_table_ipv4_route : route_map[254][RouteFamily::RT_INET]) {
+        int idx_count = 0;
+        for (auto&& nhs : main_table_ipv4_route.getNextHops()) {
+
+            // handle zero case of ipv4 address
+            std::string nh_addr = nhs.getGateway().toString() == "none" ? "0.0.0.0" : nhs.getGateway().toString();
+
+            m_sess.setItem("/ietf-routing:routing/control-plane-protocols/control-plane-protocol[type='ietf-routing:static'][name='unspec']/static-routes/ietf-ipv4-unicast-routing:ipv4/route[destination-prefix='" + main_table_ipv4_route.getDestinationString() + "']/next-hop/next-hop-list/next-hop[index='index-" + std::to_string(idx_count) + "']/next-hop-address", nh_addr);
+            m_sess.setItem("/ietf-routing:routing/control-plane-protocols/control-plane-protocol[type='ietf-routing:static'][name='unspec']/static-routes/ietf-ipv4-unicast-routing:ipv4/route[destination-prefix='" + main_table_ipv4_route.getDestinationString() + "']/next-hop/next-hop-list/next-hop[index='index-" + std::to_string(idx_count) + "']/outgoing-interface", nl_ctx.ifindexToName(nhs.getInterfaceIndex()));
+
+            idx_count++;
+        }
+
+        idx_count = 0;
+    }
+
+    m_sess.applyChanges();
 }

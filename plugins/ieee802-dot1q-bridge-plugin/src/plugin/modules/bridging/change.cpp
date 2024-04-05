@@ -245,7 +245,7 @@ namespace sub::change {
 
                 try {
                     // bridge_name = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='"+bridge_name+"']/name").asTerm().valueStr().data();
-                    bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path().data())["name"];
+                    bridge_name = srpc::extractListKeysFromXpath("bridge", change.node.path().data())["name"];
                 } catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot get bridge name node, reason: %s", e.what());
                 }
@@ -375,7 +375,7 @@ namespace sub::change {
                 case sysrepo::ChangeOperation::Created:
                 case sysrepo::ChangeOperation::Modified: {
 
-                    // std::string bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path().data())["name"];
+                    // std::string bridge_name = srpc::extractListKeysFromXpath("bridge", change.node.path().data())["name"];
                     // std::string bridge_address;
                     // try {
                     //     bridge_address = session.getOneNode("/ieee802-dot1q-bridge:bridges/bridge[name='" + bridge_name + "']/address").asTerm().valueStr().data();
@@ -670,7 +670,7 @@ namespace sub::change {
 
                 uint32_t port_ref = std::get<uint32_t>(change.node.asTerm().value());
 
-                std::unordered_map<std::string, std::string> filtering_entry = NlContext::getKeyValFromXpath("filtering-entry", change.node.path());
+                std::unordered_map<std::string, std::string> filtering_entry = srpc::extractListKeysFromXpath("filtering-entry", change.node.path());
 
                 auto& nl_ctx = NlContext::getInstance();
                 // first check if this port-ref exists
@@ -710,11 +710,11 @@ namespace sub::change {
 
                 std::string vids_node_string;
                 for (libyang::DataNode node : vlans_set) {
-                    if (std::stoi(NlContext::getKeyValFromXpath("port-map", node.path())["port-ref"]) == port_ref) {
+                    if (std::stoi(srpc::extractListKeysFromXpath("port-map", node.path())["port-ref"]) == port_ref) {
                         if (!vids_node_string.empty()) {
                             vids_node_string.push_back(',');
                         }
-                        vids_node_string.append(NlContext::getKeyValFromXpath("vlan-registration-entry", node.path())["vids"]);
+                        vids_node_string.append(srpc::extractListKeysFromXpath("vlan-registration-entry", node.path())["vids"]);
                     };
                 }
 
@@ -756,11 +756,12 @@ namespace sub::change {
                         }
                     }
 
+                    uint32_t delete_port_ref = std::stoi(srpc::extractListKeysFromXpath("port-map", keys)["port-ref"]);
+
                     if (keys.empty()){
                         keys = change.node.path().data();
                     }
 
-                    uint32_t delete_port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", keys)["port-ref"]);
 
                     // now check if the port ref contains the vids
                     auto delete_cb_slave = bridge_opt->getSlaveByIfindex(delete_port_ref);
@@ -776,7 +777,7 @@ namespace sub::change {
                         deletion_vids.push_back(i.getVid());
                     }
 
-                    auto str_vids_create = NlContext::getKeyValFromXpath("filtering-entry", keys)["vids"];
+                    auto str_vids_create =srpc::extractListKeysFromXpath("filtering-entry", keys)["vids"];
                     auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);
                     // and now check if array is a subset
                     if (!BridgeSlaveRef::isSubset(deletion_vids, vec_str_vids_create)) {
@@ -1513,7 +1514,7 @@ namespace sub::change {
                         // get data from datastore
                         // since vids are keys, easy-parse
 
-                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                        vids_data = srpc::extractListKeysFromXpath("vlan-registration-entry", change.node.path())["vids"];
                     }
 
                     std::vector<uint16_t> parsed_vids = BridgeRef::parseStringToVlanIDS(vids_data);
@@ -1559,7 +1560,7 @@ namespace sub::change {
                     }
 
                     if (vids_data.empty()) {
-                        vids_data = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                        vids_data = srpc::extractListKeysFromXpath("vlan-registration-entry", change.node.path())["vids"];
                     }
 
                     if (vids_data.empty()) {
@@ -1760,9 +1761,9 @@ namespace sub::change {
 
                     std::string value = change.node.asTerm().valueStr().data();
 
-                    std::string vids = NlContext::getKeyValFromXpath("vlan-registration-entry", change.node.path())["vids"];
-                    int port_ref = std::stoi(NlContext::getKeyValFromXpath("port-map", change.node.path())["port-ref"]);
-                    std::string bridge_name = NlContext::getKeyValFromXpath("bridge", change.node.path())["name"];
+                    std::string vids = srpc::extractListKeysFromXpath("vlan-registration-entry", change.node.path())["vids"];
+                    int port_ref = std::stoi(srpc::extractListKeysFromXpath("port-map", change.node.path())["port-ref"]);
+                    std::string bridge_name = srpc::extractListKeysFromXpath("bridge", change.node.path())["name"];
 
                     auto bridge_opt = nl_ctx.getBridgeByName(bridge_name);
 

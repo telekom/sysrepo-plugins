@@ -6,6 +6,7 @@
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
+#include <map>
 
 ///< Type used for deleting libnl allocated structs
 template <typename T>
@@ -26,6 +27,7 @@ class RouteAddressRef;
 class NeighborRef;
 class RouteRef;
 class BridgeRef;
+class NextHopHelper;
 enum class AddressFamily;
 template <typename T>
 class CacheRef;
@@ -34,6 +36,11 @@ enum class NeighborOperations {
     Create,
     Modify,
     Delete,
+};
+
+enum class RouteFamily {
+    RT_INET = 2,
+    RT_INET6 = 10,
 };
 
 // [TODO]: Make NlContext a singleton - one instance per plugin
@@ -58,6 +65,16 @@ public:
      * @brief Refill each cache.
      */
     void refillCache(void);
+
+    /**
+     * @brief Returns the ifindex of specific link name.
+     */
+    int nameToIfindex(const std::string& name);
+
+    /**
+     * @brief Returns the name of specific ifindex.
+     */
+    std::string ifindexToName(const uint32_t& ifindex);
 
     /**
      * @brief Return names of all links found in the link cache.
@@ -93,7 +110,7 @@ public:
 
     /**
      * @brief Create interface.
-     * 
+     *
      */
     void createBridgeInterface(std::string name, std::string address);
 
@@ -128,6 +145,16 @@ public:
     void neighbor(std::string interface_name, std::string address, std::string ll_addr, AddressFamily fam, NeighborOperations oper);
 
     /**
+     * @brief Create Route with multiple nextHops
+     */
+    void createRoute(std::string destination_prefix, const std::vector<NextHopHelper>& next_hops);
+
+    /**
+     * @brief Find Route by address and prefix-len
+     */
+    std::optional<RouteRef> findRoute(const std::string& destination_addres);
+
+    /**
      * @brief Get the links cache.
      */
     CacheRef<InterfaceRef> getLinkCache();
@@ -146,7 +173,11 @@ public:
      * @brief Get the routes cache.
      */
     CacheRef<RouteRef> getRouteCache();
-    static std::unordered_map<std::string,std::string> getKeyValFromXpath(const std::string& list_name, const std::string& xpath);
+
+    /**
+     * @brief Get routing map with ribs.
+     */
+    std::unordered_map<uint32_t, std::map<RouteFamily, std::vector<RouteRef>>> getRoutingMap();
 
 private:
     NlUniquePtr<struct nl_sock> m_sock; ///< Netlink socket.

@@ -114,6 +114,38 @@ void NlContext::refillCache(void)
     }
 }
 
+int NlContext::nameToIfindex(const std::string& name)
+{
+    rtnl_link* link = NULL;
+    int ifindex = 0;
+
+    int err = rtnl_link_get_kernel(m_sock.get(), 0, name.c_str(), &link);
+
+    if (err < 0) {
+        throw std::runtime_error("nameToIfindex(), Cannot obtain link!");
+    };
+
+    ifindex = rtnl_link_get_ifindex(link);
+    rtnl_link_put(link);
+    return ifindex;
+}
+
+std::string NlContext::ifindexToName(const uint32_t& ifindex)
+{
+    rtnl_link* link = NULL;
+
+    int err = rtnl_link_get_kernel(m_sock.get(), ifindex, NULL, &link);
+
+    const char* name = rtnl_link_get_name(link);
+
+    if (err < 0) {
+        throw std::runtime_error("nameToIfindex(), Cannot obtain link!");
+    };
+
+    rtnl_link_put(link);
+    return std::string(name);
+}
+
 /**
  * @brief Return names of all links found in the link cache.
  *
@@ -558,6 +590,223 @@ void NlContext::neighbor(std::string interface_name, std::string address, std::s
     clean();
 }
 
+void NlContext::createRoute(std::string destination_prefix, const std::vector<NextHopHelper>& next_hops)
+{
+    int error = 0;
+    nl_addr* destination_addr_ptr = NULL;
+    nl_addr* next_hop_addr_ptr = NULL;
+    rtnl_nexthop* next_hop = NULL;
+    rtnl_route* route = NULL;
+
+    auto clean = [&]() {
+        if (destination_addr_ptr != NULL)
+            nl_addr_put(destination_addr_ptr);
+        if (next_hop_addr_ptr != NULL)
+            nl_addr_put(next_hop_addr_ptr);
+        if (route != NULL)
+            rtnl_route_put(route);
+    };
+
+    error = nl_addr_parse(destination_prefix.c_str(), AF_INET, &destination_addr_ptr);
+    if (error < 0) {
+        throw std::runtime_error("Unable to parse destination prefix");
+    }
+
+    route = rtnl_route_alloc();
+
+    if (route == NULL) {
+        clean();
+        throw std::bad_alloc();
+    }
+
+    // set basic info
+    rtnl_route_set_table(route, RT_TABLE_MAIN);
+    rtnl_route_set_protocol(route, RTPROT_STATIC);
+
+    // set address info
+    error = rtnl_route_set_dst(route, destination_addr_ptr);
+    if (error < 0) {
+        clean();
+        throw std::runtime_error("rtnl_route_set_dst() Failed! ");
+    };
+    rtnl_route_set_family(route, AF_INET);
+
+    for (auto nh : next_hops) {
+        // set interface and next hop
+        std::string addr = nh.getAddress();
+        next_hop = rtnl_route_nh_alloc();
+
+        if (next_hop == NULL) {
+            clean();
+            throw std::bad_alloc();
+        }
+        error = nl_addr_parse(addr.c_str(), AF_INET, &next_hop_addr_ptr);
+        if (error < 0) {
+            clean();
+            throw std::runtime_error("Unable to parse destination prefix");
+        }
+
+        rtnl_route_nh_set_ifindex(next_hop, nh.getIfindex());
+        rtnl_route_nh_set_gateway(next_hop, next_hop_addr_ptr);
+
+        rtnl_route_add_nexthop(route, next_hop);
+    }
+
+    // guess the scope
+    rtnl_route_set_scope(route, (uint8_t)rtnl_route_guess_scope(route));
+
+    // add address to netlink
+    error = rtnl_route_add(m_sock.get(), route, NLM_F_CREATE | NLM_F_REPLACE);
+
+    if (error < 0) {
+        clean();
+        throw std::runtime_error("Unable to add route to the system , " + std::string(nl_geterror(error)));
+    }
+
+    clean();
+}
+
+void NlContext::deleteRoute(const std::string& destination_prefix)
+{
+    nl_addr* dest_addr = NULL;
+    rtnl_route* iter = NULL;
+    rtnl_route* route = NULL;
+    nl_cache* cache = m_routeCache.get();
+    int err = 0;
+
+    err = nl_addr_parse(destination_prefix.c_str(), AF_UNSPEC, &dest_addr);
+    if (err < 0)
+        throw std::runtime_error("deleteRoute(), Failed to parse address!");
+
+    err = nl_cache_refill(m_sock.get(), cache);
+    if (err < 0)
+        throw std::runtime_error("deleteRoute(), Failed to refill cache!");
+
+    iter = (rtnl_route*)nl_cache_get_first(cache);
+
+    while (iter) {
+
+        nl_addr* sys_addr = rtnl_route_get_dst(iter);
+
+        if (nl_addr_cmp(sys_addr, dest_addr) == 0) {
+            route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+        }
+
+        iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    if (route == NULL) {
+        throw std::runtime_error("deleteRoute(), Route not found!");
+    } else {
+        err = rtnl_route_delete(m_sock.get(), route, 0);
+
+        if (err < 0) {
+            rtnl_route_put(route);
+            throw std::runtime_error("deleteRoute(),Failed to delete route, reason: + " + std::string(nl_geterror(err)));
+        }
+        rtnl_route_put(route);
+    }
+}
+
+std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addres)
+{
+
+    nl_cache* route_cache = NULL;
+    rtnl_route* iter = NULL;
+    nl_addr* route_addr = NULL;
+    nl_addr* dst_addr = NULL;
+    rtnl_route* route = NULL;
+    char buff[100] = { 0 };
+    int err = 0;
+    bool is_zero = false;
+
+    // handle the zero address case
+    if (destination_addres.rfind("0.0.0.0", 0) == 0) {
+        is_zero = true;
+    };
+
+    err = rtnl_route_alloc_cache(m_sock.get(), AF_ROUTE, 0, &route_cache);
+
+    if (err < 0) {
+        throw std::runtime_error("Failed to allocate cache in findRoute()");
+    }
+
+    err = nl_addr_parse(destination_addres.c_str(), AF_UNSPEC, &dst_addr);
+
+    if (err < 0) {
+        nl_cache_put(route_cache);
+        throw std::runtime_error("Failed to parse address, findRoute()");
+    }
+
+    iter = (rtnl_route*)nl_cache_get_first(route_cache);
+
+    while (iter) {
+
+        route_addr = rtnl_route_get_dst(iter);
+
+        if (!is_zero) {
+
+            if (nl_addr_cmp(route_addr, dst_addr) == 0) {
+                route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+                break;
+            }
+        } else {
+            if (nl_addr_iszero(route_addr)) {
+                route = (rtnl_route*)nl_object_clone((nl_object*)iter);
+                break;
+            }
+        }
+
+        iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    nl_cache_put(route_cache);
+
+    if (route != NULL) {
+        return RouteRef(route, m_sock.get());
+    } else
+        return std::nullopt;
+}
+
+/**
+ * @brief Get the routing map grouping by RIB, Family and Route.
+ *
+ * ---- table ----ipv4------route
+ * -------------------------route
+ * -------------------------route
+ * ---------------ipv6------route
+ * -------------------------route
+ * -------------------------route
+ *
+ */
+std::unordered_map<uint32_t, std::map<RouteFamily, std::vector<RouteRef>>> NlContext::getRoutingMap()
+{
+
+    std::unordered_map<uint32_t, std::map<RouteFamily, std::vector<RouteRef>>> route_data;
+    nl_cache* route_cache = m_routeCache.get();
+    nl_sock* socket = m_sock.get();
+    rtnl_route* iter = NULL;
+    int err = 0;
+
+    err = nl_cache_refill(socket, route_cache);
+
+    if (err < 0) {
+        throw std::runtime_error("getRoutingMap(), Failed to refill cache!");
+    }
+
+    iter = (rtnl_route*)nl_cache_get_first(route_cache);
+
+    while (iter) {
+
+        // push all routes to get them grouped by
+        route_data[rtnl_route_get_table(iter)][(RouteFamily)rtnl_route_get_family(iter)].push_back(RouteRef(iter, socket));
+
+        iter = (rtnl_route*)nl_cache_get_next((nl_object*)iter);
+    }
+
+    return route_data;
+}
+
 /**
  * @brief Get the links cache.
  */
@@ -577,46 +826,3 @@ CacheRef<NeighborRef> NlContext::getNeighborCache() { return CacheRef<NeighborRe
  * @brief Get the routes cache.
  */
 CacheRef<RouteRef> NlContext::getRouteCache() { return CacheRef<RouteRef>(m_routeCache.get(), m_sock.get()); }
-std::unordered_map<std::string, std::string> NlContext::getKeyValFromXpath(const std::string& list_name, const std::string& xpath)
-{
-
-    std::unordered_map<std::string, std::string> map;
-
-    std::istringstream chunkStream(xpath);
-    std::string chunk;
-
-    while (std::getline(chunkStream, chunk, '/')) {
-        int pos = chunk.find(list_name);
-
-        // it should be at the begin of chunk so its 0
-        if (pos == 0) {
-            int begin = chunk.find('[');
-            int end = chunk.find(']');
-            // list is found, continue
-
-            while (begin != std::string::npos || end != std::string::npos) {
-
-                std::string mapstr(++chunk.begin() + begin, chunk.begin() + end);
-                chunk.erase(begin, ++end - begin);
-
-                // now split it by '=' in key value
-
-                int eq_pos = mapstr.find('=');
-
-                if (eq_pos == std::string::npos) {
-                    throw std::runtime_error("Failed to parse '=' sympol");
-                }
-
-                std::string key(mapstr.begin(), mapstr.begin() + eq_pos);
-                // value shrink by one place begin to end to eliminate ' '
-                std::string value(mapstr.begin() + eq_pos + 2, --mapstr.end());
-
-                map.insert(std::make_pair(key, value));
-
-                begin = chunk.find('[');
-                end = chunk.find(']');
-            }
-        }
-    }
-    return map;
-}

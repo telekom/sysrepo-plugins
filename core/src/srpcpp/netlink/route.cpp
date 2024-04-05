@@ -3,7 +3,6 @@
 #include "nexthop.hpp"
 #include <netlink/route/route.h>
 #include <stdexcept>
-
 /**
  * @brief Private constructor accessible only to netlink context. Stores a reference to a route for later access of members.
  */
@@ -187,3 +186,168 @@ std::list<NextHopRef> RouteRef::getNextHops()
 
     return nhs;
 }
+
+void RouteRef::removeNextHop(NextHopHelper& nh_obj)
+{
+
+    struct Args {
+        nl_addr* address;
+        rtnl_route* route;
+        int ifindex;
+        bool found_nh;
+    } arguments{
+        .address = NULL,
+        .route = m_route.get(),
+        .ifindex = nh_obj.getIfindex(),
+        .found_nh = false
+    };
+
+    int err = 0;
+
+    err = nl_addr_parse(nh_obj.getAddress().c_str(), AF_UNSPEC, &arguments.address);
+
+    if (err < 0) {
+        throw std::runtime_error("removeNextHop(), Failed to parse next-hop address!");
+    }
+
+    auto nexthop_callback = [](rtnl_nexthop* nh, void* args) {
+        char addr_buff[50] = { 0 };
+        nl_addr* addr = NULL;
+
+        addr = rtnl_route_nh_get_gateway(nh);
+
+        Args* in_args = (Args*)args;
+
+        if (nl_addr_cmp(addr, in_args->address) == 0 && rtnl_route_nh_get_ifindex(nh) == in_args->ifindex) {
+            rtnl_route_remove_nexthop(in_args->route, nh);
+            in_args->found_nh = true;
+        }
+        };
+
+    rtnl_route_foreach_nexthop(m_route.get(), nexthop_callback, (void*)&arguments);
+
+    if (!arguments.found_nh) {
+        throw std::runtime_error("removeNextHop(), next-hop not found!");
+    }
+    err = rtnl_route_add(m_socket.get(), m_route.get(), NLM_F_REPLACE);
+
+    if (err < 0) {
+        throw std::runtime_error("removeNextHop(), Failed replace route!");
+    }
+}
+
+void RouteRef::addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, const std::vector<NextHopHelper>& nhs_delete)
+{
+    int error = 0;
+    nl_addr* next_hop_addr = NULL;
+    nl_sock* socket = m_socket.get();
+    rtnl_route* current_route = (rtnl_route*)nl_object_clone((nl_object*)m_route.get());
+
+    // deletion part
+    for (auto nh : nhs_delete) {
+
+        nl_addr* address = NULL;
+
+        error = nl_addr_parse(nh.getAddress().c_str(), AF_UNSPEC, &address);
+
+        if (error < 0) {
+            throw std::runtime_error("addAndRemoveNextHops(), Failed to parse address!");
+        }
+
+        int next_hop_number = rtnl_route_get_nnexthops(current_route);
+
+        std::vector<rtnl_nexthop*> next_hops_to_remove;
+
+        // this may be improved with a Set data structure
+        for (int i = 0; i < next_hop_number; i++) {
+
+            rtnl_nexthop* next_hop = rtnl_route_nexthop_n(current_route, i);
+            if (nl_addr_cmp(address, rtnl_route_nh_get_gateway(next_hop)) == 0 && rtnl_route_nh_get_ifindex(next_hop) == nh.getIfindex()) {
+
+                next_hops_to_remove.push_back(next_hop);
+            }
+        };
+
+        // first we obtain and then delete the nexthops, since otherwise it messes in-loop deletion
+        for (rtnl_nexthop* nh : next_hops_to_remove) {
+            rtnl_route_remove_nexthop(current_route, nh);
+        }
+    }
+
+    // addition part
+    for (auto nh : nhs_add) {
+        // set interface and next hop
+        rtnl_nexthop* next_hop = rtnl_route_nh_alloc();
+
+        if (next_hop == NULL) {
+            throw std::bad_alloc();
+        }
+        error = nl_addr_parse(nh.getAddress().c_str(), AF_UNSPEC, &next_hop_addr);
+        if (error < 0) {
+            throw std::runtime_error("Unable to parse destination prefix");
+        }
+
+        rtnl_route_nh_set_ifindex(next_hop, nh.getIfindex());
+        rtnl_route_nh_set_gateway(next_hop, next_hop_addr);
+
+        rtnl_route_add_nexthop(current_route, next_hop);
+    }
+
+    error = rtnl_route_add(socket, current_route, NLM_F_REPLACE);
+
+    if (error < 0) {
+        throw std::runtime_error(nl_geterror(error));
+    }
+}
+
+std::string RouteRef::tableToString(const uint32_t& table)
+{
+
+    char buffer[50] = { 0 };
+    void* error = NULL;
+    error = rtnl_route_table2str(table, buffer, sizeof(buffer));
+
+    if (error == NULL) {
+        throw std::runtime_error("Cannot find name of Table in RIB table!");
+    }
+
+    return std::string(buffer);
+}
+
+std::string RouteRef::getDestinationString()
+{
+
+    char buffer[100] = { 0 };
+    void* error = 0;
+    nl_addr* addr = rtnl_route_get_dst(m_route.get());
+
+    if (nl_addr_iszero(addr)) {
+        return (std::string("0.0.0.0/" + std::to_string(nl_addr_get_prefixlen(addr))));
+    }
+
+    error = nl_addr2str(addr, buffer, sizeof(buffer));
+    if (error == nullptr) {
+        throw std::runtime_error("Unable to convert address to text format");
+    }
+
+    std::string buf_str(buffer);
+    if (buf_str.find("/") == std::string::npos) {
+        buf_str.append("/" + std::to_string(nl_addr_get_prefixlen(addr)));
+    }
+
+    return buf_str;
+}
+
+
+NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
+    : m_address(address)
+    , m_ifindex(ifindex)
+{}
+
+int NextHopHelper::getIfindex() {
+    return m_ifindex;
+}
+
+std::string NextHopHelper::getAddress() {
+    return m_address;
+};

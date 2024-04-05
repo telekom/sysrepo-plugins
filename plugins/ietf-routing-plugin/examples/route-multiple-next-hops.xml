@@ -1,0 +1,34 @@
+<routing xmlns="urn:ietf:params:xml:ns:yang:ietf-routing">
+  <control-plane-protocols>
+    <control-plane-protocol>
+      <type>static</type>
+      <name>unspec</name>
+      <static-routes>
+        <ipv4 xmlns="urn:ietf:params:xml:ns:yang:ietf-ipv4-unicast-routing">
+          <route>
+            <destination-prefix>10.10.10.0/24</destination-prefix>
+            <next-hop>
+              <next-hop-list>
+                <next-hop>
+                  <index>test5</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>192.168.0.120</next-hop-address>
+                </next-hop>
+                <next-hop>
+                  <index>test3</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>192.168.0.130</next-hop-address>
+                </next-hop>
+                <next-hop>
+                  <index>test4</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>192.168.0.100</next-hop-address>
+                </next-hop>
+              </next-hop-list>
+            </next-hop>
+          </route>
+        </ipv4>
+      </static-routes>
+    </control-plane-protocol>
+  </control-plane-protocols>
+</routing>
