@@ -46,6 +46,7 @@ set(
     src/plugin/modules/dns.cpp
     src/plugin/modules/ntp.cpp
     src/plugin/modules/auth.cpp
+    src/plugin/ntp.cpp
 )
 
 set(

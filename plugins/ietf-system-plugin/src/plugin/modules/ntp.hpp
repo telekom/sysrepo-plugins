@@ -10,6 +10,8 @@
 #include <optional>
 #include <string>
 
+#include "plugin/ntp.hpp"
+
 namespace sr = sysrepo;
 namespace ly = libyang;
 

@@ -7,6 +7,16 @@
 
 #include <srpcpp.hpp>
 
+// test
+#undef HOSTNAME_MODULE
+#undef TIMEZONE_MODULE
+
+#undef DNS_MODULE
+#undef AUTH_MODULE
+
+#define NTP_MODULE
+// test
+
 #ifdef SYSTEM_MODULE
 #include "plugin/modules/system.hpp"
 #endif
