@@ -5,6 +5,8 @@ ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
     //open the ntp.conf file for reading only
     this->path = file_path;
 
+    error_flag = false;
+
     file.open(file_path, std::ios::in);
     temp_filepath = file_path + "temp";
 
@@ -12,10 +14,12 @@ ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
     temp_file.open(temp_filepath, std::ios::out | std::ios::app);
 
     if (!file.is_open()) {
+        raiseError();
         throw NtpFileException();
     }
 
     if (!temp_file.is_open()) {
+        raiseError();
         throw NtpFileException();
     }
 
@@ -23,17 +27,22 @@ ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
 };
 
 ietf::sys::ntp::NTP::~NTP() {
-    //TODO handle checking if everything is ok
-    applyChanges();
+    if (!error_flag)
+        applyChanges();
 
     file.close();
     temp_file.close();
 
-    std::rename(temp_filepath.c_str(), path.c_str());
+    if (!error_flag) {
+        std::rename(temp_filepath.c_str(), path.c_str());
+    }
+    else {
+        std::remove(temp_filepath.c_str());
+    };
+
 };
 
 void ietf::sys::ntp::NTP::addServer(const NTPServer& server) {
-
     this->servers.push_back(server);
 }
 
@@ -105,18 +114,18 @@ std::string ietf::sys::ntp::NTP::parseAssocToString(NTPServerAssociationType ass
         throw NtpUnknownAssociationTypeException();
         break;
     }
-
-    throw NtpUnknownAssociationTypeException();
 }
+
+void ietf::sys::ntp::NTP::raiseError() {
+    error_flag = true;
+};
 
 void ietf::sys::ntp::NTP::readServersFromFile() {
     std::string input_line;
 
     while (std::getline(file, input_line)) {
-
-        if (input_line.rfind("pool") == 0 || input_line.rfind("server") == 0 || input_line.rfind("peer") == 0) {
+        if (input_line.rfind("pool", 0) == 0 || input_line.rfind("server", 0) == 0 || input_line.rfind("peer", 0) == 0) {
             // so we found server
-
             bool iburst = false;
             bool prefer = false;
 
@@ -179,10 +188,10 @@ bool ietf::sys::ntp::NTPServer::operator==(const NTPServer& other)const {
 
 //strict comparation
 bool ietf::sys::ntp::NTPServer::operator<=>(const NTPServer& other)const {
-    return (m_server.compare(other.m_server) == 0 &&
-        m_assoc_type == other.m_assoc_type &&
-        m_iburst == other.m_iburst &&
-        m_prefer == other.m_prefer
+    return ((m_server.compare(other.m_server) == 0) &&
+        (m_assoc_type == other.m_assoc_type) &&
+        (m_iburst == other.m_iburst) &&
+        (m_prefer == other.m_prefer)
         // maybe even name?
         );
 }

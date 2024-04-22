@@ -22,9 +22,10 @@ namespace ietf::sys::ntp {
     };
 
     class NTPServer {
+
     public:
         NTPServer(NTPServerAssociationType, const std::string&, bool, bool, const std::optional<std::string>&);
-
+        
         // no default constructor;
         NTPServer() = delete;
 
@@ -41,6 +42,7 @@ namespace ietf::sys::ntp {
 
         bool operator==(const NTPServer&)const;
 
+        //strict comparation
         bool operator<=>(const NTPServer&)const;
     private:
         NTPServerAssociationType m_assoc_type;
@@ -72,6 +74,7 @@ namespace ietf::sys::ntp {
     };
 
     class NTP {
+
     public:
         NTP(const std::string&);
 
@@ -84,20 +87,23 @@ namespace ietf::sys::ntp {
         void addServer(const NTPServer&);
         bool removeServer(const NTPServer&, NTPServerRemoveOpts);
 
+        //this method will not apply changes if somewhere along the way error happens
+        void raiseError();
+
         std::vector<NTPServer> getNTPServersList();
+
+        static NTPServerAssociationType parseAssocFromString(const std::string&);
+        static std::string parseAssocToString(NTPServerAssociationType);
+
+        void clearServers();
 
         virtual ~NTP();
 
     private:
 
-        NTPServerAssociationType parseAssocFromString(const std::string&);
-
-        std::string parseAssocToString(NTPServerAssociationType);
-
         void readServersFromFile();
-        void applyChanges();
 
-        void clearServers();
+        void applyChanges();
 
         std::fstream file;
         std::fstream temp_file;
@@ -107,6 +113,7 @@ namespace ietf::sys::ntp {
 
         std::vector<NTPServer> servers;
 
+        bool error_flag;
     };
 
 }

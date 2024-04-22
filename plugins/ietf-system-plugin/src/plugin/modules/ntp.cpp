@@ -1,5 +1,6 @@
 #include "ntp.hpp"
 #include <iostream>
+#include <srpcpp.hpp>
 
 namespace ietf::sys::ntp {
     /**
@@ -83,31 +84,141 @@ namespace ietf::sys::ntp::change {
         sr::ErrorCode error = sr::ErrorCode::Ok;
         switch (event) {
         case sysrepo::Event::Change: {
-            std::cout << "CHANGED" << std::endl;
 
-            ietf::sys::ntp::NTP ntp("/etc/ntp.conf");
+            NTP ntp("/etc/ntp.conf");
+            std::map<std::string, std::string> to_create, to_delete;
+            bool execute_modifications = false;
 
-            for (auto ntp_obj : ntp.getNTPServersList()) {
-                std::cout << " SERVER: " << ntp_obj.getNTPServer();
-                std::cout << " IBURST: " << ntp_obj.is_iburst();
-                std::cout << " PREFER: " << ntp_obj.is_prefer();
-                std::cout << " ASSOC: " << ntp_obj.getServerAssociationType();
-                // std::cout << " NAME: " << ntp_obj.getServerName().value_or("none");
-                std::cout << std::endl;
+            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Deleted: {
+
+                    std::string name = srpc::extractListKeysFromXpath("server", change.node.path().data())["name"];
+                    std::string address;
+                    NTPServerAssociationType assoc_type;
+                    bool iburst = false;
+                    bool prefer = false;
+
+                    for (libyang::DataNode child : change.node.childrenDfs()) {
+                        if (child.isTerm()) {
+
+                            if (child.schema().name() == "address") {
+                                address = child.asTerm().valueStr();
+                            }
+                            else if (child.schema().name() == "association-type") {
+                                try {
+                                    assoc_type = NTP::parseAssocFromString(child.asTerm().valueStr().data());
+                                }
+                                catch (NtpUnknownAssociationTypeException) {
+                                    ntp.raiseError();
+                                }
+                            }
+                            else if (child.schema().name() == "iburst") {
+                                iburst = std::get<bool>(child.asTerm().value());
+                            }
+                            else if (child.schema().name() == "prefer") {
+                                prefer = std::get<bool>(child.asTerm().value());
+                            };
+
+                        }
+
+                    }
+
+                    switch (change.operation) {
+                    case sysrepo::ChangeOperation::Deleted: {
+                        NTPServer ntp_remove(assoc_type, address, iburst, prefer, name);
+                        if (!ntp.removeServer(ntp_remove, NTPServerRemoveOpts::FIRST_MATCHING)) {
+                            ntp.raiseError();
+                            throw NtpEraseException();
+                        };
+                        break;
+                    }
+                    case sysrepo::ChangeOperation::Created: {
+                        ntp.addServer(NTPServer(assoc_type, address, iburst, prefer, name));
+                        break;
+                    }
+                    default:
+                        break;
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+                }
             }
 
-            // NTPServer server(NTPServerAssociationType::POOL, "ntp.example.com", true, false, "Test server");
-            // NTPServer server1(NTPServerAssociationType::SERVER, "ntp.example1.com", false, true, "Test server");
-            // NTPServer server2(NTPServerAssociationType::PEER, "ntp.example5.com", false, false, "Test server");
-            NTPServer server(NTPServerAssociationType::SERVER, "ntp.test1.com", false, false, "Test server");
+            for (sysrepo::Change change : session.getChanges(std::string(subXPath->data()).append("//*"))) {
+                if (change.operation == sr::ChangeOperation::Modified) {
+                    execute_modifications = true;
+                    //first we get all data for that node, than we modify the modified one
+                    std::string name = srpc::extractListKeysFromXpath("server", change.node.path().data())["name"];
 
-            // ntp.addServer(server);
-            // ntp.addServer(server1);
-            // ntp.addServer(server2);
+                    auto opt_data_node = session.getData("/ietf-system:system/ntp/server[name='" + name + "']");
 
-            ntp.removeServer(server, ALL_MATCHING);
-            // ntp.removeServer(server1);
-            // ntp.removeServer(server1);
+                    if (opt_data_node) {
+                        auto data_node = opt_data_node->findPath("/ietf-system:system/ntp/server[name='" + name + "']");
+                        for (const libyang::DataNode& node : data_node->childrenDfs()) {
+                            if (node.isTerm()) {
+                                to_create[node.schema().name().data()] = node.asTerm().valueStr();
+                            }
+                        }
+                    }
+
+                    if (change.node.isTerm()) {
+                        to_delete[change.node.schema().name().data()] = change.previousValue.value();
+                    }
+                }
+
+                //fill the empty ones in the delete map
+                for (auto pair : to_create) {
+                    if (to_delete[pair.first].empty()) {
+                        to_delete[pair.first] = pair.second;
+                    }
+                }
+            }
+
+            if (execute_modifications) {
+
+                {   //add scope for memory deallocation
+                    std::string name = to_create["name"];
+                    NTPServerAssociationType assoc_type;
+                    try {
+                        assoc_type = NTP::parseAssocFromString(to_create["association-type"]);
+                    }
+                    catch (NtpUnknownAssociationTypeException) {
+                        ntp.raiseError();
+                    }
+                    std::string ntp_server = to_create["address"];
+                    bool iburst = (to_create["iburst"] == "true" ? true : false);
+                    bool prefer = (to_create["prefer"] == "true" ? true : false);
+
+                    ntp.addServer(NTPServer(assoc_type, ntp_server, iburst, prefer, name));
+                }
+
+                {
+                    std::string name = to_delete["name"];
+                    NTPServerAssociationType assoc_type;
+                    try {
+                        assoc_type = NTP::parseAssocFromString(to_delete["association-type"]);
+                    }
+                    catch (NtpUnknownAssociationTypeException) {
+                        ntp.raiseError();
+                    }
+                    std::string ntp_server = to_delete["address"];
+                    bool iburst = (to_delete["iburst"] == "true" ? true : false);
+                    bool prefer = (to_delete["prefer"] == "true" ? true : false);
+
+                    if (!ntp.removeServer(NTPServer(assoc_type, ntp_server, iburst, prefer, name), NTPServerRemoveOpts::FIRST_MATCHING)) {
+                        ntp.raiseError();
+                        throw NtpEraseException();
+                    };
+                }
+
+                execute_modifications = false;
+            }
+
 
             break;
         }
@@ -690,7 +801,7 @@ std::list<srpc::ModuleChangeCallback> NtpModule::getModuleChangeCallbacks()
     return {
         srpc::ModuleChangeCallback {
             "ietf-system",
-            "/ietf-system:system/ntp/server/name",
+            "/ietf-system:system/ntp/server",
             ietf::sys::ntp::change::NtpServerNameModuleChangeCb(m_changeContext),
         },
     };
