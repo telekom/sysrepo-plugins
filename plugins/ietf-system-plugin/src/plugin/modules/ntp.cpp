@@ -1,6 +1,7 @@
 #include "ntp.hpp"
 #include <iostream>
 #include <srpcpp.hpp>
+#include "plugin/common.hpp"
 
 namespace ietf::sys::ntp {
     /**
@@ -85,7 +86,7 @@ namespace ietf::sys::ntp::change {
         switch (event) {
         case sysrepo::Event::Change: {
 
-            NTP ntp("/etc/ntp.conf");
+            NTPDbus ntp;
             std::map<std::string, std::string> to_create, to_delete;
             bool execute_modifications = false;
 
@@ -219,7 +220,13 @@ namespace ietf::sys::ntp::change {
                 execute_modifications = false;
             }
 
-
+            try {
+                ntp.restartNTP();
+            }
+            catch (std::exception& e) {
+                ntp.raiseError();
+                SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+            }
             break;
         }
         default:

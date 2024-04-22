@@ -7,6 +7,7 @@
 #include <set>
 #include <optional>
 #include <sstream>
+#include "plugin/sdbus.hpp"
 
 namespace ietf::sys::ntp {
 
@@ -25,7 +26,7 @@ namespace ietf::sys::ntp {
 
     public:
         NTPServer(NTPServerAssociationType, const std::string&, bool, bool, const std::optional<std::string>&);
-        
+
         // no default constructor;
         NTPServer() = delete;
 
@@ -114,6 +115,16 @@ namespace ietf::sys::ntp {
         std::vector<NTPServer> servers;
 
         bool error_flag;
+    };
+
+    // 
+
+    class NTPDbus : public NTP, public ietf::sys::SdBus<std::string, std::string, std::string> {
+    public:
+        NTPDbus();        
+        
+        void restartNTP();
+        
     };
 
 }

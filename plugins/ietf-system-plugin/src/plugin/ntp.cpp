@@ -211,3 +211,11 @@ bool ietf::sys::ntp::NTPServer::is_prefer() {
 std::optional<std::string> ietf::sys::ntp::NTPServer::getServerName() {
     return m_name;
 }
+
+// NTPSdbus derived class that contains dbus interface, NTP class with constructor file path /etc/ntp.conf
+//"org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Version", "RestartUnit"
+ietf::sys::ntp::NTPDbus::NTPDbus() : NTP("/etc/ntp.conf"), ietf::sys::SdBus<std::string, std::string, std::string>("org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "RestartUnit", "Version") {};
+
+void ietf::sys::ntp::NTPDbus::restartNTP() {
+    this->exportToSdBus("ntp.service", "replace");
+}
