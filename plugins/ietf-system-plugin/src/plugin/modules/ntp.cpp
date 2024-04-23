@@ -3,30 +3,6 @@
 #include <srpcpp.hpp>
 #include "plugin/common.hpp"
 
-namespace ietf::sys::ntp {
-    /**
-     * @brief Constructor for the list of ntp servers. Uses the session and augyang ability to retrieve NTP servers on the system.
-     */
-    NtpServerList::NtpServerList(sr::Session& sess)
-        : m_session(sess)
-    {
-    }
-
-    /**
-     * @brief Load the list from the system.
-     */
-    void NtpServerList::loadFromSystem()
-    {
-        // load the NTP servers from the configuration file in the session
-        const auto path = "/ntp:ntp[config-file=\'/etc/ntp.conf\']";
-    }
-
-    /**
-     * @brief Store the list to the system.
-     */
-    void NtpServerList::storeToSystem() { }
-}
-
 namespace ietf::sys::ntp::change {
     /**
      * sysrepo-plugin-generator: Generated default constructor.
@@ -45,7 +21,7 @@ namespace ietf::sys::ntp::change {
      * @param subXPath The optional xpath used at the time of subscription.
      * @param event Type of the event that has occured.
      * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
-     * SR_EV_DONE, for example) have the same request ID.
+     * SR_EV_DONE, for example) have then same request ID.
      *
      * @return Error code.
      *
@@ -54,6 +30,36 @@ namespace ietf::sys::ntp::change {
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sr::Event::Change: {
+            NTPState ntp;
+            bool enabled = false;
+            for (sr::Change change : session.getChanges(subXPath->data())) {
+
+                switch (change.operation) {
+
+                case sr::ChangeOperation::Created:
+                case sr::ChangeOperation::Modified: {
+                    enabled = std::get<bool>(change.node.asTerm().value());
+                    break;
+                }
+                case sr::ChangeOperation::Deleted:
+                    enabled = false;
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            ntp.ntpSetState(enabled);
+
+            break;
+        }
+
+        default:
+            break;
+        }
         return error;
     }
 
@@ -810,6 +816,11 @@ std::list<srpc::ModuleChangeCallback> NtpModule::getModuleChangeCallbacks()
             "ietf-system",
             "/ietf-system:system/ntp/server",
             ietf::sys::ntp::change::NtpServerNameModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-system",
+            "/ietf-system:system/ntp/enabled",
+            ietf::sys::ntp::change::NtpEnabledModuleChangeCb(m_changeContext),
         },
     };
 }

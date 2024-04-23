@@ -219,3 +219,23 @@ ietf::sys::ntp::NTPDbus::NTPDbus() : NTP("/etc/ntp.conf"), ietf::sys::SdBus<std:
 void ietf::sys::ntp::NTPDbus::restartNTP() {
     this->exportToSdBus("ntp.service", "replace");
 }
+
+//NTPState class that manipulates and gets the state on ntp.servive enabled and disabled state
+ietf::sys::ntp::NTPState::NTPState() {
+    m_proxy = sdbus::createProxy(M_DESTINATION, M_OBJ_PATH);
+};
+
+void ietf::sys::ntp::NTPState::ntpSetState(bool state) {
+    m_proxy->callMethod((state ? "Start" : "Stop")).onInterface(M_INTERFACE).withArguments(M_PARAM).dontExpectReply();
+};
+
+bool ietf::sys::ntp::NTPState::ntpGetState() {
+    sdbus::Variant var;
+    //                                                                           the interface as a parameter
+    m_proxy->callMethod(M_GET_METHOD).onInterface(M_GET_INTERFACE).withArguments(M_INTERFACE, M_UNIT_STATE_METHOD).storeResultsTo(var);
+    std::string active = var.get<std::string>();
+    if (active == "active") {
+        return true;
+    }
+    else return false;
+};

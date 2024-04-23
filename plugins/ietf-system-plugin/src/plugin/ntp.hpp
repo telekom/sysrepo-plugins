@@ -117,14 +117,35 @@ namespace ietf::sys::ntp {
         bool error_flag;
     };
 
-    // 
+    class NTPState {
+    public:
+        NTPState();
 
+        NTPState(const NTPState&) = delete;
+        NTPState(const NTPState&&) = delete;
+
+        void ntpSetState(bool);
+        bool ntpGetState();
+
+    private:
+        const std::string M_DESTINATION = "org.freedesktop.systemd1";
+        const std::string M_OBJ_PATH = "/org/freedesktop/systemd1/unit/ntp_2eservice";
+        const std::string M_UNIT_STATE_METHOD = "ActiveState";
+        const std::string M_INTERFACE = "org.freedesktop.systemd1.Unit";
+        const std::string M_GET_INTERFACE = "org.freedesktop.DBus.Properties";
+        const std::string M_GET_METHOD = "Get";
+        const std::string M_PARAM = "replace";
+
+        std::unique_ptr<sdbus::IProxy> m_proxy;
+    };
+    
+    //we do not inherit NTPState, since there is no need due to diferent callbacks
     class NTPDbus : public NTP, public ietf::sys::SdBus<std::string, std::string, std::string> {
     public:
-        NTPDbus();        
-        
+        NTPDbus();
+
         void restartNTP();
-        
     };
+
 
 }
