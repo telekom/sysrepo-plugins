@@ -34,15 +34,15 @@
 #include "sysrepo.h"
 
 namespace sr = sysrepo;
-
-/**
- * @brief Plugin init callback.
- *
- * @param session Plugin session.
- * @param priv Private data.
- *
- * @return Error code (SR_ERR_OK on success).
- */
+ 
+ /**
+  * @brief Plugin init callback.
+  *
+  * @param session Plugin session.
+  * @param priv Private data.
+  *
+  * @return Error code (SR_ERR_OK on success).
+  */
 int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 {
     sr::ErrorCode error = sysrepo::ErrorCode::Ok;
@@ -82,13 +82,13 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     // get all registered modules
     auto& modules = registry.getRegisteredModules();
 
-    // for all registered modules - apply running datastore values
     for (auto& mod : modules) {
         SRPLG_LOG_INF(ctx->getPluginName(), "Applying running datastore values for module %s", mod->getName());
         for (auto& applier : mod->getValueAppliers()) {
             try {
                 applier->applyDatastoreValues(sess);
-            } catch (const std::runtime_error& err) {
+            }
+            catch (const std::runtime_error& err) {
                 SRPLG_LOG_ERR(
                     ctx->getPluginName(),
                     "Failed to apply datastore values for the following paths:");

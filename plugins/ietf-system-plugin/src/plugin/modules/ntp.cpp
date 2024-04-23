@@ -752,16 +752,76 @@ namespace ietf::sys::ntp::oper {
         std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        ietf::sys::ntp::NTPDbus ntp;
+        ietf::sys::ntp::NTPState ntp_state;
+
+        uint16_t counter = 0;
+        try {
+            output->newPath("/ietf-system:system/ntp/enabled", (ntp_state.ntpGetState() ? "true" : "false"));
+
+            for (auto server : ntp.getNTPServersList()) {
+                counter++;
+                std::string&& server_name = "Server-" + std::to_string(counter);
+                output->newPath("/ietf-system:system/ntp/server[name='" + server_name + "']/udp/address", server.getNTPServer());
+                output->newPath("/ietf-system:system/ntp/server[name='" + server_name + "']/association-type", ietf::sys::ntp::NTP::parseAssocToString(server.getServerAssociationType()));
+                output->newPath("/ietf-system:system/ntp/server[name='" + server_name + "']/iburst", (server.is_iburst() ? "true" : "false"));
+                output->newPath("/ietf-system:system/ntp/server[name='" + server_name + "']/prefer", (server.is_prefer() ? "true" : "false"));
+            }
+        }
+        catch (std::exception& e) {
+            ntp.raiseError();
+            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+        }
+
         return error;
     }
 }
 
 /**
- * @brief Apply datastore content from the provided session to the system.
+ * @brief Apply system values to running ds
  *
  * @param session Session to use for retreiving datastore data.
  */
-void NtpValuesApplier::applyDatastoreValues(sysrepo::Session& session) { }
+void NtpValuesApplier::applyDatastoreValues(sysrepo::Session& session) {
+    //first we get the active ds so we can revert
+    sr::Datastore active_ds = session.activeDatastore();
+    session.switchDatastore(sr::Datastore::Running);
+
+    // just clear it so it can be overwriten
+    session.deleteItem("/ietf-system:system/ntp");
+    session.applyChanges();
+
+    //set the enabled value
+    ietf::sys::ntp::NTPState ntpstate;
+
+    bool ntp_enabled = ntpstate.ntpGetState();
+
+    uint16_t counter = 0;
+
+    ietf::sys::ntp::NTPDbus ntp;
+
+    try {
+
+        session.setItem("/ietf-system:system/ntp/enabled", (ntp_enabled ? "true" : "false"));
+
+        for (auto ntp_srv : ntp.getNTPServersList()) {
+            counter++;
+            std::string&& server_count = "Server-" + std::to_string(counter);
+            session.setItem("/ietf-system:system/ntp/server[name=\"" + server_count + "\"]/udp/address", ntp_srv.getNTPServer());
+            session.setItem("/ietf-system:system/ntp/server[name=\"" + server_count + "\"]/association-type", ietf::sys::ntp::NTP::parseAssocToString(ntp_srv.getServerAssociationType()));
+            session.setItem("/ietf-system:system/ntp/server[name=\"" + server_count + "\"]/iburst", (ntp_srv.is_iburst() ? "true" : "false"));
+            session.setItem("/ietf-system:system/ntp/server[name=\"" + server_count + "\"]/prefer", (ntp_srv.is_prefer() ? "true" : "false"));
+        };
+    }
+    catch (std::exception& e) {
+        ntp.raiseError();
+        SRPLG_LOG_ERR(ietf::sys::PLUGIN_NAME, e.what());
+    }
+
+    session.applyChanges();
+    session.switchDatastore(active_ds);
+}
 
 /**
  * NTP module constructor. Allocates each context.
@@ -800,8 +860,8 @@ std::list<srpc::OperationalCallback> NtpModule::getOperationalCallbacks()
     return {
         srpc::OperationalCallback {
             "ietf-system",
-            "/ietf-system:system/ntp/server",
-            ietf::sys::ntp::oper::NtpServerOperGetCb(m_operContext),
+            "/ietf-system:system/ntp",
+            ietf::sys::ntp::oper::NtpOperGetCb(m_operContext),
         },
     };
 }
