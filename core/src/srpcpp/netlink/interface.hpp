@@ -27,14 +27,13 @@ struct InterfaceStats {
     uint32_t OutErrors;
 };
 
-const std::unordered_map<std::string, std::string> InterfaceTypes
-    = {
-          { "iana-if-type:ethernetCsmacd", "veth" },
-          { "iana-if-type:softwareLoopback", "vcan" },
-          //{ "iana-if-type:l2vlan", "vlan" },
-          { "iana-if-type:other", "dummy" },
-          { "iana-if-type:bridge", "bridge" },
-      };
+const std::unordered_map<std::string, std::string> InterfaceTypes = {
+      { "iana-if-type:ethernetCsmacd", "veth" },
+      { "iana-if-type:softwareLoopback", "vcan" },
+      //{ "iana-if-type:l2vlan", "vlan" },
+      { "iana-if-type:other", "dummy" },
+      { "iana-if-type:bridge", "bridge" },
+};
 
 class InterfaceRef {
 public:
@@ -109,7 +108,7 @@ public:
     /**
      * @brief Changes the MTU of an interface.
      */
-    void setMtu(uint16_t mtu);
+    void setMtu(uint32_t mtu);
 
     /**
      * @brief Enable/Dissable forwarding of an interface.
@@ -121,6 +120,24 @@ public:
      */
     bool isBridge(void);
 
+    /**
+     * @breif get interface type
+     */
+    std::string getIanaType(void);
+
+    /**
+     * @brief Get the family specific mtu
+     * @return MTU
+     */
+    bool getForwarding(AddressFamily fam);
+
+    /**
+    * @brief Check if ipv 4/6 is enabled by checking if it contains ipv fam specific address
+    * @param addr_cache RouteAddressCache - Address cache iterator class
+    * @return boolean state of ipv interface
+    */
+    bool isIPVEnabled(AddressFamily, CacheRef<RouteAddressRef>& );
+    
 private:
     using RtnlLink = struct rtnl_link; ///< Route link type alias.
     using RtnlLinkDeleter = NlDeleter<RtnlLink>; ///< Deleter type alias.

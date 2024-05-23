@@ -71,7 +71,8 @@ sr::ErrorCode InterfaceNameModuleChangeCb::operator()(sr::Session session, uint3
                 // delete interface with 'name' = 'name_value'
                 try {
                     nl_ctx.deleteInterface(name_value);
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot remove %s, reason: %s", name_value.c_str(), e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -180,7 +181,8 @@ sr::ErrorCode InterfaceTypeModuleChangeCb::operator()(sr::Session session, uint3
     try {
         // update cache
         nl_ctx.refillCache();
-    } catch (const std::runtime_error& err) {
+    }
+    catch (const std::runtime_error& err) {
         SRPLG_LOG_ERR(getModuleLogPrefix(), "Error refilling cache: %s", err.what());
         return sr::ErrorCode::OperationFailed;
     }
@@ -257,7 +259,8 @@ sr::ErrorCode InterfaceEnabledModuleChangeCb::operator()(sr::Session session, ui
 
                 // get interface reference
                 if_ref = nl_ctx.getInterfaceByName(interface_name);
-            } catch (std::exception& e) {
+            }
+            catch (std::exception& e) {
                 SRPLG_LOG_ERR(getModuleLogPrefix(), "Error: %s", e.what());
             };
 
@@ -267,7 +270,8 @@ sr::ErrorCode InterfaceEnabledModuleChangeCb::operator()(sr::Session session, ui
                 // apply 'enabled_value' value for interface 'interface_name'
                 try {
                     if_ref.has_value() ? if_ref->setEnabled(enabled_value) : throw std::bad_optional_access();
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot change Enabled: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -410,14 +414,16 @@ sr::ErrorCode Ipv4EnabledModuleChangeCb::operator()(sr::Session session, uint32_
                     for (libyang::DataNode&& child : address_node.childrenDfs()) {
                         if (std::string(child.schema().name().data()).compare("prefix-length") == 0) {
                             prefix_len = std::stoi(child.asTerm().valueStr().data());
-                        } else if (std::string(child.schema().name().data()).compare("ip") == 0) {
+                        }
+                        else if (std::string(child.schema().name().data()).compare("ip") == 0) {
                             address = child.asTerm().valueStr().data();
                         }
                     }
 
                     if (enabled_value) {
                         ctx.createAddress(interface_name, address, prefix_len, AddressFamily::V4);
-                    } else {
+                    }
+                    else {
                         ctx.deleteAddress(interface_name, address, prefix_len, AddressFamily::V4);
                     }
                 }
@@ -490,8 +496,10 @@ sr::ErrorCode Ipv4ForwardingModuleChangeCb::operator()(sr::Session session, uint
             case sysrepo::ChangeOperation::Modified: {
 
                 try {
-                    if_ref->setForwarding(forwarding_value, AddressFamily::V4);
-                } catch (std::exception& e) {
+                    // if_ref->setForwarding(forwarding_value, AddressFamily::V4);
+                    if_ref->setForwarding(forwarding_value, AddressFamily::V6);
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
                 }
 
@@ -558,7 +566,8 @@ sr::ErrorCode Ipv4MtuModuleChangeCb::operator()(sr::Session session, uint32_t su
             case sysrepo::ChangeOperation::Modified:
                 try {
                     if_ref ? if_ref->setMtu(mtu_value) : throw std::bad_optional_access();
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot change MTU: %s", e.what());
                 }
 
@@ -626,12 +635,14 @@ sr::ErrorCode Ipv4AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
 
             if (!enabled_data.has_value()) {
                 enabled_running_ds = false;
-            } else {
+            }
+            else {
                 const auto& enabled_opt
                     = enabled_data->findPath("/ietf-interfaces:interfaces/interface[name='" + interface_name + "']/ietf-ip:ipv4/enabled");
                 if (!enabled_data.has_value()) {
                     enabled_running_ds = false;
-                } else {
+                }
+                else {
                     enabled_running_ds = std::get<bool>(enabled_opt->asTerm().value());
                 }
             }
@@ -650,7 +661,8 @@ sr::ErrorCode Ipv4AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
                         ctx.createAddress(interface_name, address_value, prefix_len, AddressFamily::V4);
                     }
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot create address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -674,7 +686,8 @@ sr::ErrorCode Ipv4AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
                         ctx.deleteAddress(interface_name, address_value, prefix_len, AddressFamily::V4);
                     }
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot delete address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -759,7 +772,8 @@ sr::ErrorCode Ipv4AddrPrefixLengthModuleChangeCb::operator()(sr::Session session
                         return sr::ErrorCode::NotFound;
                     }
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot modify prefix-length: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -947,7 +961,8 @@ sr::ErrorCode Ipv4NeighIpModuleChangeCb::operator()(sr::Session session, uint32_
 
                     ctx.neighbor(interface_name, address_value, ll_addr, AddressFamily::V4, NeighborOperations::Create);
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot create address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -970,7 +985,8 @@ sr::ErrorCode Ipv4NeighIpModuleChangeCb::operator()(sr::Session session, uint32_
 
                     ctx.neighbor(interface_name, address_value, ll_addr, AddressFamily::V4, NeighborOperations::Delete);
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot delete address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -1040,7 +1056,8 @@ sr::ErrorCode Ipv4NeighLinkLayerAddressModuleChangeCb::operator()(sr::Session se
                     nl_ctx.refillCache();
                     nl_ctx.neighbor(interface_name, neigh_addr, lladdr, AddressFamily::V4, NeighborOperations::Modify);
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     return sr::ErrorCode::CallbackFailed;
                     SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
                 }
@@ -1177,14 +1194,16 @@ sr::ErrorCode Ipv6EnabledModuleChangeCb::operator()(sr::Session session, uint32_
                     for (libyang::DataNode&& child : address_node.childrenDfs()) {
                         if (std::string(child.schema().name().data()).compare("prefix-length") == 0) {
                             prefix_len = std::stoi(child.asTerm().valueStr().data());
-                        } else if (std::string(child.schema().name().data()).compare("ip") == 0) {
+                        }
+                        else if (std::string(child.schema().name().data()).compare("ip") == 0) {
                             address = child.asTerm().valueStr().data();
                         }
                     }
 
                     if (enabled_value) {
                         ctx.createAddress(interface_name, address, prefix_len, AddressFamily::V6);
-                    } else {
+                    }
+                    else {
                         ctx.deleteAddress(interface_name, address, prefix_len, AddressFamily::V6);
                     }
                 }
@@ -1293,20 +1312,27 @@ sr::ErrorCode Ipv6MtuModuleChangeCb::operator()(sr::Session session, uint32_t su
     switch (event) {
     case sysrepo::Event::Change:
         // apply interface changes to the netlink context received from module changes context
-        for (auto& change : session.getChanges("/ietf-interfaces:interfaces/interface/ipv6/mtu")) {
+        for (sysrepo::Change change : session.getChanges("/ietf-interfaces:interfaces/interface/ipv6/mtu")) {
 
             const auto& value = change.node.asTerm().value();
-            const auto& name_value = std::get<uint32_t>(value);
+            const auto& mtu_value = std::get<uint32_t>(value);
+
+            auto& nl_ctx = NlContext::getInstance();
+
+            std::string interface_name = srpc::extractListKeysFromXpath("interface", change.node.path())["name"];
 
             switch (change.operation) {
             case sysrepo::ChangeOperation::Created:
-            case sysrepo::ChangeOperation::Modified:
+            case sysrepo::ChangeOperation::Modified: {
 
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Mtu: %d", name_value);
+                auto interface = nl_ctx.getInterfaceByName(interface_name);
+
+                if (interface.has_value()) {
+                    interface->setMtu(mtu_value);
+                };
                 break;
-            case sysrepo::ChangeOperation::Deleted:
-                SRPLG_LOG_DBG(getModuleLogPrefix(), "Deleted Mtu: %d", name_value);
-                break;
+            }
+                                                   //delete mtu does nothing, or handle some default value?
             default:
                 // other options not needed
                 break;
@@ -1369,12 +1395,14 @@ sr::ErrorCode Ipv6AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
 
             if (!enabled_data.has_value()) {
                 enabled_running_ds = false;
-            } else {
+            }
+            else {
                 const auto& enabled_opt
                     = enabled_data->findPath("/ietf-interfaces:interfaces/interface[name='" + interface_name + "']/ietf-ip:ipv6/enabled");
                 if (!enabled_data.has_value()) {
                     enabled_running_ds = false;
-                } else {
+                }
+                else {
                     enabled_running_ds = std::get<bool>(enabled_opt->asTerm().value());
                 }
             }
@@ -1393,7 +1421,8 @@ sr::ErrorCode Ipv6AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
                         ctx.createAddress(interface_name, address_value, prefix_len, AddressFamily::V6);
                     }
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot create address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -1416,7 +1445,8 @@ sr::ErrorCode Ipv6AddrIpModuleChangeCb::operator()(sr::Session session, uint32_t
                         ctx.deleteAddress(interface_name, address_value, prefix_len, AddressFamily::V6);
                     }
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot delete address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -1498,7 +1528,8 @@ sr::ErrorCode Ipv6AddrPrefixLengthModuleChangeCb::operator()(sr::Session session
                         return sr::ErrorCode::NotFound;
                     }
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot modify prefix-length: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -1602,7 +1633,8 @@ sr::ErrorCode Ipv6NeighIpModuleChangeCb::operator()(sr::Session session, uint32_
 
                     ctx.neighbor(interface_name, address_value, ll_addr, AddressFamily::V6, NeighborOperations::Create);
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot create address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -1624,7 +1656,8 @@ sr::ErrorCode Ipv6NeighIpModuleChangeCb::operator()(sr::Session session, uint32_
 
                     ctx.neighbor(interface_name, address_value, ll_addr, AddressFamily::V6, NeighborOperations::Delete);
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot delete address: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
                 }
@@ -1693,7 +1726,8 @@ sr::ErrorCode Ipv6NeighLinkLayerAddressModuleChangeCb::operator()(sr::Session se
                     nl_ctx.refillCache();
                     nl_ctx.neighbor(interface_name, neigh_addr, lladdr, AddressFamily::V6, NeighborOperations::Modify);
 
-                } catch (std::exception& e) {
+                }
+                catch (std::exception& e) {
                     return sr::ErrorCode::CallbackFailed;
                     SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
                 }

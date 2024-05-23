@@ -8,7 +8,8 @@
 #include <stdexcept>
 #include <linux/if.h>
 #include <fstream>
-
+#include <linux/if_arp.h>
+#include <linux/ipv6.h>
 /**
  * @brief Private constructor accessible only to netlink context. Stores a reference to a link for later access of link members.
  */
@@ -172,7 +173,7 @@ void InterfaceRef::setEnabled(bool enabled)
 /**
  * @brief Changes the MTU of an interface.
  */
-void InterfaceRef::setMtu(uint16_t mtu)
+void InterfaceRef::setMtu(uint32_t mtu)
 {
 
     RtnlLink* current_link = m_link.get();
@@ -232,7 +233,88 @@ void InterfaceRef::setForwarding(bool enabled, AddressFamily fam)
     // file path probably varies from system to system
 }
 
-bool InterfaceRef::isBridge(void)
-{
+bool InterfaceRef::isBridge(void) {
     return (bool)rtnl_link_is_bridge(m_link.get());
+}
+
+std::string InterfaceRef::getIanaType() {
+
+    std::string iana_prefix = "iana-if-type:";
+
+    const char* rtnl_type = rtnl_link_get_type(m_link.get());
+
+    //bridge is handled by type since by arp num its a eth interface
+    if (rtnl_type && std::string(rtnl_type) == "bridge") {
+        return iana_prefix + "bridge";
+    }
+
+    //if its not bridge, handle arptype
+    unsigned int type = rtnl_link_get_arptype(m_link.get());
+
+
+    switch (type) {
+    case ARPHRD_ETHER:
+    case ARPHRD_EETHER:
+    case ARPHRD_IEEE802:
+        return iana_prefix + "ethernetCsmacd";
+
+    case ARPHRD_LOOPBACK:
+        return iana_prefix + "softwareLoopback";
+
+    case ARPHRD_IEEE80211:
+    case ARPHRD_IEEE80211_PRISM:
+    case ARPHRD_IEEE80211_RADIOTAP:
+        return iana_prefix + "ieee80211";
+
+    default:
+        return "iana-if-type:other";
+    }
+
+    // types can be added, and maped from the <linux/if_arp.h> header as a key,
+    // and from the identities of the iana-if-type model.
+
+}
+
+bool InterfaceRef::getForwarding(AddressFamily fam) {
+
+    std::fstream fw_file;
+    std::string ip_version;
+
+    switch (fam) {
+    case AddressFamily::V4:
+        ip_version = "ipv4";
+        break;
+    case AddressFamily::V6:
+        ip_version = "ipv6";
+        break;
+    default:
+        break;
+    };
+
+    std::string path = "/proc/sys/net/" + ip_version + "/conf/" + this->getName() + "/forwarding";
+
+    fw_file.open(path, std::ios::in);
+
+    if (!fw_file.is_open())
+        throw std::runtime_error("Error opening file: " + path);
+
+    char enabled_ch;
+    fw_file >> enabled_ch;
+
+    fw_file.close();
+
+    return (enabled_ch == '1' ? true : false);
+
+}
+
+bool InterfaceRef::isIPVEnabled(AddressFamily fam, CacheRef<RouteAddressRef>& addr_cache) {
+    //this functuon checks if there is ipv 4/6 address present, which means that has ipv x interface
+
+    for (RouteAddressRef& addr : addr_cache) {
+        if (addr.getFamily() == fam && addr.getInterfaceIndex() == this->getIndex()) {
+            return true;
+        }
+    }
+
+    return false;
 }
