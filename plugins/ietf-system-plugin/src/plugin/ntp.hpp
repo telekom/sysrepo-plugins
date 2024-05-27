@@ -30,9 +30,6 @@ namespace ietf::sys::ntp {
         // no default constructor;
         NTPServer() = delete;
 
-        //NTPServer(const NTPServer&) = delete;
-        //NTPServer(const NTPServer&&) = delete;
-
         NTPServerAssociationType getServerAssociationType();
         std::optional<std::string> getServerName();
         std::string getNTPServer();

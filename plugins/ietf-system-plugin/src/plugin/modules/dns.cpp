@@ -876,7 +876,6 @@ namespace ietf::sys::sub::change {
 
                 const auto name_node = change.node.findPath("name");
                 const auto address_node = change.node.findPath("udp-and-tcp/address");
-                // [TODO]: Check for DNS port feature to get the port node
 
                 switch (change.operation) {
                 case sysrepo::ChangeOperation::Created: {

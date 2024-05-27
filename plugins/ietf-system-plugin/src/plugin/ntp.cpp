@@ -57,11 +57,11 @@ bool ietf::sys::ntp::NTP::removeServer(const NTPServer& server, NTPServerRemoveO
         if (*it <=> server) {
             servers.erase(it);
             deleted = true;
-            if (opt == FIRST_MATCHING) break;
+            if (opt == FIRST_MATCHING)
+                break;
         }
-        else {
+        else
             it++;
-        }
     }
     return deleted;
 }
@@ -102,17 +102,12 @@ std::string ietf::sys::ntp::NTP::parseAssocToString(NTPServerAssociationType ass
     switch (assoc_type) {
     case POOL:
         return "pool";
-        break;
     case PEER:
         return "peer";
-        break;
     case SERVER:
         return "server";
-        break;
-
     default:
         throw NtpUnknownAssociationTypeException();
-        break;
     }
 }
 
@@ -125,7 +120,7 @@ void ietf::sys::ntp::NTP::readServersFromFile() {
 
     while (std::getline(file, input_line)) {
         if (input_line.rfind("pool", 0) == 0 || input_line.rfind("server", 0) == 0 || input_line.rfind("peer", 0) == 0) {
-            // so we found server
+            // server found
             bool iburst = false;
             bool prefer = false;
 
@@ -192,7 +187,6 @@ bool ietf::sys::ntp::NTPServer::operator<=>(const NTPServer& other)const {
         (m_assoc_type == other.m_assoc_type) &&
         (m_iburst == other.m_iburst) &&
         (m_prefer == other.m_prefer)
-        // maybe even name?
         );
 }
 
@@ -231,7 +225,7 @@ void ietf::sys::ntp::NTPState::ntpSetState(bool state) {
 
 bool ietf::sys::ntp::NTPState::ntpGetState() {
     sdbus::Variant var;
-    //                                                                           the interface as a parameter
+    //M_INTERFACE is the interface as a parameter
     m_proxy->callMethod(M_GET_METHOD).onInterface(M_GET_INTERFACE).withArguments(M_INTERFACE, M_UNIT_STATE_METHOD).storeResultsTo(var);
     std::string active = var.get<std::string>();
     if (active == "active") {
