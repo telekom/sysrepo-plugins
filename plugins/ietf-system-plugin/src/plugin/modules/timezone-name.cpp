@@ -18,226 +18,227 @@ static constexpr const char* getModuleLogPrefix()
 }
 
 namespace ietf::sys {
-/**
- * @brief Default constructor.
- */
-TimezoneName::TimezoneName()
-    : SdBus<std::string, std::string, bool>(
-        "org.freedesktop.timedate1", "/org/freedesktop/timedate1",
-        "org.freedesktop.timedate1", "SetTimezone", "Timezone")
-{
-}
+    /**
+     * @brief Default constructor.
+     */
+    TimezoneName::TimezoneName()
+        : SdBus<std::string, std::string, bool>(
+            "org.freedesktop.timedate1", "/org/freedesktop/timedate1",
+            "org.freedesktop.timedate1", "SetTimezone", "Timezone")
+    {
+    }
 
-/**
- * @brief Get timezone name value from the system.
- *
- * @return System timezone name.
- */
-std::string TimezoneName::getValue(void) { return this->importFromSdBus(); }
+    /**
+     * @brief Get timezone name value from the system.
+     *
+     * @return System timezone name.
+     */
+    std::string TimezoneName::getValue(void) { return this->importFromSdBus(); }
 
-/**
- * @brief Set the timezone name on the system.
- *
- * @param timezone_name Timezone to set.
- */
-void TimezoneName::setValue(const std::string& timezone_name)
-{
-    this->exportToSdBus(timezone_name, false);
-}
+    /**
+     * @brief Set the timezone name on the system.
+     *
+     * @param timezone_name Timezone to set.
+     */
+    void TimezoneName::setValue(const std::string& timezone_name)
+    {
+        this->exportToSdBus(timezone_name, false);
+    }
 
 } // namespace ietf::sys
 
 namespace ietf::sys::sub::oper {
-/**
- * sysrepo-plugin-generator: Generated default constructor.
- *
- * @param ctx Plugin operational context.
- *
- */
-ClockTimezoneNameOperGetCb::ClockTimezoneNameOperGetCb(
-    std::shared_ptr<TimezoneOperationalContext> ctx)
-{
-    m_ctx = ctx;
-}
+    /**
+     * sysrepo-plugin-generator: Generated default constructor.
+     *
+     * @param ctx Plugin operational context.
+     *
+     */
+    ClockTimezoneNameOperGetCb::ClockTimezoneNameOperGetCb(
+        std::shared_ptr<TimezoneOperationalContext> ctx)
+    {
+        m_ctx = ctx;
+    }
 
-/**
- * sysrepo-plugin-generator: Generated operator() for path
- * /ietf-system:system/clock/timezone-name.
- *
- * @param session An implicit session for the callback.
- * @param subscriptionId ID the subscription associated with the callback.
- * @param moduleName The module name used for subscribing.
- * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected
- * events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree
- * with the requested data.
- *
- * @return Error code.
- *
- */
-sr::ErrorCode ClockTimezoneNameOperGetCb::operator()(
-    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath,
-    std::optional<std::string_view> requestXPath, uint32_t requestId,
-    std::optional<ly::DataNode>& output)
-{
-    sr::ErrorCode error = sr::ErrorCode::Ok;
+    /**
+     * sysrepo-plugin-generator: Generated operator() for path
+     * /ietf-system:system/clock/timezone-name.
+     *
+     * @param session An implicit session for the callback.
+     * @param subscriptionId ID the subscription associated with the callback.
+     * @param moduleName The module name used for subscribing.
+     * @param subXPath The optional xpath used at the time of subscription.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this tree
+     * with the requested data.
+     *
+     * @return Error code.
+     *
+     */
+    sr::ErrorCode ClockTimezoneNameOperGetCb::operator()(
+        sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath, uint32_t requestId,
+        std::optional<ly::DataNode>& output)
+    {
+        sr::ErrorCode error = sr::ErrorCode::Ok;
 
-    TimezoneName tz_handle;
+        TimezoneName tz_handle;
 
-    auto tz_name = tz_handle.getValue();
+        auto tz_name = tz_handle.getValue();
 
-    output->newPath("timezone-name", tz_name);
+        output->newPath("timezone-name", tz_name);
 
-    return error;
-}
+        return error;
+    }
 
-/**
- * sysrepo-plugin-generator: Generated default constructor.
- *
- * @param ctx Plugin operational context.
- *
- */
-ClockTimezoneUtcOffsetOperGetCb::ClockTimezoneUtcOffsetOperGetCb(
-    std::shared_ptr<TimezoneOperationalContext> ctx)
-{
-    m_ctx = ctx;
-}
+    /**
+     * sysrepo-plugin-generator: Generated default constructor.
+     *
+     * @param ctx Plugin operational context.
+     *
+     */
+    ClockTimezoneUtcOffsetOperGetCb::ClockTimezoneUtcOffsetOperGetCb(
+        std::shared_ptr<TimezoneOperationalContext> ctx)
+    {
+        m_ctx = ctx;
+    }
 
-/**
- * sysrepo-plugin-generator: Generated operator() for path
- * /ietf-system:system/clock/timezone-utc-offset.
- *
- * @param session An implicit session for the callback.
- * @param subscriptionId ID the subscription associated with the callback.
- * @param moduleName The module name used for subscribing.
- * @param subXPath The optional xpath used at the time of subscription.
- * @param requestId Request ID unique for the specific module_name. Connected
- * events for one request (SR_EV_CHANGE and
- * @param output A handle to a tree. The callback is supposed to fill this tree
- * with the requested data.
- *
- * @return Error code.
- *
- */
-sr::ErrorCode ClockTimezoneUtcOffsetOperGetCb::operator()(
-    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath,
-    std::optional<std::string_view> requestXPath, uint32_t requestId,
-    std::optional<ly::DataNode>& output)
-{
-    sr::ErrorCode error = sr::ErrorCode::Ok;
-    return error;
-}
+    /**
+     * sysrepo-plugin-generator: Generated operator() for path
+     * /ietf-system:system/clock/timezone-utc-offset.
+     *
+     * @param session An implicit session for the callback.
+     * @param subscriptionId ID the subscription associated with the callback.
+     * @param moduleName The module name used for subscribing.
+     * @param subXPath The optional xpath used at the time of subscription.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and
+     * @param output A handle to a tree. The callback is supposed to fill this tree
+     * with the requested data.
+     *
+     * @return Error code.
+     *
+     */
+    sr::ErrorCode ClockTimezoneUtcOffsetOperGetCb::operator()(
+        sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+        std::optional<std::string_view> subXPath,
+        std::optional<std::string_view> requestXPath, uint32_t requestId,
+        std::optional<ly::DataNode>& output)
+    {
+        sr::ErrorCode error = sr::ErrorCode::Ok;
+        return error;
+    }
 } // namespace ietf::sys::sub::oper
 
 namespace ietf::sys::sub::change {
-/**
- * sysrepo-plugin-generator: Generated default constructor.
- *
- * @param ctx Plugin module change context.
- *
- */
-ClockTimezoneNameModuleChangeCb::ClockTimezoneNameModuleChangeCb(
-    std::shared_ptr<TimezoneModuleChangesContext> ctx)
-{
-    m_ctx = ctx;
-}
-
-/**
- * sysrepo-plugin-generator: Generated module change operator() for path
- * /ietf-system:system/clock/timezone-name.
- *
- * @param session An implicit session for the callback.
- * @param subscriptionId ID the subscription associated with the callback.
- * @param moduleName The module name used for subscribing.
- * @param subXPath The optional xpath used at the time of subscription.
- * @param event Type of the event that has occured.
- * @param requestId Request ID unique for the specific module_name. Connected
- * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
- * same request ID.
- *
- * @return Error code.
- *
- */
-sr::ErrorCode ClockTimezoneNameModuleChangeCb::operator()(
-    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, sr::Event event,
-    uint32_t requestId)
-{
-    sr::ErrorCode error = sr::ErrorCode::Ok;
-
-    TimezoneName tz_handle;
-
-    switch (event) {
-    case sysrepo::Event::Change:
-        for (auto& change : session.getChanges(subXPath->data())) {
-            switch (change.operation) {
-            case sysrepo::ChangeOperation::Created:
-            case sysrepo::ChangeOperation::Modified: {
-                auto value = change.node.asTerm().value();
-                auto timezone_name = std::get<std::string>(value);
-
-                try {
-                    tz_handle.setValue(timezone_name);
-                } catch (const std::runtime_error& err) {
-                    SRPLG_LOG_ERR(ietf::sys::PLUGIN_NAME, "%s", err.what());
-                    error = sr::ErrorCode::OperationFailed;
-                }
-
-                break;
-            }
-            case sysrepo::ChangeOperation::Deleted:
-                break;
-            case sysrepo::ChangeOperation::Moved:
-                break;
-            }
-        }
-        break;
-    default:
-        break;
+    /**
+     * sysrepo-plugin-generator: Generated default constructor.
+     *
+     * @param ctx Plugin module change context.
+     *
+     */
+    ClockTimezoneNameModuleChangeCb::ClockTimezoneNameModuleChangeCb(
+        std::shared_ptr<TimezoneModuleChangesContext> ctx)
+    {
+        m_ctx = ctx;
     }
 
-    return error;
-}
+    /**
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/clock/timezone-name.
+     *
+     * @param session An implicit session for the callback.
+     * @param subscriptionId ID the subscription associated with the callback.
+     * @param moduleName The module name used for subscribing.
+     * @param subXPath The optional xpath used at the time of subscription.
+     * @param event Type of the event that has occured.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
+     *
+     * @return Error code.
+     *
+     */
+    sr::ErrorCode ClockTimezoneNameModuleChangeCb::operator()(
+        sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+        std::optional<std::string_view> subXPath, sr::Event event,
+        uint32_t requestId)
+    {
+        sr::ErrorCode error = sr::ErrorCode::Ok;
 
-/**
- * sysrepo-plugin-generator: Generated default constructor.
- *
- * @param ctx Plugin module change context.
- *
- */
-ClockTimezoneUtcOffsetModuleChangeCb::ClockTimezoneUtcOffsetModuleChangeCb(
-    std::shared_ptr<TimezoneModuleChangesContext> ctx)
-{
-    m_ctx = ctx;
-}
+        TimezoneName tz_handle;
 
-/**
- * sysrepo-plugin-generator: Generated module change operator() for path
- * /ietf-system:system/clock/timezone-utc-offset.
- *
- * @param session An implicit session for the callback.
- * @param subscriptionId ID the subscription associated with the callback.
- * @param moduleName The module name used for subscribing.
- * @param subXPath The optional xpath used at the time of subscription.
- * @param event Type of the event that has occured.
- * @param requestId Request ID unique for the specific module_name. Connected
- * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
- * same request ID.
- *
- * @return Error code.
- *
- */
-sr::ErrorCode ClockTimezoneUtcOffsetModuleChangeCb::operator()(
-    sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
-    std::optional<std::string_view> subXPath, sr::Event event,
-    uint32_t requestId)
-{
-    sr::ErrorCode error = sr::ErrorCode::Ok;
-    return error;
-}
+        switch (event) {
+        case sysrepo::Event::Change:
+            for (auto& change : session.getChanges(subXPath->data())) {
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+                    auto value = change.node.asTerm().value();
+                    auto timezone_name = std::get<std::string>(value);
+
+                    try {
+                        tz_handle.setValue(timezone_name);
+                    }
+                    catch (const std::runtime_error& err) {
+                        SRPLG_LOG_ERR(ietf::sys::PLUGIN_NAME, "%s", err.what());
+                        error = sr::ErrorCode::OperationFailed;
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted:
+                    break;
+                case sysrepo::ChangeOperation::Moved:
+                    break;
+                }
+            }
+            break;
+        default:
+            break;
+        }
+
+        return error;
+    }
+
+    /**
+     * sysrepo-plugin-generator: Generated default constructor.
+     *
+     * @param ctx Plugin module change context.
+     *
+     */
+    ClockTimezoneUtcOffsetModuleChangeCb::ClockTimezoneUtcOffsetModuleChangeCb(
+        std::shared_ptr<TimezoneModuleChangesContext> ctx)
+    {
+        m_ctx = ctx;
+    }
+
+    /**
+     * sysrepo-plugin-generator: Generated module change operator() for path
+     * /ietf-system:system/clock/timezone-utc-offset.
+     *
+     * @param session An implicit session for the callback.
+     * @param subscriptionId ID the subscription associated with the callback.
+     * @param moduleName The module name used for subscribing.
+     * @param subXPath The optional xpath used at the time of subscription.
+     * @param event Type of the event that has occured.
+     * @param requestId Request ID unique for the specific module_name. Connected
+     * events for one request (SR_EV_CHANGE and SR_EV_DONE, for example) have the
+     * same request ID.
+     *
+     * @return Error code.
+     *
+     */
+    sr::ErrorCode ClockTimezoneUtcOffsetModuleChangeCb::operator()(
+        sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+        std::optional<std::string_view> subXPath, sr::Event event,
+        uint32_t requestId)
+    {
+        sr::ErrorCode error = sr::ErrorCode::Ok;
+        return error;
+    }
 } // namespace ietf::sys::sub::change
 
 /**
@@ -256,34 +257,26 @@ TimezoneValueChecker::checkDatastoreValues(sysrepo::Session& session)
 }
 
 /**
- * @brief Apply datastore content from the provided session to the system.
+ * @brief Apply datastore content from the system to the session
  *
  * @param session Session to use for retreiving datastore data.
  */
 void TimezoneValueApplier::applyDatastoreValues(sysrepo::Session& session)
 {
-    auto system_node = session.getData("/ietf-system:system");
-    if (system_node) {
-        auto timezone_node = system_node->findPath("clock/timezone-name");
-        if (timezone_node) {
-            auto timezone_value = timezone_node->asTerm().value();
-            auto timezone = std::get<std::string>(timezone_value);
-            auto timezone_sys = ietf::sys::TimezoneName();
 
-            if (timezone != timezone_sys.getValue()) {
-                // apply the datastore values
-                SRPLG_LOG_INF(
-                    getModuleLogPrefix(),
-                    "Timezone name system value mismatched: applying datastore value");
-                timezone_sys.setValue(timezone);
-                // throw std::runtime_error("Timezone name value from the datastore not
-                // in sync with the value from sd-bus");
-            } else {
-                SRPLG_LOG_INF(getModuleLogPrefix(),
-                    "Timezone name system value matches the datastore value");
-            }
-        }
-    }
+    sr::Datastore active_datastore = session.activeDatastore();
+    session.switchDatastore(sr::Datastore::Running);
+
+    session.deleteItem("/ietf-system:system/clock/timezone-name");
+    session.applyChanges();
+
+    ietf::sys::TimezoneName tz;
+
+    session.setItem("/ietf-system:system/clock/timezone-name", tz.getValue());
+
+    session.applyChanges();
+    session.switchDatastore(active_datastore);
+   
 }
 
 /**
