@@ -32,7 +32,6 @@ find_package(SYSREPOCPP REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 find_package(SYSREPO REQUIRED)
 find_package(LIBYANG REQUIRED)
-find_package(UMGMT REQUIRED)
 find_package(LIBSYSTEMD REQUIRED)
 find_package(LIBSDBUSCPP REQUIRED)
 
