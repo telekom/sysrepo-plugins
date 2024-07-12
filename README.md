@@ -1,11 +1,11 @@
 <h1 align="center">
-    Sysrepo Plugins
+  Sysrepo Plugins
 </h1>
 
 <p align="center">
-    <a href="/../../commits/" title="Last Commit"><img src="https://img.shields.io/github/last-commit/telekom/sysrepo-plugins?style=flat"></a>
-    <a href="/../../issues" title="Open Issues"><img src="https://img.shields.io/github/issues/telekom/sysrepo-plugins?style=flat"></a>
-    <a href="./LICENSE" title="License"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat"></a>
+  <a href="/../../commits/" title="Last Commit"><img src="https://img.shields.io/github/last-commit/telekom/sysrepo-plugins?style=flat"></a>
+  <a href="/../../issues" title="Open Issues"><img src="https://img.shields.io/github/issues/telekom/sysrepo-plugins?style=flat"></a>
+  <a href="./LICENSE" title="License"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat"></a>
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@ ietf-interfaces-plugin is based on the `ietf-interfaces` YANG module which provi
 More information about the specific YANG module can be found in [RFC 7223: A YANG Data Model for Interface Management](https://datatracker.ietf.org/doc/html/rfc7223).
 
 
-The second, sysrepo-plugin-routing is based on the `ietf-routing` YANG module which provides
+ietf-routing-plugin is based on the `ietf-routing` YANG module which provides
 "generic components of a routing data model" and `ietf-ipv4-unicast-routing` and `ietf-ipv6-unicast-routing`
 which augment `ietf-routing` with IPv4 and IPv6 specific data.
 More information about `ietf-routing` is available in [RFC 8022: A YANG Data Model for Routing Management](https://datatracker.ietf.org/doc/html/rfc8022)
@@ -144,7 +144,7 @@ $ sysrepoctl -i ./yang/ietf-ipv6-unicast-routing@2018-03-13.yang -s ./yang
 
 ## Code of Conduct
 
-This project has adopted the [Contributor Covenant](https://www.contributor-covenant.org/) in version 2.0 as our code of conduct. Please see the details in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). All contributors must abide by the code of conduct.
+This project has adopted the [Contributor Covenant](https://www.contributor-covenant.org/) in version 2.1 as our code of conduct. Please see the details in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). All contributors must abide by the code of conduct.
 
 
 ## Working Language
