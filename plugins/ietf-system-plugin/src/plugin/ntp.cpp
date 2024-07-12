@@ -1,5 +1,4 @@
 #include "ntp.hpp"
-#include <iostream>
 
 ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
     //open the ntp.conf file for reading only

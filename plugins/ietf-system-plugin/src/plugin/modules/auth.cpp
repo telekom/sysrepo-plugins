@@ -1124,7 +1124,6 @@ namespace ietf::sys::sub::oper {
         catch (const std::exception& e) {
             SRPLG_LOG_ERR(PLUGIN_NAME, "Error loading local users");
             SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
-            // std::cerr << "Error loading local users: " << e.what() << std::endl;
             error = sr::ErrorCode::Internal;
         }
 

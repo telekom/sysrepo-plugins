@@ -18,7 +18,6 @@
 #include <map>
 #include <sstream>
 #include <iomanip>
-#include <iostream>
 
 // helper class for FilteredVid
 class BridgeFDBEntry {

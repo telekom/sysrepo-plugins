@@ -2,7 +2,6 @@
 
 #include "context.hpp"
 
-#include <iostream>
 #include <optional>
 #include <string_view>
 #include "srpcpp/netlink.hpp"

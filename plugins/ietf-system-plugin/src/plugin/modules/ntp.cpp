@@ -1,5 +1,4 @@
 #include "ntp.hpp"
-#include <iostream>
 #include <srpcpp.hpp>
 #include "plugin/common.hpp"
 
