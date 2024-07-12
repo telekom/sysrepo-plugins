@@ -753,6 +753,7 @@ namespace ietf::sys::ntp::oper {
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
 
+
         ietf::sys::ntp::NTPDbus ntp;
         ietf::sys::ntp::NTPState ntp_state;
 

@@ -34,6 +34,7 @@ find_package(SYSREPO REQUIRED)
 find_package(LIBYANG REQUIRED)
 find_package(LIBSYSTEMD REQUIRED)
 find_package(LIBSDBUSCPP REQUIRED)
+find_package(UMGMT REQUIRED)
 
 set(
     MODULE_SOURCES

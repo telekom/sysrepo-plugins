@@ -19,13 +19,17 @@ public:
         , m_setMethod(set_method)
         , m_property(property)
     {
+        m_connection = sdbus::createSystemBusConnection();
+        m_srvc_name = sdbus::ServiceName(m_dest);
+        m_obj_path = sdbus::ObjectPath(m_objPath);
     }
 
 protected:
     void exportToSdBus(SET... data)
     {
+
         try {
-            auto proxy = sdbus::createProxy(m_dest, m_objPath);
+            auto proxy = sdbus::createProxy(*m_connection ,m_srvc_name, m_obj_path);
             proxy->callMethod(m_setMethod).onInterface(m_interface).withArguments(data...);
         } catch (sdbus::Error& e) {
             SRPLG_LOG_ERR("sd-bus", "Error exporting data to sd-bus: %s", e.what());
@@ -38,7 +42,7 @@ protected:
         GET data;
 
         try {
-            auto proxy = sdbus::createProxy(m_dest, m_objPath);
+            auto proxy = sdbus::createProxy(*m_connection, m_srvc_name, m_obj_path);
             sdbus::Variant v = proxy->getProperty(m_property).onInterface(m_interface);
             data = v.get<GET>();
         } catch (sdbus::Error& e) {
@@ -55,5 +59,8 @@ private:
     std::string m_interface;
     std::string m_setMethod;
     std::string m_property;
+    std::unique_ptr<sdbus::IConnection> m_connection;
+    sdbus::ServiceName m_srvc_name;
+    sdbus::ObjectPath m_obj_path;
 };
 }
