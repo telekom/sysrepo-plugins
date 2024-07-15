@@ -9,8 +9,6 @@
 
 #include <sysrepo.h>
 
-#include <iostream>
-
 /**
  * @brief Return the logging prefix of the current module.
  */

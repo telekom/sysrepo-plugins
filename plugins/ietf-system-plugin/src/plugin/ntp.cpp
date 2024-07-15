@@ -1,5 +1,4 @@
 #include "ntp.hpp"
-#include <iostream>
 
 ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
     //open the ntp.conf file for reading only
@@ -216,7 +215,10 @@ void ietf::sys::ntp::NTPDbus::restartNTP() {
 
 //NTPState class that manipulates and gets the state on ntp.servive enabled and disabled state
 ietf::sys::ntp::NTPState::NTPState() {
-    m_proxy = sdbus::createProxy(M_DESTINATION, M_OBJ_PATH);
+    m_connection = sdbus::createSystemBusConnection();
+    sdbus::ServiceName m_srvc_name = sdbus::ServiceName(M_DESTINATION);
+    sdbus::ObjectPath m_obj_path = sdbus::ObjectPath(M_OBJ_PATH);
+    m_proxy = sdbus::createProxy(*m_connection, m_srvc_name, m_obj_path);
 };
 
 void ietf::sys::ntp::NTPState::ntpSetState(bool state) {

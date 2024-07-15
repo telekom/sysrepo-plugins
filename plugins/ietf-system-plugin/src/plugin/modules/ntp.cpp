@@ -1,5 +1,4 @@
 #include "ntp.hpp"
-#include <iostream>
 #include <srpcpp.hpp>
 #include "plugin/common.hpp"
 
@@ -752,6 +751,7 @@ namespace ietf::sys::ntp::oper {
         std::optional<std::string_view> subXPath, std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
 
         ietf::sys::ntp::NTPDbus ntp;
         ietf::sys::ntp::NTPState ntp_state;

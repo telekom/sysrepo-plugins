@@ -134,6 +134,7 @@ namespace ietf::sys::ntp {
         const std::string M_PARAM = "replace";
 
         std::unique_ptr<sdbus::IProxy> m_proxy;
+        std::unique_ptr<sdbus::IConnection> m_connection;
     };
     
     //we do not inherit NTPState, since there is no need due to diferent callbacks
