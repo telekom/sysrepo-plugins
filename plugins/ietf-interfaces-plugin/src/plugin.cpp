@@ -166,6 +166,19 @@ void fillInitialRunningDs(sysrepo::Session& s) {
                 s.setItem("/ietf-interfaces:interfaces/interface[name='" + if_name + "']/ietf-ip:ipv6/neighbor[ip='" + neigh.getDestinationIP() + "']/link-layer-address", neigh.getLinkLayerAddress());
             }
         }
+
+        //bridge port ref handling
+        if (interface.isBridge()) {
+
+            auto bridge = nl_ctx.getBridgeByName(if_name);
+            if (bridge.has_value()) {
+
+                for (auto&& slave_if : bridge->getSlaveInterfaces()) {
+                    s.setItem("/ietf-interfaces:interfaces/interface[name='"+slave_if.getName()+"']/ieee802-dot1q-bridge:bridge-port/component-name", if_name );
+                }
+
+            }
+        }
     }
 
     s.applyChanges();
