@@ -1865,9 +1865,9 @@ private:
 
 /**
  * @brief sysrepo-plugin-generator: Generated module change functor for path
- * /ietf-interfaces:interfaces/interface[name='%s']/ietf-if-extensions:parent-interface.
+ * /ietf-interfaces:interfaces/interface[name='%s']/bridge-port/component-name"
  */
-class InterfaceParentInterfaceModuleChangeCb {
+class InterfaceBridgePortChangeCb {
 public:
     /**
      * sysrepo-plugin-generator: Generated default constructor.
@@ -1875,7 +1875,7 @@ public:
      * @param ctx Plugin module change context.
      *
      */
-    InterfaceParentInterfaceModuleChangeCb(std::shared_ptr<InterfacesModuleChangesContext> ctx);
+    InterfaceBridgePortChangeCb(std::shared_ptr<InterfacesModuleChangesContext> ctx);
 
     /**
      * sysrepo-plugin-generator: Generated module change operator() for path

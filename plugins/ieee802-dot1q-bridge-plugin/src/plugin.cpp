@@ -48,24 +48,8 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     // fill initial ds from system
     // first check if datastore is empty
 
-    if (!sess.getData("/ieee802-dot1q-bridge:bridges")->child().has_value()) {
-        fillInitialDatastoreFromSystem(sess);
-    }
+    fillInitialDatastoreFromSystem(sess);
 
-    // for all registered modules - apply running datastore values
-    for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Applying running datastore values for module %s", mod->getName());
-        for (auto& applier : mod->getValueAppliers()) {
-            try {
-                applier->applyDatastoreValues(sess);
-            } catch (const std::runtime_error& err) {
-                SRPLG_LOG_INF(ctx->getPluginName(), "Failed to apply datastore values for the following paths:");
-                for (const auto& path : applier->getPaths()) {
-                    SRPLG_LOG_INF(ctx->getPluginName(), "\t%s", path.c_str());
-                }
-            }
-        }
-    }
 
     // get registered modules and create subscriptions
     for (auto& mod : modules) {
@@ -111,6 +95,12 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
 
 inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
 {
+    sr::Datastore current_ds = session.activeDatastore();
+    session.switchDatastore(sr::Datastore::Running);
+
+    //delete running ds for data consistancy
+    session.deleteItem("/ieee802-dot1q-bridge:bridges");
+
     // fill system data here
     auto& nl_ctx = NlContext::getInstance();
 
@@ -174,4 +164,6 @@ inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
     }
 
     session.applyChanges();
+
+    session.switchDatastore(current_ds);
 }
