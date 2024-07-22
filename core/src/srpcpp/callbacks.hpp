@@ -15,6 +15,7 @@
 
 #include <string>
 #include <sysrepo-cpp/Session.hpp>
+#include <sysrepo-cpp/Changes.hpp>
 
 namespace srpc
 {
