@@ -23,6 +23,7 @@ find_package(SYSREPO REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
 find_package(NL REQUIRED)
+find_package(NFTABLES REQUIRED)
 
 set(
     PLUGIN_CORE_SOURCES
@@ -71,6 +72,7 @@ target_include_directories(
     PRIVATE ${NL_INCLUDE_DIRS}
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PRIVATE ${NFTABLES_INCLUDE_DIRS}
 )
 
 target_compile_options(
@@ -95,6 +97,7 @@ target_include_directories(
     PRIVATE ${NL_INCLUDE_DIRS}
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PRIVATE ${NFTABLES_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -108,6 +111,7 @@ target_link_libraries(
     ${LIBYANGCPP_LIBRARIES}
     ${CORE_LIBRARY_NAME}
     ${NL_LIBRARIES}
+    ${NFTABLES_LIBRARIES}
 )
 
 # plugin as a library
@@ -127,6 +131,7 @@ target_include_directories(
     PRIVATE ${NL_INCLUDE_DIRS}
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PRIVATE ${NFTABLES_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -139,4 +144,5 @@ target_link_libraries(
     ${LIBYANGCPP_LIBRARIES}
     ${CORE_LIBRARY_NAME}
     ${NL_LIBRARIES}
+    ${NFTABLES_LIBRARIES}
 )
