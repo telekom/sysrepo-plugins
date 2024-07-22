@@ -19,7 +19,20 @@ namespace sr = sysrepo;
  * @param mod Module to use.
  *
  */
-void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){}
+void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+    const auto oper_callbacks = mod->getOperationalCallbacks();
+
+    auto& sub_handle = ctx.getSubscriptionHandle();
+
+    for (auto& cb : oper_callbacks) {
+        SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Creating operational subscription for xpath %s", cb.XPath.c_str());
+        if (sub_handle.has_value()) {
+            sub_handle->onOperGet("ietf-access-control-list", cb.Callback, cb.XPath);
+        } else {
+            sub_handle = sess.onOperGet("ietf-access-control-list", cb.Callback, cb.XPath);
+        }
+    }
+};
 
 /**
  * TODO
@@ -30,7 +43,21 @@ void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContex
  * @param mod Module to use.
  *
  */
-void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){}
+void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+    
+    const auto change_callbacks = mod->getModuleChangeCallbacks();
+
+    auto& sub_handle = ctx.getSubscriptionHandle();
+
+    for (auto& cb : change_callbacks) {
+        SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Creating module change subscription for xpath %s", cb.XPath.c_str());
+        if (sub_handle.has_value()) {
+            sub_handle->onModuleChange("ietf-access-control-list", cb.Callback, cb.XPath);
+        } else {
+            sub_handle = sess.onModuleChange("ietf-access-control-list", cb.Callback, cb.XPath);
+        }
+    }
+};
 
 /**
  * TODO
@@ -41,7 +68,20 @@ void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginConte
  * @param mod Module to use.
  *
  */
-void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){}
+void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+    const auto rpc_callbacks = mod->getRpcCallbacks();
+
+    auto& sub_handle = ctx.getSubscriptionHandle();
+
+    for (auto& cb : rpc_callbacks) {
+        SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Creating RPC subscription for xpath %s", cb.XPath.c_str());
+        if (sub_handle.has_value()) {
+            sub_handle->onRPCAction(cb.XPath, cb.Callback);
+        } else {
+            sub_handle = sess.onRPCAction(cb.XPath, cb.Callback);
+        }
+    }
+};
 
 /**
  * @brief Plugin init callback.
@@ -96,76 +136,4 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
     delete plugin_ctx;
 
     SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Plugin cleanup finished");
-}
-
-/**
- * Register all operational plugin subscriptions.
- *
- * @param sess Session to use for creating subscriptions.
- * @param ctx Plugin context.
- * @param mod Module to use.
- *
- */
-void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<AclModule>& mod)
-{
-    const auto oper_callbacks = mod->getOperationalCallbacks();
-
-    auto& sub_handle = ctx.getSubscriptionHandle();
-
-    for (auto& cb : oper_callbacks) {
-        SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Creating operational subscription for xpath %s", cb.XPath.c_str());
-        if (sub_handle.has_value()) {
-            sub_handle->onOperGet("ietf-access-control-list", cb.Callback, cb.XPath);
-        } else {
-            sub_handle = sess.onOperGet("ietf-access-control-list", cb.Callback, cb.XPath);
-        }
-    }
-}
-
-/**
- * Register all module change plugin subscriptions.
- *
- * @param sess Session to use for creating subscriptions.
- * @param ctx Plugin context.
- * @param mod Module to use.
- *
- */
-void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<AclModule>& mod)
-{
-    const auto change_callbacks = mod->getModuleChangeCallbacks();
-
-    auto& sub_handle = ctx.getSubscriptionHandle();
-
-    for (auto& cb : change_callbacks) {
-        SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Creating module change subscription for xpath %s", cb.XPath.c_str());
-        if (sub_handle.has_value()) {
-            sub_handle->onModuleChange("ietf-access-control-list", cb.Callback, cb.XPath);
-        } else {
-            sub_handle = sess.onModuleChange("ietf-access-control-list", cb.Callback, cb.XPath);
-        }
-    }
-}
-
-/**
- * Register all RPC plugin subscriptions.
- *
- * @param sess Session to use for creating subscriptions.
- * @param ctx Plugin context.
- * @param mod Module to use.
- *
- */
-void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<AclModule>& mod)
-{
-    const auto rpc_callbacks = mod->getRpcCallbacks();
-
-    auto& sub_handle = ctx.getSubscriptionHandle();
-
-    for (auto& cb : rpc_callbacks) {
-        SRPLG_LOG_INF(ietf::acl::PLUGIN_NAME, "Creating RPC subscription for xpath %s", cb.XPath.c_str());
-        if (sub_handle.has_value()) {
-            sub_handle->onRPCAction(cb.XPath, cb.Callback);
-        } else {
-            sub_handle = sess.onRPCAction(cb.XPath, cb.Callback);
-        }
-    }
 }

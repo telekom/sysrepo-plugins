@@ -1,4 +1,5 @@
 #include "change.hpp"
+#include <iostream>
 
 namespace ietf::acl {
 namespace sub::change {
@@ -8,7 +9,7 @@ namespace sub::change {
      * @param ctx Plugin module change context.
      *
      */
-    AclModuleChangeCb::AclModuleChangeCb(std::shared_ptr<ietf::acl::ModuleChangeContext> ctx) { m_ctx = ctx; }
+    AclModuleChangeCb::AclModuleChangeCb(std::shared_ptr<AclModuleChangesContext> ctx) { m_ctx = ctx; }
 
     /**
      * sysrepo-plugin-generator: Generated module change operator() for path /ietf-access-control-list:acls/acl[name='%s'].
@@ -28,6 +29,7 @@ namespace sub::change {
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        std::cout<<"Changed"<<std::endl;
         return error;
     }
 

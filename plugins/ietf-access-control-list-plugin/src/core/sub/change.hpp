@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string_view>
+#include "core/sub/context.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
 
@@ -22,7 +23,7 @@ namespace sub::change {
          * @param ctx Plugin module change context.
          *
          */
-        AclModuleChangeCb(std::shared_ptr<ietf::acl::ModuleChangeContext> ctx);
+        AclModuleChangeCb(std::shared_ptr<AclModuleChangesContext> ctx);
 
         /**
          * sysrepo-plugin-generator: Generated module change operator() for path /ietf-access-control-list:acls/acl[name='%s'].
@@ -42,7 +43,7 @@ namespace sub::change {
             sr::Event event, uint32_t requestId);
 
     private:
-        std::shared_ptr<ietf::acl::ModuleChangeContext> m_ctx;
+        std::shared_ptr<AclModuleChangesContext> m_ctx;
     };
 
     /**

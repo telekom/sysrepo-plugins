@@ -31,6 +31,7 @@ set(
     src/core/sub/change.cpp
     src/core/sub/oper.cpp
     src/core/sub/rpc.cpp
+    src/core/sub/context.hpp
 )
 
 set(
