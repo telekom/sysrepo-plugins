@@ -24,6 +24,7 @@ find_package(LIBYANGCPP REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
 find_package(NL REQUIRED)
 find_package(NFTABLES REQUIRED)
+find_package(NLOHMANN_JSON REQUIRED)
 
 set(
     PLUGIN_CORE_SOURCES
@@ -73,6 +74,8 @@ target_include_directories(
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PRIVATE ${NFTABLES_INCLUDE_DIRS}
+    PRIVATE ${NLOHMANN_JSON_INCLUDE_DIRS}
+
 )
 
 target_compile_options(
@@ -98,6 +101,7 @@ target_include_directories(
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PRIVATE ${NFTABLES_INCLUDE_DIRS}
+    PRIVATE ${NLOHMANN_JSON_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -132,6 +136,7 @@ target_include_directories(
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PRIVATE ${NFTABLES_INCLUDE_DIRS}
+    PRIVATE ${NLOHMANN_JSON_INCLUDE_DIRS}
 )
 
 target_link_libraries(
