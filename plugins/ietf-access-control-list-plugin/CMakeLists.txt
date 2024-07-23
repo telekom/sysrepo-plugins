@@ -34,6 +34,7 @@ set(
     src/core/sub/oper.cpp
     src/core/sub/rpc.cpp
     src/core/sub/context.hpp
+    src/core/nftables.cpp
 )
 
 set(

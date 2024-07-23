@@ -1,5 +1,6 @@
 #include "change.hpp"
 #include <iostream>
+#include "core/nftables.hpp"
 
 namespace ietf::acl {
 namespace sub::change {
@@ -29,7 +30,8 @@ namespace sub::change {
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
-        std::cout<<"Changed"<<std::endl;
+        NFTables nftables;
+        std::cout<<nftables.dumpJSON()<<std::endl;
         return error;
     }
 
