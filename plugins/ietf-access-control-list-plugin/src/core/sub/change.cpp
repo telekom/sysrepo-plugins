@@ -1,6 +1,7 @@
 #include "change.hpp"
 #include <iostream>
 #include "core/nftables.hpp"
+#include <list>
 
 namespace ietf::acl {
 namespace sub::change {
@@ -30,8 +31,30 @@ namespace sub::change {
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
-        NFTables nftables;
-        std::cout<<nftables.dumpJSON()<<std::endl;
+        
+        switch (event){
+        case sr::Event::Change:{
+
+            NFTables nftables;
+
+            NFTTable tab = nftables.addTable("test1",NFT_BRIDGE);
+
+            std::cout<<"TAB: "<<tab.getTableName()<<std::endl;
+
+            std::optional<NFTTable> table = nftables.getTable("test1",NFT_BRIDGE);
+            if(table){
+                std::cout<<"TB: "<<table->getTableName()<<std::endl;
+            }else{
+                std::cout<<"Table not found"<<std::endl;
+            }
+
+
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
