@@ -67,7 +67,7 @@ NFT_Types NFTTable::getFamily() {
     return m_fam;
 }
 
-void NFTTable::addChain(const std::string& name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy)
+NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy)
 {
     if (name.empty()) throw NFTablesCommandExecException("Chain name cannot be empty!");
 
@@ -94,8 +94,12 @@ void NFTTable::addChain(const std::string& name, const std::optional<NFT_Chain_T
 
     if (has_params) command.append(" }");
 
-    std::cout<<"CMD: "<<command<<std::endl;
+    std::cout << "CMD: " << command << std::endl;
     NFTCommand::getInstance().exec_cmd(command);
+
+    //if no exception is thrown, we construct NFTChain
+
+   return std::move(NFTChain(name, type, hook, priority, policy, this->getTableName()));
 }
 
 NFTCommand& NFTCommand::getInstance()
@@ -158,3 +162,23 @@ NFTCommand::~NFTCommand()
     std::cout << "NFTCommand destructed" << std::endl;
     if (m_ctx != NULL) nft_ctx_free(m_ctx);
 }
+
+std::string NFTChain::getTableName()
+{
+    return m_table_name;
+}
+
+std::string NFTChain::getChainName()
+{
+   return m_chain_name;
+}
+
+NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name):
+    m_chain_name(chain_name),
+    m_chain_type(type),
+    m_chain_priority(priority),
+    m_chain_hook(hook),
+    m_chain_policy(policy),
+    m_table_name(table_name)
+
+{}

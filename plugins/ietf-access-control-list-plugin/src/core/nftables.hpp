@@ -163,7 +163,7 @@ public:
     std::string getTableName();
     NFT_Types getFamily();
     //[TODO] addChain
-    void addChain(const std::string&,
+    NFTChain addChain(const std::string&,
         const std::optional<NFT_Chain_Types>&,
         const std::optional<NFT_Chain_Hooks>&,
         const std::optional<int32_t>&,
@@ -176,20 +176,32 @@ private:
     std::string m_name;
 };
 
-// class NFTChain {
-//     public:
-//         NFTChain() = delete;
-//         std::string getTableName();
-//         std::string getChainName();
-//         std::optional<std::string> getType();
-//         std::optional<std::string> getHook();
-//         std::optional<int16_t> getPrio();
-//         std::optional<std::string> getPolicy();
-//         //[TODO] addRule
-//     private:
-//         NFTChain(const std::string&, const std::string&, const std::string&, const std::string&, 
-//         std::optional<std::string>, std::optional<std::string>, std::optional<int16_t>,std::optional<std::string>);
-// };
+class NFTChain {
+    friend class NFTTable;
+    public:
+        NFTChain() = delete;
+        std::string getTableName();
+        std::string getChainName();
+        // std::optional<std::string> getType();
+        // std::optional<std::string> getHook();
+        // std::optional<int16_t> getPrio();
+        // std::optional<std::string> getPolicy();
+        //[TODO] addRule
+    private:
+        NFTChain(const std::string&,
+        const std::optional<NFT_Chain_Types>&,
+        const std::optional<NFT_Chain_Hooks>&,
+        const std::optional<int32_t>&,
+        const std::optional<NFT_Chain_Policy>&,
+        const std::string&);
+
+        std::string m_table_name;
+        std::string m_chain_name;
+        std::optional<NFT_Chain_Types> m_chain_type;
+        std::optional<NFT_Chain_Hooks> m_chain_hook;
+        std::optional<int32_t> m_chain_priority;
+        std::optional<NFT_Chain_Policy> m_chain_policy;
+};
 
 // class NFTRule{
 

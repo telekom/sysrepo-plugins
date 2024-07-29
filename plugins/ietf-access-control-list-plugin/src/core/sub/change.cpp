@@ -40,8 +40,11 @@ namespace sub::change {
             NFTTable tab = nftables.addTable("test1", NFT_IP);
             std::cout<<"TAB: "<<tab.getTableName()<<std::endl;
 
-            tab.addChain("TESTCHAIN11",std::nullopt,std::nullopt,std::nullopt,std::nullopt);
-            tab.addChain("TESTCHAIN12",NFT_Chain_Types::CHAIN_FILTER ,NFT_Chain_Hooks::CH_HOOK_INPUT,-111 ,NFT_Chain_Policy::CH_POLICY_DROP);
+            auto chain1 = tab.addChain("TESTCHAIN11",std::nullopt,std::nullopt,std::nullopt,std::nullopt);
+            auto chain2 = tab.addChain("TESTCHAIN12",NFT_Chain_Types::CHAIN_FILTER ,NFT_Chain_Hooks::CH_HOOK_INPUT,-111 ,NFT_Chain_Policy::CH_POLICY_DROP);
+
+            std::cout<<"CHAIN 1"<<chain1.getChainName()<<" AT: "<<chain1.getTableName()<<std::endl;
+            std::cout<<"CHAIN 2"<<chain2.getChainName()<<" AT: "<<chain2.getTableName()<<std::endl;
 
             break;
         }
