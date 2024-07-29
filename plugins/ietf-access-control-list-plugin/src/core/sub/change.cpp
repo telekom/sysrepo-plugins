@@ -37,18 +37,11 @@ namespace sub::change {
 
             NFTables nftables;
 
-            NFTTable tab = nftables.addTable("test1",NFT_BRIDGE);
-
+            NFTTable tab = nftables.addTable("test1", NFT_IP);
             std::cout<<"TAB: "<<tab.getTableName()<<std::endl;
 
-            std::optional<NFTTable> table = nftables.getTable("test1",NFT_BRIDGE);
-            if(table){
-                std::cout<<"TB: "<<table->getTableName()<<std::endl;
-            }else{
-                std::cout<<"Table not found"<<std::endl;
-            }
-
-
+            tab.addChain("TESTCHAIN11",std::nullopt,std::nullopt,std::nullopt,std::nullopt);
+            tab.addChain("TESTCHAIN12",NFT_Chain_Types::CHAIN_FILTER ,NFT_Chain_Hooks::CH_HOOK_INPUT,-111 ,NFT_Chain_Policy::CH_POLICY_DROP);
 
             break;
         }

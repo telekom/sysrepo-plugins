@@ -28,15 +28,15 @@ std::optional<NFTTable> NFTables::getTable(const std::string& name, NFT_Types fa
     }
     for (auto& table_obj : table["nftables"]) {
         if (!table_obj["table"].empty()) {
-           
+
             const nlohmann::json tb = table_obj["table"];
             NFT_Types tb_type = NFT_INVALID_TYPE;
             for (auto it = nft_types.begin(); it != nft_types.end(); ++it)
-                if (it->second == tb["family"]){
+                if (it->second == tb["family"]) {
                     tb_type = it->first;
                     break;
                 }
-                    
+
             if (tb_type == NFT_INVALID_TYPE) {
                 throw NFTablesCommandExecException("Invalid type: " + tb["family"].dump());
             }
@@ -65,6 +65,37 @@ std::string NFTTable::getTableName() {
 
 NFT_Types NFTTable::getFamily() {
     return m_fam;
+}
+
+void NFTTable::addChain(const std::string& name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy)
+{
+    if (name.empty()) throw NFTablesCommandExecException("Chain name cannot be empty!");
+
+    std::string command = "add chain " + utils::getString<NFT_Types>(this->getFamily()) + " " + this->getTableName() + " ";
+    bool has_params = false;
+
+    command.append(name);
+
+    if (type || hook || priority || policy) {
+
+        //if one of them has value, they all have to have!
+        if (!(type && hook && priority && policy)) {
+            throw NFTablesCommandExecException("type, hook, priority, and policy have to be present!");
+        }
+
+        has_params = true;
+        command.append(" {");
+    }
+
+    if (type) command.append(" type " + chain_types.at(*type));
+    if (hook) command.append(" hook " + hook_types.at(*hook));
+    if (priority) command.append(" priority " + std::to_string(*priority) + "; ");
+    if (policy) command.append(" policy " + chain_policy.at(*policy) + " ;");
+
+    if (has_params) command.append(" }");
+
+    std::cout<<"CMD: "<<command<<std::endl;
+    NFTCommand::getInstance().exec_cmd(command);
 }
 
 NFTCommand& NFTCommand::getInstance()
