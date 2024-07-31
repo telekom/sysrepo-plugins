@@ -102,6 +102,37 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
     return std::move(NFTChain(name, type, hook, priority, policy, this->getTableName(), this->getFamily()));
 }
 
+std::list<NFTChain> NFTTable::getChains()
+{
+    std::list<NFTChain> loaded_chains;
+
+    nlohmann::json json_chains = NFTCommand::getInstance().exec_cmd("list chains");
+    for (auto chain : json_chains["nftables"]) {
+        if (!chain["chain"].empty()) {
+            nlohmann::json chain_obj = chain["chain"];
+            if (chain_obj["family"] == utils::getString<NFT_Types>(this->getFamily()) &&
+                chain_obj["table"] == this->getTableName()) {
+
+                NFT_Types family = utils::getNFTType<NFT_Types>(chain_obj["family"]);
+                std::string chain_name = chain_obj["name"];
+                std::optional<NFT_Chain_Types> nft_chain_type;
+                std::optional<NFT_Chain_Hooks> nft_chain_hook;
+                std::optional<NFT_Chain_Policy> nft_chain_policy;
+                std::optional<int32_t> nft_priority;
+
+                chain_obj["type"].empty() ? nft_chain_type = std::nullopt : nft_chain_type = utils::getNFTType<NFT_Chain_Types>(chain_obj["type"]);
+                chain_obj["hook"].empty() ? nft_chain_hook = std::nullopt : nft_chain_hook = utils::getNFTType<NFT_Chain_Hooks>(chain_obj["hook"]);
+                chain_obj["prio"].empty() ? nft_priority = std::nullopt : nft_priority = (int32_t)chain_obj["prio"];
+                chain_obj["policy"].empty() ? nft_chain_policy = std::nullopt : nft_chain_policy = utils::getNFTType<NFT_Chain_Policy>(chain_obj["policy"]);
+
+                loaded_chains.push_back(NFTChain(chain_name, nft_chain_type, nft_chain_hook, nft_priority, nft_chain_policy, this->getTableName(), family));
+
+            }
+        }
+    }
+    return loaded_chains;
+}
+
 NFTCommand& NFTCommand::getInstance()
 {
     static NFTCommand instance;
@@ -173,16 +204,37 @@ std::string NFTChain::getChainName()
     return m_chain_name;
 }
 
+std::optional<NFT_Chain_Types> NFTChain::getChainType()
+{
+    return m_chain_type;
+}
+
+std::optional<NFT_Chain_Hooks> NFTChain::getChainHook()
+{
+    return m_chain_hook;
+}
+
+std::optional<int32_t> NFTChain::getPrio()
+{
+    return m_chain_priority;
+}
+
+std::optional<NFT_Chain_Policy> NFTChain::getChainPolicy()
+{
+    return m_chain_policy;
+}
+
 void NFTChain::addRule(const IP_Match& rule)
 {
     std::string command;
 
-    try{
+    try {
         command = cmd_rule<IP_Match>(rule);
-    }catch(...){
+    }
+    catch (...) {
         throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
     }
-    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    std::cout << "DBG: CMD: " << command << std::endl;
     NFTCommand::getInstance().exec_cmd(command);
 }
 
@@ -190,12 +242,13 @@ void NFTChain::addRule(const IP6_Match& rule)
 {
     std::string command;
 
-    try{
+    try {
         command = cmd_rule<IP6_Match>(rule);
-    }catch(...){
+    }
+    catch (...) {
         throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
     }
-    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    std::cout << "DBG: CMD: " << command << std::endl;
     NFTCommand::getInstance().exec_cmd(command);
 }
 
@@ -203,12 +256,13 @@ void NFTChain::addRule(const ETH_Match& rule)
 {
     std::string command;
 
-    try{
+    try {
         command = cmd_rule<ETH_Match>(rule);
-    }catch(...){
+    }
+    catch (...) {
         throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
     }
-    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    std::cout << "DBG: CMD: " << command << std::endl;
     NFTCommand::getInstance().exec_cmd(command);
 }
 
@@ -216,12 +270,13 @@ void NFTChain::addRule(const TCP_Match& rule)
 {
     std::string command;
 
-    try{
+    try {
         command = cmd_rule<TCP_Match>(rule);
-    }catch(...){
+    }
+    catch (...) {
         throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
     }
-    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    std::cout << "DBG: CMD: " << command << std::endl;
     NFTCommand::getInstance().exec_cmd(command);
 }
 
@@ -255,7 +310,7 @@ bool Match::hasNotEqual(void) const
     return m_not_equal;
 }
 
-std::string Match::getVal(void) const{
+std::string Match::getVal(void) const {
     return m_value;
 }
 

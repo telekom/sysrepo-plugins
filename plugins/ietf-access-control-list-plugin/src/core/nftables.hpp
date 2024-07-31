@@ -81,6 +81,18 @@ const std::map<NFT_Chain_Policy, std::string> chain_policy = {
     //expand if needed
 };
 
+class NFTablesCommandExecException : public std::exception {
+public:
+    NFTablesCommandExecException(const std::string what) {
+        this->m_what = what;
+    }
+    virtual const char* what() const noexcept override {
+        return m_what.c_str();
+    }
+private:
+    std::string m_what;
+};
+
 namespace utils {
 
     // Generic template, will give a compile-time error if not specialized
@@ -117,18 +129,56 @@ namespace utils {
         return it != chain_policy.end() ? it->second : "Unknown Chain Policy!";
     }
 
-};
+    // Generic template, will give a compile-time error if not specialized
+    template<typename T> inline
+        T getNFTType(const std::string& val) {
+        return "Unknown Type!";
+    }
 
-class NFTablesCommandExecException : public std::exception {
-public:
-    NFTablesCommandExecException(const std::string what) {
-        this->m_what = what;
-    }
-    virtual const char* what() const noexcept override {
-        return m_what.c_str();
-    }
-private:
-    std::string m_what;
+    // Template specialization for NFT_Types
+    template<> inline
+        NFT_Types getNFTType<NFT_Types>(const std::string& val) {
+        for (auto obj : nft_types) {
+            if (val == obj.second) {
+                return obj.first;
+            }
+        };
+        throw NFTablesCommandExecException("Unknown NFT_Types type!");
+    };
+
+    // Template specialization for NFT_Chain_Types
+    template<> inline
+        NFT_Chain_Types getNFTType<NFT_Chain_Types>(const std::string& val) {
+        for (auto obj : chain_types) {
+            if (val == obj.second) {
+                return obj.first;
+            }
+        };
+        throw NFTablesCommandExecException("Unknown NFT_Chain_Types type!");
+    };
+
+    // Template specialization for NFT_Chain_Hooks
+    template<> inline
+        NFT_Chain_Hooks getNFTType<NFT_Chain_Hooks>(const std::string& val) {
+        for (auto obj : hook_types) {
+            if (val == obj.second) {
+                return obj.first;
+            }
+        };
+        throw NFTablesCommandExecException("Unknown NFT_Chain_Hooks type!");
+    };
+
+    // Template specialization for NFT_Chain_Policy
+    template<> inline
+        NFT_Chain_Policy getNFTType<NFT_Chain_Policy>(const std::string& val) {
+        for (auto obj : chain_policy) {
+            if (val == obj.second) {
+                return obj.first;
+            }
+        };
+        throw NFTablesCommandExecException("Unknown NFT_Chain_Policy type!");
+    };
+
 };
 
 // NFTCommand
@@ -168,13 +218,15 @@ public:
     NFTTable() = delete;
     std::string getTableName();
     NFT_Types getFamily();
-    //[TODO] addChain
     NFTChain addChain(const std::string&,
         const std::optional<NFT_Chain_Types>&,
         const std::optional<NFT_Chain_Hooks>&,
         const std::optional<int32_t>&,
         const std::optional<NFT_Chain_Policy>&
     );
+
+    std::list<NFTChain> getChains();
+
 private:
     NFTTable(const NFT_Types, const std::string&);
 
@@ -188,10 +240,10 @@ public:
     NFTChain() = delete;
     std::string getTableName();
     std::string getChainName();
-    // std::optional<std::string> getType();
-    // std::optional<std::string> getHook();
-    // std::optional<int16_t> getPrio();
-    // std::optional<std::string> getPolicy();
+    std::optional<NFT_Chain_Types> getChainType();
+    std::optional<NFT_Chain_Hooks> getChainHook();
+    std::optional<int32_t> getPrio();
+    std::optional<NFT_Chain_Policy> getChainPolicy();
     //[TODO] addRule
     void addRule(const IP_Match&);
     void addRule(const IP6_Match&);
@@ -223,7 +275,7 @@ private:
             rule.getMatchType() + " " +
             rule.getMatch();
 
-        command.append( rule.hasNotEqual() ? " != " : " ");
+        command.append(rule.hasNotEqual() ? " != " : " ");
         command.append(rule.getVal());
 
         return command;
