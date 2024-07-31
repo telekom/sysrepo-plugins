@@ -46,6 +46,11 @@ namespace sub::change {
             std::cout<<"CHAIN 1"<<chain1.getChainName()<<" AT: "<<chain1.getTableName()<<std::endl;
             std::cout<<"CHAIN 2"<<chain2.getChainName()<<" AT: "<<chain2.getTableName()<<std::endl;
 
+            IP_Match rule(IP_Match::IP_D_ADDR_MATCH);
+            rule.notEqual().setRange<std::string>("192.168.0.1","192.168.0.20");
+
+            chain1.addRule(rule);
+
             break;
         }
         default:

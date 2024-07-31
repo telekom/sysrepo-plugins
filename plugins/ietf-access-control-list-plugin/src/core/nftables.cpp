@@ -99,7 +99,7 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
 
     //if no exception is thrown, we construct NFTChain
 
-   return std::move(NFTChain(name, type, hook, priority, policy, this->getTableName()));
+    return std::move(NFTChain(name, type, hook, priority, policy, this->getTableName(), this->getFamily()));
 }
 
 NFTCommand& NFTCommand::getInstance()
@@ -170,15 +170,133 @@ std::string NFTChain::getTableName()
 
 std::string NFTChain::getChainName()
 {
-   return m_chain_name;
+    return m_chain_name;
 }
 
-NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name):
+void NFTChain::addRule(const IP_Match& rule)
+{
+    std::string command;
+
+    try{
+        command = cmd_rule<IP_Match>(rule);
+    }catch(...){
+        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
+    }
+    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    NFTCommand::getInstance().exec_cmd(command);
+}
+
+void NFTChain::addRule(const IP6_Match& rule)
+{
+    std::string command;
+
+    try{
+        command = cmd_rule<IP6_Match>(rule);
+    }catch(...){
+        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
+    }
+    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    NFTCommand::getInstance().exec_cmd(command);
+}
+
+void NFTChain::addRule(const ETH_Match& rule)
+{
+    std::string command;
+
+    try{
+        command = cmd_rule<ETH_Match>(rule);
+    }catch(...){
+        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
+    }
+    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    NFTCommand::getInstance().exec_cmd(command);
+}
+
+void NFTChain::addRule(const TCP_Match& rule)
+{
+    std::string command;
+
+    try{
+        command = cmd_rule<TCP_Match>(rule);
+    }catch(...){
+        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
+    }
+    std::cout<<"DBG: CMD: "<<command<<std::endl;
+    NFTCommand::getInstance().exec_cmd(command);
+}
+
+NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name, const NFT_Types table_type) :
     m_chain_name(chain_name),
     m_chain_type(type),
     m_chain_priority(priority),
     m_chain_hook(hook),
     m_chain_policy(policy),
-    m_table_name(table_name)
-
+    m_table_name(table_name),
+    m_table_type(table_type)
 {}
+
+IP_Match::IP_Match(IP_Match_Types type) : m_match_type(type) {};
+Match::Match() {};
+
+Match& Match::notEqual(void)
+{
+    m_not_equal = true;
+    return *this;
+}
+
+Match& Match::equal(void)
+{
+    m_not_equal = false;
+    return *this;
+}
+
+bool Match::hasNotEqual(void) const
+{
+    return m_not_equal;
+}
+
+std::string Match::getVal(void) const{
+    return m_value;
+}
+
+std::string IP_Match::getMatch(void) const
+{
+    return _ip_match_types.at(m_match_type);
+}
+
+IP6_Match::IP6_Match(IP6_Match_Types type) : m_match_type(type) {};
+
+std::string IP6_Match::getMatch(void) const
+{
+    return _ip6_match_types.at(m_match_type);
+}
+
+std::string ETH_Match::getMatch(void) const
+{
+    return _eth_match_types.at(m_match_type);
+}
+
+std::string TCP_Match::getMatch(void) const
+{
+    return _tcp_match_types.at(m_match_type);
+}
+
+std::string IP_Match::getMatchType(void) const
+{
+    return MATCH_TYPE;
+}
+
+std::string IP6_Match::getMatchType(void) const
+{
+    return MATCH_TYPE;
+}
+
+std::string ETH_Match::getMatchType(void) const
+{
+    return MATCH_TYPE;
+}
+
+std::string TCP_Match::getMatchType(void) const
+{
+    return MATCH_TYPE;
+}
