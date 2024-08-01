@@ -19,7 +19,7 @@ jobs:
             build-type: "Release",
             cc: "gcc",
             cxx: "g++",
-            options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
+            options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
             # no expect because stdout seems to be redirected
             packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
@@ -29,9 +29,9 @@ jobs:
             build-type: "Release",
             cc: "clang",
             cxx: "clang",
-            options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
+            options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
           }
           - {
             name: "Debug, gcc",
@@ -40,7 +40,7 @@ jobs:
             cxx: "g++",
             options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
           }
           - {
             name: "Debug, clang",
@@ -49,7 +49,7 @@ jobs:
             cxx: "clang",
             options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
           }
           - {
             name: "ASAN and UBSAN",
@@ -58,7 +58,7 @@ jobs:
             cxx: "clang",
             options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
           }
 
     steps:
@@ -145,6 +145,16 @@ jobs:
 #          sudo python3 -m pip install .
 #          sudo python3 -m pip install rpaframework
 #          sudo sysctl -e fs.protected_regular=0
+
+      - name: Deps-sdbus-cpp
+        shell: bash
+        run: |
+          git clone --recurse-submodules https://github.com/Kistler-Group/sdbus-cpp
+          cd sdbus-cpp
+          CC=${{matrix.config.cxx}} cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          sudo cmake --install build
+          sudo ldconfig
 
       - name: Configure
         shell: bash
