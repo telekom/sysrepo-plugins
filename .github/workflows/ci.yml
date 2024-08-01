@@ -151,7 +151,7 @@ jobs:
         run: |
           git clone --recurse-submodules https://github.com/Kistler-Group/sdbus-cpp
           cd sdbus-cpp
-          CC=${{matrix.config.cxx}} cmake -B build -DCMAKE_BUILD_TYPE=Release
+          CC=${{matrix.config.cc}} cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build
           sudo cmake --install build
           sudo ldconfig
