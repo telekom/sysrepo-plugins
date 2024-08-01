@@ -136,15 +136,15 @@ jobs:
           sudo cmake --install build
           sudo ldconfig
 
-      - name: Deps-robot
-        shell: bash
-        run: |
-          git clone https://github.com/telekom/sysrepo-library-robot-framework
-          cd sysrepo-library-robot-framework
-          sudo python3 -m pip install --upgrade pip setuptools wheel build
-          sudo python3 -m pip install .
-          sudo python3 -m pip install rpaframework
-          sudo sysctl -e fs.protected_regular=0
+#      - name: Deps-robot
+#        shell: bash
+#        run: |
+#          git clone https://github.com/telekom/sysrepo-library-robot-framework
+#          cd sysrepo-library-robot-framework
+#          sudo python3 -m pip install --upgrade pip setuptools wheel build
+#          sudo python3 -m pip install .
+#          sudo python3 -m pip install rpaframework
+#          sudo sysctl -e fs.protected_regular=0
 
       - name: Configure
         shell: bash
