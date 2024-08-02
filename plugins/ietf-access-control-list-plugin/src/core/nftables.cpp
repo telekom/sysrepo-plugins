@@ -21,7 +21,7 @@ std::optional<NFTTable> NFTables::getTable(const std::string& name, NFT_Types fa
     nlohmann::json table;
 
     try {
-        table = NFTCommand::getInstance().exec_cmd("list table " + nft_types.at(family) + " " + name);
+        table = NFTCommand::getInstance().exec_cmd("list table " + utils::getString<NFT_Types>(family) + " " + name);
     }
     catch (std::exception& e) {
         return std::nullopt;
@@ -50,7 +50,7 @@ std::optional<NFTTable> NFTables::getTable(const std::string& name, NFT_Types fa
 
 NFTTable NFTables::addTable(const std::string& name, const NFT_Types family)
 {
-    NFTCommand::getInstance().exec_cmd("add table " + nft_types.at(family) + " " + name);
+    NFTCommand::getInstance().exec_cmd("add table " + utils::getString<NFT_Types>(family) + " " + name);
 
     return NFTTable(family, name);
 }
@@ -87,10 +87,10 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
         command.append(" {");
     }
 
-    if (type) command.append(" type " + chain_types.at(*type));
-    if (hook) command.append(" hook " + hook_types.at(*hook));
+    if (type) command.append(" type " + utils::getString<NFT_Chain_Types>(*type));
+    if (hook) command.append(" hook " + utils::getString<NFT_Chain_Hooks>(*hook));
     if (priority) command.append(" priority " + std::to_string(*priority) + "; ");
-    if (policy) command.append(" policy " + chain_policy.at(*policy) + " ;");
+    if (policy) command.append(" policy " + utils::getString<NFT_Chain_Policy>(*policy) + " ;");
 
     if (has_params) command.append(" }");
 
@@ -224,60 +224,90 @@ std::optional<NFT_Chain_Policy> NFTChain::getChainPolicy()
     return m_chain_policy;
 }
 
-void NFTChain::addRule(const IP_Match& rule)
+void NFTChain::addRule(const Match& match)
 {
-    std::string command;
+    std::string command = "add rule " + utils::getString<NFT_Types>(m_table_type) + " " +
+        m_table_name + " " +
+        m_chain_name + " ";
 
-    try {
-        command = cmd_rule<IP_Match>(rule);
+    if (match.isMeta()) {
+        command.append(match.getMetaKey().value() + " ");
     }
-    catch (...) {
-        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
+
+    if (match.isPayload()) {
+        command.append(match.getProtocol().value() + " " + match.getField().value() + " ");
     }
-    std::cout << "DBG: CMD: " << command << std::endl;
+
+    if (match.getOperator()) {
+        command.append(match.getOperator().value() + " ");
+    }
+
+    command.append(match.getValue());
+
+
     NFTCommand::getInstance().exec_cmd(command);
 }
 
-void NFTChain::addRule(const IP6_Match& rule)
+std::list<Match> NFTChain::getRules()
 {
-    std::string command;
 
-    try {
-        command = cmd_rule<IP6_Match>(rule);
-    }
-    catch (...) {
-        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
-    }
-    std::cout << "DBG: CMD: " << command << std::endl;
-    NFTCommand::getInstance().exec_cmd(command);
-}
+    nlohmann::json ruleset = NFTCommand::getInstance().exec_cmd("list ruleset");
+    std::list<Match> matches;
+    for (auto& rule : ruleset["nftables"]) {
+        if (rule["rule"].empty()) continue; //we are interested in rules only
+        if (rule["rule"]["family"] == utils::getString<NFT_Types>(m_table_type) &&
+            rule["rule"]["table"] == m_table_name &&
+            rule["rule"]["chain"] == m_chain_name) {
+            //we found the rule at this chain
 
-void NFTChain::addRule(const ETH_Match& rule)
-{
-    std::string command;
+            nlohmann::json expr = rule["rule"]["expr"];
 
-    try {
-        command = cmd_rule<ETH_Match>(rule);
-    }
-    catch (...) {
-        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
-    }
-    std::cout << "DBG: CMD: " << command << std::endl;
-    NFTCommand::getInstance().exec_cmd(command);
-}
+            //we only target the single ones 
+            if (expr.size() > 1) continue;
+            nlohmann::json match = expr.at(0);
 
-void NFTChain::addRule(const TCP_Match& rule)
-{
-    std::string command;
+            if (match["match"].empty()) continue;
 
-    try {
-        command = cmd_rule<TCP_Match>(rule);
+            Match s_match;
+            s_match.Operator(match["match"]["op"]);
+
+            if (!match["match"]["left"]["meta"].empty()) s_match.Meta(match["match"]["left"]["meta"]["key"]);
+
+            if (!match["match"]["left"]["payload"].empty()) {
+                s_match.Protocol(match["match"]["left"]["payload"]["protocol"]);
+                s_match.Field(match["match"]["left"]["payload"]["field"]);
+            }
+            //its a range
+            if (match["match"]["right"].contains("range")) {
+
+                std::string from, to;
+                if (match["match"]["right"]["range"].at(0).is_string()) {
+                    from = match["match"]["right"]["range"].at(0);
+                    to = match["match"]["right"]["range"].at(1);
+                }
+                else {
+                    from = match["match"]["right"]["range"].at(0).dump();
+                    to = match["match"]["right"]["range"].at(1).dump();
+                }
+                s_match.Range(from, to);
+
+            }else{
+                std::string val;
+                if(match["match"]["right"].is_string()){
+                    val = match["match"]["right"];
+                }else{
+                    val = match["match"]["right"].dump();
+                }
+
+                s_match.Value(val);
+            }
+
+            matches.push_back(s_match);
+        }
     }
-    catch (...) {
-        throw NFTablesCommandExecException("Cannot read rule due to type mismatch!");
-    }
-    std::cout << "DBG: CMD: " << command << std::endl;
-    NFTCommand::getInstance().exec_cmd(command);
+
+    return matches;
+
 }
 
 NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name, const NFT_Types table_type) :
@@ -290,68 +320,79 @@ NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_
     m_table_type(table_type)
 {}
 
-IP_Match::IP_Match(IP_Match_Types type) : m_match_type(type) {};
-Match::Match() {};
 
-Match& Match::notEqual(void)
+Match& Match::Operator(const std::string& oper)
 {
-    m_not_equal = true;
-    return *this;
+    m_operator = oper;
+    return (*this);
 }
 
-Match& Match::equal(void)
+Match& Match::Protocol(const std::string& protocol)
 {
-    m_not_equal = false;
-    return *this;
+    m_protocol = protocol;
+    return (*this);
 }
 
-bool Match::hasNotEqual(void) const
+Match& Match::Field(const std::string& field)
 {
-    return m_not_equal;
+    m_field = field;
+    return (*this);
 }
 
-std::string Match::getVal(void) const {
+Match& Match::Meta(const std::string& meta_key)
+{
+    m_meta_key = meta_key;
+    return (*this);
+}
+
+Match& Match::Value(const std::string& value)
+{
+    m_value = value;
+    return (*this);
+}
+
+Match& Match::Range(const std::string& from, const std::string& to)
+{
+    m_value = from + "-" + to;
+    return (*this);
+}
+
+bool Match::isMeta() const
+{
+    return m_meta_key.has_value();
+}
+
+bool Match::isPayload() const
+{
+    return m_protocol.has_value() && m_field.has_value();
+}
+
+bool Match::isRange() const
+{
+    return (m_value.find("-") != std::string::npos);
+}
+
+std::optional<std::string> Match::getMetaKey() const
+{
+    return m_meta_key;
+}
+
+std::optional<std::string> Match::getProtocol() const
+{
+    return m_protocol;
+}
+
+std::optional<std::string> Match::getField() const
+{
+    return m_field;
+}
+
+std::string Match::getValue() const
+{
     return m_value;
 }
 
-std::string IP_Match::getMatch(void) const
+std::optional<std::string> Match::getOperator() const
 {
-    return _ip_match_types.at(m_match_type);
-}
-
-IP6_Match::IP6_Match(IP6_Match_Types type) : m_match_type(type) {};
-
-std::string IP6_Match::getMatch(void) const
-{
-    return _ip6_match_types.at(m_match_type);
-}
-
-std::string ETH_Match::getMatch(void) const
-{
-    return _eth_match_types.at(m_match_type);
-}
-
-std::string TCP_Match::getMatch(void) const
-{
-    return _tcp_match_types.at(m_match_type);
-}
-
-std::string IP_Match::getMatchType(void) const
-{
-    return MATCH_TYPE;
-}
-
-std::string IP6_Match::getMatchType(void) const
-{
-    return MATCH_TYPE;
-}
-
-std::string ETH_Match::getMatchType(void) const
-{
-    return MATCH_TYPE;
-}
-
-std::string TCP_Match::getMatchType(void) const
-{
-    return MATCH_TYPE;
+    return m_operator;
 }

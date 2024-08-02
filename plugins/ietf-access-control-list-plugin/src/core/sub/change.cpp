@@ -37,6 +37,22 @@ namespace ietf::acl {
 
                 NFTables nftables;
 
+                auto tab = nftables.getTable("test1", NFT_Types::NFT_IP);
+
+                if(tab){
+                    
+                   std::list<NFTChain> chains = tab->getChains();
+
+                   for(auto& chain : chains){
+                        std::cout<<"CHAIN: "<<chain.getChainName()<<std::endl;
+                        std::list<Match> rules = chain.getRules();
+
+                        for(auto& rule : rules){
+                            std::cout<<"--------Rule: " <<rule.getValue()<<"is Range :"<<rule.isRange()<<std::endl;
+                        }
+                   }
+
+                }
                 // NFTTable tab = nftables.addTable("test1", NFT_IP);
                 // std::cout<<"TAB: "<<tab.getTableName()<<std::endl;
 
@@ -46,26 +62,26 @@ namespace ietf::acl {
                 // std::cout<<"CHAIN 1"<<chain1.getChainName()<<" AT: "<<chain1.getTableName()<<std::endl;
                 // std::cout<<"CHAIN 2"<<chain2.getChainName()<<" AT: "<<chain2.getTableName()<<std::endl;
 
-                // IP_Match rule(IP_Match::IP_D_ADDR_MATCH);
-                // rule.notEqual().setRange<std::string>("192.168.0.1","192.168.0.20");
+                
+                // chain1.addRule(Match().Meta("oifname").Operator("!=").Value("docker0"));
+                // chain1.addRule(Match().Protocol("ip").Field("dscp").Operator("!="));
 
-                // chain1.addRule(rule);
+                // auto table = nftables.getTable("nat", NFT_Types::NFT_IP);
 
-                auto table = nftables.getTable("nat", NFT_Types::NFT_IP);
+                // if (table) {
 
-                if (table) {
+                //     for (auto chain : table->getChains()) {
 
-                    for (auto chain : table->getChains()) {
+                //         std::cout << "CHAIN: " << chain.getChainName() << std::endl;
 
-                        std::cout << "CHAIN: " << chain.getChainName() << std::endl;
+                //         std::cout<<"HOOK: "<<(chain.getChainHook() ? utils::getString<NFT_Chain_Hooks>(chain.getChainHook().value()) : "NULL")<<std::endl;
+                //         std::cout<<"POLICY: "<<(chain.getChainPolicy() ? utils::getString<NFT_Chain_Policy>(chain.getChainPolicy().value()) : "NULL")<<std::endl;
+                //         std::cout<<"TYPE: "<<(chain.getChainType() ? utils::getString<NFT_Chain_Types>(chain.getChainType().value()) : "NULL")<<std::endl;
+                //         std::cout<<"PRIO: "<< (chain.getPrio() ? chain.getPrio().value() : 0)<<std::endl;
+                //     }
+                // }
 
-                        std::cout<<"HOOK: "<<(chain.getChainHook() ? utils::getString<NFT_Chain_Hooks>(chain.getChainHook().value()) : "NULL")<<std::endl;
-                        std::cout<<"POLICY: "<<(chain.getChainPolicy() ? utils::getString<NFT_Chain_Policy>(chain.getChainPolicy().value()) : "NULL")<<std::endl;
-                        std::cout<<"TYPE: "<<(chain.getChainType() ? utils::getString<NFT_Chain_Types>(chain.getChainType().value()) : "NULL")<<std::endl;
-                        std::cout<<"PRIO: "<< (chain.getPrio() ? chain.getPrio().value() : 0)<<std::endl;
-                    }
-                }
-
+                
                 break;
             }
             default:

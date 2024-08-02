@@ -13,11 +13,12 @@
 class NFTables;
 class NFTTable;
 class NFTChain;
+class Match;
 
-class IP_Match;
-class ETH_Match;
-class IP6_Match;
-class TCP_Match;
+// class IP_Match;
+// class ETH_Match;
+// class IP6_Match;
+// class TCP_Match;
 
 enum NFT_Types {
     NFT_IP,
@@ -244,11 +245,8 @@ public:
     std::optional<NFT_Chain_Hooks> getChainHook();
     std::optional<int32_t> getPrio();
     std::optional<NFT_Chain_Policy> getChainPolicy();
-    //[TODO] addRule
-    void addRule(const IP_Match&);
-    void addRule(const IP6_Match&);
-    void addRule(const ETH_Match&);
-    void addRule(const TCP_Match&);
+    void addRule(const Match&);
+    std::list<Match> getRules();
 
 private:
     NFTChain(const std::string&,
@@ -266,227 +264,41 @@ private:
     std::optional<int32_t> m_chain_priority;
     std::optional<NFT_Chain_Policy> m_chain_policy;
     NFT_Types m_table_type;
-
-    template<typename T> inline std::string cmd_rule(const T& rule) {
-        std::string command = "add rule " +
-            nft_types.at(m_table_type) + " " +
-            m_table_name + " " +
-            m_chain_name + " " +
-            rule.getMatchType() + " " +
-            rule.getMatch();
-
-        command.append(rule.hasNotEqual() ? " != " : " ");
-        command.append(rule.getVal());
-
-        return command;
-    }
+   
 };
 
 class Match {
 
-    virtual std::string getMatch(void) const = 0;
-    virtual std::string getMatchType(void) const = 0;
+    public:
 
-public:
+        Match& Operator(const std::string&);
+        Match& Protocol(const std::string&);
+        Match& Field(const std::string&);
+        Match& Meta(const std::string&);
+        Match& Value(const std::string&);
+        Match& Range(const std::string&, const std::string&);
 
-    Match& notEqual(void);
-    Match& equal(void);
+        uint16_t getHandle();
 
-    template<typename T> inline
-        Match& setValue(const T&);
-
-    template<typename T> inline
-        Match& setRange(const T&, const T&);
-
-    bool hasNotEqual(void) const;
-    std::string getVal(void) const;
-
-protected:
-    Match();
-
-private:
-    std::string m_value;
-    bool m_not_equal;
-};
-
-template<typename T>
-inline Match& Match::setValue(const T& val)
-{
-    if constexpr (std::is_same_v<T, std::string>) {
-        //its a string
-        m_value = val;
-    }
-    else if constexpr (std::is_integral_v<T>) {
-        // its a number
-        m_value = std::to_string(val);
-    }
-    else {
-        throw NFTablesCommandExecException("Wrong value types, please use strings or numbers!");
-    };
-
-    return *this;
-}
-
-template<typename T>
-inline Match& Match::setRange(const T& first, const T& second)
-{
-    if constexpr (std::is_same_v<T, std::string>) {
-        //its a string
-        m_value = first + "-" + second;
-    }
-    else if constexpr (std::is_integral_v<T>) {
-        // its a number
-        std::string s_first = std::to_string(first);
-        std::string s_second = std::to_string(second);
-        m_value = s_first + "-" + s_second;
-    }
-    else {
-        throw NFTablesCommandExecException("Wrong value types, please use strings or numbers!");
-    };
-    return *this;
-}
-
-class IP_Match : public Match {
-
-public:
-
-    enum IP_Match_Types {
-        IP_DSCP_MATCH,
-        IP_LENGTH_MATCH,
-        IP_ID_MATCH,
-        IP_FRAGMENT_MATCH,
-        IP_TTL_MATCH,
-        IP_PROTOCOL_MATCH,
-        IP_CHECKSUM_MATCH,
-        IP_S_ADDR_MATCH,
-        IP_D_ADDR_MATCH,
-        IP_VERSION_MATCH,
-        IP_HDR_LEN_MATCH,
-    };
+        bool isMeta() const;
+        bool isPayload() const;
+        bool isRange() const;
+ 
+        std::optional<std::string> getMetaKey() const;
+        std::optional<std::string> getProtocol() const;
+        std::optional<std::string> getField() const;
+        std::optional<std::string> getOperator() const;
+        std::string getValue() const;
 
 
-    IP_Match(IP_Match_Types);
+    private:
+        int16_t m_handle;
+        std::string m_left;
+        std::string m_operator;
+        std::string m_value;
 
-    std::string getMatch(void) const override;
-    std::string getMatchType(void) const override;
+        std::optional<std::string> m_meta_key;
+        std::optional<std::string> m_protocol;
+        std::optional<std::string> m_field;
 
-private:
-
-    const std::map<IP_Match_Types, std::string>_ip_match_types = {
-        {IP_DSCP_MATCH,             "dscp"},
-        {IP_LENGTH_MATCH,           "length"},
-        {IP_ID_MATCH,               "id"},
-        {IP_FRAGMENT_MATCH,         "frag-off"},
-        {IP_TTL_MATCH,              "ttl"},
-        {IP_PROTOCOL_MATCH,         "protocol"},
-        {IP_CHECKSUM_MATCH,         "checksum"},
-        {IP_S_ADDR_MATCH,           "saddr"},
-        {IP_D_ADDR_MATCH,           "daddr"},
-        {IP_VERSION_MATCH,          "version"},
-        {IP_HDR_LEN_MATCH,          "hdrlength"},
-    };
-
-    IP_Match_Types m_match_type;
-    const std::string MATCH_TYPE = "ip";
-};
-
-class IP6_Match : public Match {
-
-public:
-    enum IP6_Match_Types {
-        IP6_DSCP_MATCH,
-        IP6_FLOWLABEL_MATCH,
-        IP6_LENGTH_MATCH,
-        IP6_NEXT_HDR_MATCH,
-        IP6_HOP_LIMIT_MATCH,
-        IP6_S_ADDR_MATCH,
-        IP6_D_ADDR_MATCH,
-        IP6_VERSION_MATCH,
-    };
-
-
-    IP6_Match(IP6_Match_Types);
-
-    std::string getMatch(void) const override;
-    std::string getMatchType(void) const override;
-
-private:
-
-    const std::map<IP6_Match_Types, std::string>_ip6_match_types = {
-        {IP6_DSCP_MATCH,        "dscp"},
-        {IP6_FLOWLABEL_MATCH,   "flowlabel"},
-        {IP6_LENGTH_MATCH,      "length"},
-        {IP6_NEXT_HDR_MATCH,    "nexthdr"},
-        {IP6_HOP_LIMIT_MATCH,   "hoplimit"},
-        {IP6_S_ADDR_MATCH,      "saddr"},
-        {IP6_D_ADDR_MATCH,      "daddr"},
-        {IP6_VERSION_MATCH,     "vetsion"},
-    };
-
-    IP6_Match_Types m_match_type;
-    const std::string MATCH_TYPE = "ip6";
-};
-
-class ETH_Match : public Match {
-
-public:
-    enum ETH_Match_Types {
-        ETH_S_ADDR_MATCH,
-        ETH_D_ADDR_MATCH,
-        ETH_TYPE_MATCH,
-    };
-
-    ETH_Match(ETH_Match_Types);
-
-    std::string getMatch(void) const override;
-    std::string getMatchType(void) const override;
-
-private:
-
-    const std::map<ETH_Match_Types, std::string>_eth_match_types = {
-        {ETH_S_ADDR_MATCH,        "saddr"},
-        {ETH_D_ADDR_MATCH,        "daddr"},
-        {ETH_TYPE_MATCH,           "type"},
-    };
-
-    ETH_Match_Types m_match_type;
-    const std::string MATCH_TYPE = "ether";
-};
-
-class TCP_Match : public Match {
-
-public:
-    enum TCP_Match_Types {
-        TCP_S_PORT_MATCH,
-        TCP_D_PORT_MATCH,
-        TCP_SEQ_MATCH,
-        TCP_ACK_SEQ_MATCH,
-        TCP_FLAGS_MATCH,
-        TCP_WINDOW_MATCH,
-        TCP_CHECKSUM_MATCH,
-        TCP_URG_PTR_MATCH,
-        TCP_D_OFFSET_MATCH,
-    };
-
-    TCP_Match(TCP_Match_Types);
-
-    std::string getMatch(void) const override;
-    std::string getMatchType(void) const override;
-
-private:
-
-    const std::map<TCP_Match_Types, std::string>_tcp_match_types = {
-        {TCP_S_PORT_MATCH,      "sport"},
-        {TCP_D_PORT_MATCH,      "dport"},
-        {TCP_SEQ_MATCH,         "sequence"},
-        {TCP_ACK_SEQ_MATCH,     "ackseq"},
-        {TCP_FLAGS_MATCH,       "flags"},
-        {TCP_WINDOW_MATCH,      "window"},
-        {TCP_CHECKSUM_MATCH,    "checksum"},
-        {TCP_URG_PTR_MATCH,     "urgptr"},
-        {TCP_D_OFFSET_MATCH,    "doff"},
-    };
-
-    TCP_Match_Types m_match_type;
-    const std::string MATCH_TYPE = "tcp";
 };
