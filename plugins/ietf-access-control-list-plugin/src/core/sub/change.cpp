@@ -1,6 +1,8 @@
 #include "change.hpp"
+#include "sysrepo.h"
 #include <iostream>
 #include "core/nftables.hpp"
+#include "core/nft_helper.hpp"
 #include <list>
 
 namespace ietf::acl {
@@ -35,53 +37,60 @@ namespace ietf::acl {
             switch (event) {
             case sr::Event::Change: {
 
-                NFTables nftables;
+                for (sysrepo::Change change : session.getChanges(std::string(subXPath->data()).append("/name"))) {
 
-                auto tab = nftables.getTable("test1", NFT_Types::NFT_IP);
+                    std::string table_name = change.node.asTerm().valueStr().data();
+                    std::string table_type_str;
 
-                if(tab){
-                    
-                   std::list<NFTChain> chains = tab->getChains();
-
-                   for(auto& chain : chains){
-                        std::cout<<"CHAIN: "<<chain.getChainName()<<std::endl;
-                        std::list<Match> rules = chain.getRules();
-
-                        for(auto& rule : rules){
-                            std::cout<<"--------Rule: " <<rule.getValue()<<"is Range :"<<rule.isRange()<<std::endl;
+                    NFT_Types type = NFT_Types::NFT_INVALID_TYPE;
+                    bool type_found = false;
+                    //find the type value in the tree
+                    for (const libyang::DataNode& node : change.node.siblings()) {
+                        if (node.schema().name() == "type") {
+                            type_found = true;
+                            table_type_str = node.asTerm().valueStr().data();
+                            break;
                         }
-                   }
+                    }
+
+                    if (!type_found) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot obtain /acl/type[name='%s'] node", table_name.c_str());
+                        return sr::ErrorCode::NotFound;
+                    }
+
+                    type = nft::helper::ianaToNFTType(table_type_str);
+                    if (type == NFT_Types::NFT_INVALID_TYPE) {
+                        //type cannot be obtained
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Invalid type %s on table %s", table_type_str, table_name.c_str());
+                        return sr::ErrorCode::NotFound;
+                    }
+
+                    NFTables nft;
+
+                    switch (change.operation) {
+                    case sr::ChangeOperation::Created: {
+
+                        nft.addTable(table_name, type);
+
+                        break;
+                    }
+                    case sr::ChangeOperation::Deleted:
+                        //delete table
+                        try {
+                            nft.deleteTable(table_name, type);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        break;
+
+                    default:
+                        break;
+                    }
 
                 }
-                // NFTTable tab = nftables.addTable("test1", NFT_IP);
-                // std::cout<<"TAB: "<<tab.getTableName()<<std::endl;
-
-                // auto chain1 = tab.addChain("TESTCHAIN11",std::nullopt,std::nullopt,std::nullopt,std::nullopt);
-                // auto chain2 = tab.addChain("TESTCHAIN12",NFT_Chain_Types::CHAIN_FILTER ,NFT_Chain_Hooks::CH_HOOK_INPUT,-111 ,NFT_Chain_Policy::CH_POLICY_DROP);
-
-                // std::cout<<"CHAIN 1"<<chain1.getChainName()<<" AT: "<<chain1.getTableName()<<std::endl;
-                // std::cout<<"CHAIN 2"<<chain2.getChainName()<<" AT: "<<chain2.getTableName()<<std::endl;
-
-                
-                // chain1.addRule(Match().Meta("oifname").Operator("!=").Value("docker0"));
-                // chain1.addRule(Match().Protocol("ip").Field("dscp").Operator("!="));
-
-                // auto table = nftables.getTable("nat", NFT_Types::NFT_IP);
-
-                // if (table) {
-
-                //     for (auto chain : table->getChains()) {
-
-                //         std::cout << "CHAIN: " << chain.getChainName() << std::endl;
-
-                //         std::cout<<"HOOK: "<<(chain.getChainHook() ? utils::getString<NFT_Chain_Hooks>(chain.getChainHook().value()) : "NULL")<<std::endl;
-                //         std::cout<<"POLICY: "<<(chain.getChainPolicy() ? utils::getString<NFT_Chain_Policy>(chain.getChainPolicy().value()) : "NULL")<<std::endl;
-                //         std::cout<<"TYPE: "<<(chain.getChainType() ? utils::getString<NFT_Chain_Types>(chain.getChainType().value()) : "NULL")<<std::endl;
-                //         std::cout<<"PRIO: "<< (chain.getPrio() ? chain.getPrio().value() : 0)<<std::endl;
-                //     }
-                // }
-
-                
                 break;
             }
             default:

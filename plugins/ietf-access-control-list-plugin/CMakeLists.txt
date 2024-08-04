@@ -35,6 +35,7 @@ set(
     src/core/sub/rpc.cpp
     src/core/sub/context.hpp
     src/core/nftables.cpp
+    src/core/nft_helper.hpp
 )
 
 set(

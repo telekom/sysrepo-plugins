@@ -55,6 +55,11 @@ NFTTable NFTables::addTable(const std::string& name, const NFT_Types family)
     return NFTTable(family, name);
 }
 
+void NFTables::deleteTable(const std::string& name, const NFT_Types family)
+{
+    NFTCommand::getInstance().exec_cmd("delete table " + utils::getString<NFT_Types>(family) + " " + name);
+}
+
 NFTTable::NFTTable(const NFT_Types fam, const std::string& name) :
     m_fam{ fam },
     m_name{ name } {};
@@ -248,6 +253,42 @@ void NFTChain::addRule(const Match& match)
     NFTCommand::getInstance().exec_cmd(command);
 }
 
+void NFTChain::deleteRule(const Match& rule)
+{
+    for (auto& m_rule : this->getRules()) {
+        if (rule == m_rule) {
+            //NOTE! handle is crutial for delete, so we are getting it from the listed object,
+            //not from the constructed one
+            std::string command = "delete rule " + utils::getString<NFT_Types>(m_table_type) + " " +
+                m_table_name + " " + m_chain_name + " handle " + std::to_string(m_rule.m_handle);
+            //it will throw an exception if failed to delete
+            NFTCommand::getInstance().exec_cmd(command);
+            //our job is done, return if deleted
+            return;
+        }
+    }
+
+    std::string rule_string;
+    rule_string.append("(");
+
+    if (rule.isMeta()) {
+        rule_string.append(rule.m_meta_key.value_or("unknown meta value"));
+    }
+    else if (rule.isPayload()) {
+        rule_string.append(rule.m_protocol.value_or("unknown proto"));
+        rule_string.append(" ");
+        rule_string.append(rule.m_field.value_or("unknown field"));
+        rule_string.append(" ");
+    }
+
+    rule_string.append(rule.m_operator);
+    rule_string.append(" ");
+    rule_string.append(rule.m_value);
+    rule_string.append(")");
+
+    throw NFTablesCommandExecException("Cannot find to delete rule: " + rule_string);
+}
+
 std::list<Match> NFTChain::getRules()
 {
 
@@ -270,6 +311,7 @@ std::list<Match> NFTChain::getRules()
 
             Match s_match;
             s_match.Operator(match["match"]["op"]);
+            s_match.m_handle = rule["rule"]["handle"];
 
             if (!match["match"]["left"]["meta"].empty()) s_match.Meta(match["match"]["left"]["meta"]["key"]);
 
@@ -291,11 +333,13 @@ std::list<Match> NFTChain::getRules()
                 }
                 s_match.Range(from, to);
 
-            }else{
+            }
+            else {
                 std::string val;
-                if(match["match"]["right"].is_string()){
+                if (match["match"]["right"].is_string()) {
                     val = match["match"]["right"];
-                }else{
+                }
+                else {
                     val = match["match"]["right"].dump();
                 }
 
@@ -310,6 +354,16 @@ std::list<Match> NFTChain::getRules()
 
 }
 
+std::optional<Match> NFTChain::findRule(const Match& rule)
+{
+    for (auto& m_rule : this->getRules()) {
+        if (rule == m_rule) {
+            return m_rule;
+        }
+    }
+    return std::nullopt;
+}
+
 NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name, const NFT_Types table_type) :
     m_chain_name(chain_name),
     m_chain_type(type),
@@ -320,6 +374,8 @@ NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_
     m_table_type(table_type)
 {}
 
+
+Match::Match() : m_operator("=="), m_handle(-1) {}
 
 Match& Match::Operator(const std::string& oper)
 {
@@ -357,6 +413,11 @@ Match& Match::Range(const std::string& from, const std::string& to)
     return (*this);
 }
 
+uint16_t Match::getHandle() const
+{
+    return m_handle;
+}
+
 bool Match::isMeta() const
 {
     return m_meta_key.has_value();
@@ -390,6 +451,32 @@ std::optional<std::string> Match::getField() const
 std::string Match::getValue() const
 {
     return m_value;
+}
+
+bool Match::operator==(const Match& other) const
+{
+    std::string m_other_left;
+    std::string m_this_left;
+
+    if (this->isMeta()) {
+        m_this_left.append(m_meta_key.value_or(""));
+    }
+    else if (this->isPayload()) {
+        m_this_left.append(m_protocol.value_or("") + " " + m_field.value_or(""));
+    };
+
+    if (other.isMeta()) {
+        m_other_left.append(other.m_meta_key.value_or(""));
+    }
+    else if (other.isPayload()) {
+        m_other_left.append(other.m_protocol.value_or("") + " " + other.m_field.value_or(""));
+    };
+
+    return (
+        m_other_left == m_this_left &&
+        m_operator == other.m_operator &&
+        m_value == other.m_value
+        );
 }
 
 std::optional<std::string> Match::getOperator() const

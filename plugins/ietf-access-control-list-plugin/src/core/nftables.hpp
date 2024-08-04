@@ -207,6 +207,7 @@ public:
     std::optional<NFTTable> getTable(const std::string&, NFT_Types);
     //[TODO] addTable
     NFTTable addTable(const std::string&, const NFT_Types);
+    void deleteTable(const std::string&, const NFT_Types);
 
 private:
 
@@ -246,7 +247,9 @@ public:
     std::optional<int32_t> getPrio();
     std::optional<NFT_Chain_Policy> getChainPolicy();
     void addRule(const Match&);
+    void deleteRule(const Match&);
     std::list<Match> getRules();
+    std::optional<Match> findRule(const Match&);
 
 private:
     NFTChain(const std::string&,
@@ -264,41 +267,41 @@ private:
     std::optional<int32_t> m_chain_priority;
     std::optional<NFT_Chain_Policy> m_chain_policy;
     NFT_Types m_table_type;
-   
+
 };
 
 class Match {
+    friend class NFTChain;
+public:
+    Match();
+    Match& Operator(const std::string&);
+    Match& Protocol(const std::string&);
+    Match& Field(const std::string&);
+    Match& Meta(const std::string&);
+    Match& Value(const std::string&);
+    Match& Range(const std::string&, const std::string&);
 
-    public:
+    uint16_t getHandle() const;
 
-        Match& Operator(const std::string&);
-        Match& Protocol(const std::string&);
-        Match& Field(const std::string&);
-        Match& Meta(const std::string&);
-        Match& Value(const std::string&);
-        Match& Range(const std::string&, const std::string&);
+    bool isMeta() const;
+    bool isPayload() const;
+    bool isRange() const;
 
-        uint16_t getHandle();
+    std::optional<std::string> getMetaKey() const;
+    std::optional<std::string> getProtocol() const;
+    std::optional<std::string> getField() const;
+    std::optional<std::string> getOperator() const;
+    std::string getValue() const;
 
-        bool isMeta() const;
-        bool isPayload() const;
-        bool isRange() const;
- 
-        std::optional<std::string> getMetaKey() const;
-        std::optional<std::string> getProtocol() const;
-        std::optional<std::string> getField() const;
-        std::optional<std::string> getOperator() const;
-        std::string getValue() const;
+    bool operator==(const Match&) const;
 
+private:
+    int16_t m_handle;
+    std::string m_operator;
+    std::string m_value;
 
-    private:
-        int16_t m_handle;
-        std::string m_left;
-        std::string m_operator;
-        std::string m_value;
-
-        std::optional<std::string> m_meta_key;
-        std::optional<std::string> m_protocol;
-        std::optional<std::string> m_field;
+    std::optional<std::string> m_meta_key;
+    std::optional<std::string> m_protocol;
+    std::optional<std::string> m_field;
 
 };
