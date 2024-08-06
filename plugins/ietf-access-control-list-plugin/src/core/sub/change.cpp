@@ -249,7 +249,7 @@ namespace ietf::acl {
          * @param ctx Plugin module change context.
          *
          */
-        InterfaceModuleChangeCb::InterfaceModuleChangeCb(std::shared_ptr<ietf::acl::ModuleChangeContext> ctx) { m_ctx = ctx; }
+        AclAceActFwModuleChangeCb::AclAceActFwModuleChangeCb(std::shared_ptr<AclModuleChangesContext> ctx) { m_ctx = ctx; }
 
         /**
          * sysrepo-plugin-generator: Generated module change operator() for path
@@ -266,10 +266,79 @@ namespace ietf::acl {
          * @return Error code.
          *
          */
-        sr::ErrorCode InterfaceModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+        sr::ErrorCode AclAceActFwModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
             std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
         {
             sr::ErrorCode error = sr::ErrorCode::Ok;
+
+            switch (event) {
+            case sr::Event::Change: {
+
+                for (sr::Change change : session.getChanges(subXPath->data())) {
+
+                    switch (change.operation) {
+                        //Forwarding node can just be modified
+                    case sr::ChangeOperation::Modified: {
+                        std::string type_str;
+                        std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path())["name"];
+
+                        try {
+                            auto type_node = session.getOneNode("/ietf-access-control-list:acls/acl[name='" + table_name + "']/type");
+                            type_str = type_node.asTerm().valueStr().data();
+                        }
+                        catch (...) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot obtain /acl[name='%s']/type node", table_name.c_str());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        NFT_Types table_type = nft::helper::ianaToNFTType(type_str);
+
+                        std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+
+                        NFTables nftables;
+
+                        auto nft_table = nftables.getTable(table_name, table_type);
+
+                        if (!nft_table) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot find table %s!", table_name.c_str());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        auto nft_chain = nft_table->findChain(chain_name);
+
+                        if (!nft_chain) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot find chain %s!", chain_name.c_str());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        try {
+                            NFT_Chain_Policy policy = nft::helper::ianaToPolicyType(change.node.asTerm().valueStr().data());
+                            nft_chain->updateChainPolicy(policy);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        catch (...) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Failed to update policy on chain %s", chain_name.c_str());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
+
+                    }
+
+                }
+
+                break;
+            }
+            default:
+                break;
+            }
+
             return error;
         }
 

@@ -115,6 +115,17 @@ void NFTTable::deleteChain(const NFT_Types table_type, const std::string& table_
     NFTCommand::getInstance().exec_cmd(command);
 }
 
+std::optional<NFTChain> NFTTable::findChain(const std::string& chain_name)
+{
+    for(NFTChain chain : this->getChains()){
+        if(chain.getChainName() == chain_name){
+            return chain;
+        }
+    }
+
+    return std::nullopt;
+}
+
 std::list<NFTChain> NFTTable::getChains()
 {
     std::list<NFTChain> loaded_chains;
@@ -235,6 +246,15 @@ std::optional<int32_t> NFTChain::getPrio()
 std::optional<NFT_Chain_Policy> NFTChain::getChainPolicy()
 {
     return m_chain_policy;
+}
+
+void NFTChain::updateChainPolicy(const NFT_Chain_Policy policy)
+{
+    std::string command = "add chain ";
+    command.append(utils::getString<NFT_Types>(m_table_type) + " " + m_table_name + " " + m_chain_name + " ");
+    command.append("{ policy " + utils::getString<NFT_Chain_Policy>(policy) + "; }");
+
+    NFTCommand::getInstance().exec_cmd(command);
 }
 
 void NFTChain::addRule(const Match& match)

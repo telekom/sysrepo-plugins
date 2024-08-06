@@ -84,7 +84,7 @@ namespace sub::change {
      * @brief sysrepo-plugin-generator: Generated module change functor for path
      * /ietf-access-control-list:acls/attachment-points/interface[interface-id='%s'].
      */
-    class InterfaceModuleChangeCb {
+    class AclAceActFwModuleChangeCb {
     public:
         /**
          * sysrepo-plugin-generator: Generated default constructor.
@@ -92,7 +92,7 @@ namespace sub::change {
          * @param ctx Plugin module change context.
          *
          */
-        InterfaceModuleChangeCb(std::shared_ptr<ietf::acl::ModuleChangeContext> ctx);
+        AclAceActFwModuleChangeCb(std::shared_ptr<AclModuleChangesContext> ctx);
 
         /**
          * sysrepo-plugin-generator: Generated module change operator() for path
@@ -113,7 +113,7 @@ namespace sub::change {
             sr::Event event, uint32_t requestId);
 
     private:
-        std::shared_ptr<ietf::acl::ModuleChangeContext> m_ctx;
+        std::shared_ptr<AclModuleChangesContext> m_ctx;
     };
 
 }
