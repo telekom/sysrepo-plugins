@@ -5,7 +5,7 @@
 #include <memory>
 #include <list>
 
-AclModule::AclModule(ietf::acl::PluginContext &ctx) : srpc::IModule<ietf::acl::PluginContext>(ctx)
+AclModule::AclModule(ietf::acl::PluginContext& ctx) : srpc::IModule<ietf::acl::PluginContext>(ctx)
 {
     m_operContext = std::make_shared<AclOperationalContext>();
     m_changeContext = std::make_shared<AclModuleChangesContext>();
@@ -45,6 +45,11 @@ std::list<srpc::ModuleChangeCallback> AclModule::getModuleChangeCallbacks()
             "/ietf-access-control-list:acls/acl",
             ietf::acl::sub::change::AclModuleChangeCb(m_changeContext),
         },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace",
+            ietf::acl::sub::change::AclAcesAceModuleChangeCb(m_changeContext),
+        },
     };
 }
 
@@ -54,4 +59,4 @@ std::list<srpc::RpcCallback> AclModule::getRpcCallbacks()
     return std::list<srpc::RpcCallback>();
 }
 
-constexpr const char* AclModule::getName() {return "ACL Module";}
+constexpr const char* AclModule::getName() { return "ACL Module"; }

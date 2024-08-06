@@ -76,7 +76,7 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
 {
     if (name.empty()) throw NFTablesCommandExecException("Chain name cannot be empty!");
 
-    std::string command = "add chain " + utils::getString<NFT_Types>(this->getFamily()) + " " + this->getTableName() + " ";
+    std::string command = "create chain " + utils::getString<NFT_Types>(this->getFamily()) + " " + this->getTableName() + " ";
     bool has_params = false;
 
     command.append(name);
@@ -105,6 +105,14 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
     //if no exception is thrown, we construct NFTChain
 
     return std::move(NFTChain(name, type, hook, priority, policy, this->getTableName(), this->getFamily()));
+}
+
+void NFTTable::deleteChain(const NFT_Types table_type, const std::string& table_name, const std::string& chain_name)
+{
+    std::string tb_type = utils::getString<NFT_Types>(table_type);
+    std::string command = "delete chain " + tb_type + " " + table_name + " " + chain_name;
+
+    NFTCommand::getInstance().exec_cmd(command);
 }
 
 std::list<NFTChain> NFTTable::getChains()

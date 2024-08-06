@@ -15,4 +15,15 @@ namespace nft::helper {
 
     }
 
+    inline NFT_Chain_Policy ianaToPolicyType(const std::string& policy) {
+
+        if (policy == "ietf-access-control-list:accept") {
+            return NFT_Chain_Policy::CH_POLICY_ACCEPT;
+        }
+        else if (policy == "ietf-access-control-list:drop") {
+            return NFT_Chain_Policy::CH_POLICY_DROP;
+        }
+        else throw NFTablesCommandExecException("Unknown policy type" + policy + " !");
+    }
+
 }

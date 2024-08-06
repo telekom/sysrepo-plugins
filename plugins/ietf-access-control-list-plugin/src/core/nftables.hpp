@@ -227,6 +227,8 @@ public:
         const std::optional<NFT_Chain_Policy>&
     );
 
+    void deleteChain(const NFT_Types, const std::string& ,const std::string&);
+
     std::list<NFTChain> getChains();
 
 private:
