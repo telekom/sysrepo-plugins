@@ -117,8 +117,8 @@ void NFTTable::deleteChain(const NFT_Types table_type, const std::string& table_
 
 std::optional<NFTChain> NFTTable::findChain(const std::string& chain_name)
 {
-    for(NFTChain chain : this->getChains()){
-        if(chain.getChainName() == chain_name){
+    for (NFTChain chain : this->getChains()) {
+        if (chain.getChainName() == chain_name) {
             return chain;
         }
     }
@@ -315,6 +315,30 @@ void NFTChain::deleteRule(const Match& rule)
     rule_string.append(")");
 
     throw NFTablesCommandExecException("Cannot find to delete rule: " + rule_string);
+}
+
+void NFTChain::updateRule(int16_t handle, const Match& rule)
+{
+    std::string command = "replace rule " + utils::getString<NFT_Types>(m_table_type) + " " +
+        m_table_name + " " +
+        m_chain_name + " " + 
+        std::to_string(handle) + " ";
+
+    if (rule.isMeta()) {
+        command.append(rule.getMetaKey().value() + " ");
+    }
+
+    if (rule.isPayload()) {
+        command.append(rule.getProtocol().value() + " " + rule.getField().value() + " ");
+    }
+
+    if (rule.getOperator()) {
+        command.append(rule.getOperator().value() + " ");
+    }
+
+    command.append(rule.getValue());
+
+    NFTCommand::getInstance().exec_cmd(command);
 }
 
 std::list<Match> NFTChain::getRules()

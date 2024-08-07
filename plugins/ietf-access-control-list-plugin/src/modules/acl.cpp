@@ -55,6 +55,11 @@ std::list<srpc::ModuleChangeCallback> AclModule::getModuleChangeCallbacks()
             "/ietf-access-control-list:acls/acl/aces/ace/actions/forwarding",
             ietf::acl::sub::change::AclAceActFwModuleChangeCb(m_changeContext),
         },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/eth",
+            ietf::acl::sub::change::AclAceAcesMatchEthModuleChangeCb(m_changeContext),
+        },  
     };
 }
 

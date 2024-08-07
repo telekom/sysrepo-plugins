@@ -227,7 +227,7 @@ public:
         const std::optional<NFT_Chain_Policy>&
     );
 
-    void deleteChain(const NFT_Types, const std::string& ,const std::string&);
+    void deleteChain(const NFT_Types, const std::string&, const std::string&);
     std::optional<NFTChain> findChain(const std::string&);
 
     std::list<NFTChain> getChains();
@@ -252,8 +252,11 @@ public:
     void updateChainPolicy(const NFT_Chain_Policy policy);
     void addRule(const Match&);
     void deleteRule(const Match&);
+    void updateRule(int16_t, const Match&);
     std::list<Match> getRules();
     std::optional<Match> findRule(const Match&);
+
+
 
 private:
     NFTChain(const std::string&,

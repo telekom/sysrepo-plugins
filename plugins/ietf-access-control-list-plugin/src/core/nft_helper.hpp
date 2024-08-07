@@ -9,6 +9,9 @@ namespace nft::helper {
         else if (type == "ietf-access-control-list:ipv6-acl-type") {
             return NFT_Types::NFT_IP6;
         }
+        else if (type == "ietf-access-control-list:eth-acl-type") {
+            return NFT_Types::NFT_INET;
+        }
         else {
             return NFT_Types::NFT_INVALID_TYPE;
         }

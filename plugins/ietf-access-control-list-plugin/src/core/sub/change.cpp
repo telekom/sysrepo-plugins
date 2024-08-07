@@ -342,5 +342,340 @@ namespace ietf::acl {
             return error;
         }
 
+        /**
+         * sysrepo-plugin-generator: Generated default constructor.
+         *
+         * @param ctx Plugin module change context.
+         *
+         */
+        AclAceAcesMatchEthModuleChangeCb::AclAceAcesMatchEthModuleChangeCb(std::shared_ptr<AclModuleChangesContext> ctx) { m_ctx = ctx; }
+
+        /**
+         * sysrepo-plugin-generator: Generated module change operator() for path
+         * /ietf-access-control-list:acls/attachment-points/interface[interface-id='%s'].
+         *
+         * @param session An implicit session for the callback.
+         * @param subscriptionId ID the subscription associated with the callback.
+         * @param moduleName The module name used for subscribing.
+         * @param subXPath The optional xpath used at the time of subscription.
+         * @param event Type of the event that has occured.
+         * @param requestId Request ID unique for the specific module_name. Connected events for one request (SR_EV_CHANGE and
+         * SR_EV_DONE, for example) have the same request ID.
+         *
+         * @return Error code.
+         *
+         */
+        sr::ErrorCode AclAceAcesMatchEthModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+            std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
+        {
+            sr::ErrorCode error = sr::ErrorCode::Ok;
+
+            switch (event) {
+            case sr::Event::Change: {
+
+                //destination mac address
+                for (sr::Change change : session.getChanges(std::string(subXPath->data()).append("/destination-mac-address"))) {
+
+                    //we have to get the table type, table name, chain, and rule
+
+                    //obtaining table name
+                    std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path())["name"];
+
+                    //obtaining chain name
+                    std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+                    std::string type_str;
+
+                    //obtaining table type
+                    try {
+                        auto type_node = session.getOneNode("/ietf-access-control-list:acls/acl[name='" + table_name + "']/type");
+                        type_str = type_node.asTerm().valueStr().data();
+                    }
+                    catch (...) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot obtain /acl[name='%s']/type node", table_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    NFTables nft;
+
+                    NFT_Types table_type = nft::helper::ianaToNFTType(type_str);
+
+                    if (table_type == NFT_Types::NFT_INVALID_TYPE) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Invalid type %s !", type_str.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    };
+
+                    //obtaining table
+                    std::optional<NFTTable> table = nft.getTable(table_name, table_type);
+                    if (!table) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Table %s %s does not exist!", utils::getString<NFT_Types>(table_type).c_str(), table_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    //obtaining chain
+                    std::optional<NFTChain> chain = table->findChain(chain_name);
+                    if (!chain) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Chain %s does not exist!", chain_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    Match rule;
+
+                    switch (change.operation) {
+                        //Forwarding node can just be modified
+                    case sr::ChangeOperation::Created: {
+                        std::string mac = change.node.asTerm().valueStr().data();
+                        //constructing rule
+                        rule.Protocol("ether").Field("daddr").Value(mac);
+                        try {
+                            chain->addRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        break;
+                    }
+                    case sr::ChangeOperation::Modified: {
+                        std::string mac = change.node.asTerm().valueStr().data();
+                        std::string old_mac = change.previousValue->data();
+                        rule.Protocol("ether").Field("daddr").Value(mac);
+                        try {
+                            chain->deleteRule(Match().Protocol("ether").Field("daddr").Value(old_mac));
+                            chain->addRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        break;
+                    }
+                    case sr::ChangeOperation::Deleted: {
+                        std::string mac = change.node.asTerm().valueStr().data();
+                        rule.Protocol("ether").Field("daddr").Value(mac);
+                        try {
+                            chain->deleteRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
+
+                    }
+
+                }
+
+                //source mac address
+                for (sr::Change change : session.getChanges(std::string(subXPath->data()).append("/source-mac-address"))) {
+
+                    //we have to get the table type, table name, chain, and rule
+
+                    //obtaining table name
+                    std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path())["name"];
+
+                    //obtaining chain name
+                    std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+                    std::string type_str;
+
+                    //obtaining table type
+                    try {
+                        auto type_node = session.getOneNode("/ietf-access-control-list:acls/acl[name='" + table_name + "']/type");
+                        type_str = type_node.asTerm().valueStr().data();
+                    }
+                    catch (...) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot obtain /acl[name='%s']/type node", table_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    NFTables nft;
+
+                    NFT_Types table_type = nft::helper::ianaToNFTType(type_str);
+
+                    if (table_type == NFT_Types::NFT_INVALID_TYPE) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Invalid type %s !", type_str.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    };
+
+                    //obtaining table
+                    std::optional<NFTTable> table = nft.getTable(table_name, table_type);
+                    if (!table) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Table %s %s does not exist!", utils::getString<NFT_Types>(table_type).c_str(), table_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    //obtaining chain
+                    std::optional<NFTChain> chain = table->findChain(chain_name);
+                    if (!chain) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Chain %s does not exist!", chain_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    Match rule;
+
+                    switch (change.operation) {
+                        //Forwarding node can just be modified
+                    case sr::ChangeOperation::Created: {
+                        std::string mac = change.node.asTerm().valueStr().data();
+                        //constructing rule
+                        rule.Protocol("ether").Field("saddr").Value(mac);
+                        try {
+                            chain->addRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        break;
+                    }
+                    case sr::ChangeOperation::Modified: {
+                        std::string mac = change.node.asTerm().valueStr().data();
+                        std::string old_mac = change.previousValue->data();
+                        rule.Protocol("ether").Field("daddr").Value(mac);
+                        try {
+                            chain->deleteRule(Match().Protocol("ether").Field("saddr").Value(old_mac));
+                            chain->addRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        break;
+                    }
+                    case sr::ChangeOperation::Deleted: {
+                        std::string mac = change.node.asTerm().valueStr().data();
+                        rule.Protocol("ether").Field("saddr").Value(mac);
+                        try {
+                            chain->deleteRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
+
+                    }
+
+                }
+
+                //ethertype
+
+                //[TODO]: ethertype should be fixed, bug in the nftables api, when returned json numerical values
+                // the hex to numerical is incorrect!
+                for (sr::Change change : session.getChanges(std::string(subXPath->data()).append("/ethertype"))) {
+
+                    //we have to get the table type, table name, chain, and rule
+
+                    //obtaining table name
+                    std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path())["name"];
+
+                    //obtaining chain name
+                    std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+                    std::string type_str;
+
+                    //obtaining table type
+                    try {
+                        auto type_node = session.getOneNode("/ietf-access-control-list:acls/acl[name='" + table_name + "']/type");
+                        type_str = type_node.asTerm().valueStr().data();
+                    }
+                    catch (...) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot obtain /acl[name='%s']/type node", table_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    NFTables nft;
+
+                    NFT_Types table_type = nft::helper::ianaToNFTType(type_str);
+
+                    if (table_type == NFT_Types::NFT_INVALID_TYPE) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Invalid type %s !", type_str.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    };
+
+                    //obtaining table
+                    std::optional<NFTTable> table = nft.getTable(table_name, table_type);
+                    if (!table) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Table %s %s does not exist!", utils::getString<NFT_Types>(table_type).c_str(), table_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    //obtaining chain
+                    std::optional<NFTChain> chain = table->findChain(chain_name);
+                    if (!chain) {
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Chain %s does not exist!", chain_name.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    Match rule;
+
+                    switch (change.operation) {
+                        //Forwarding node can just be modified
+                    case sr::ChangeOperation::Created: {
+                        std::string vlan = change.node.asTerm().valueStr().data();
+                        //constructing rule
+                        rule.Protocol("ether").Field("type").Value(vlan);
+                        try {
+                            // chain->addRule(rule);
+                            
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        break;
+                    }
+                    case sr::ChangeOperation::Modified: {
+                        std::string vlan = change.node.asTerm().valueStr().data();
+                        std::string old_vlan = change.previousValue->data();
+                        rule.Protocol("ether").Field("type").Value(vlan);
+                        try {
+                            // chain->deleteRule(Match().Protocol("ether").Field("type").Value(old_vlan));
+                            // chain->addRule(rule);
+
+                            libyang::Value val;
+                            std::cout<<"get val: "<<std::get<uint32_t>(change.node.asTerm().value())<<std::endl;
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+                        break;
+                    }
+                    case sr::ChangeOperation::Deleted: {
+                        std::string vlan = change.node.asTerm().valueStr().data();
+                        rule.Protocol("ether").Field("type").Value(vlan);
+                        try {
+                            // chain->deleteRule(rule);
+                        }
+                        catch (NFTablesCommandExecException& e) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                            return sr::ErrorCode::CallbackFailed;
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
+
+                    }
+
+                }
+
+                break;
+            }
+            default:
+                break;
+            }
+
+            return error;
+        }
+
     }
 }
