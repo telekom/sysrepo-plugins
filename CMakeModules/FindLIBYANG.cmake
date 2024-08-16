@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2015 CESNET, z.s.p.o.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # - Try to find LibYANG
 # Once done this will define
 #

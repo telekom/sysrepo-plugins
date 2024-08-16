@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2024 Deutsche Telekom AG
+
+SPDX-License-Identifier: CC0-1.0    
+-->
+
 ## Development Setup
 
 Setup the development environment using the provided [`setup-dev-sysrepo`](https://github.com/sartura/setup-dev-sysrepo) scripts. This will build all the necessary components.
