@@ -12,8 +12,6 @@
   <a href="#development">Development</a> •
   <a href="#documentation">Documentation</a> •
   <a href="#support-and-feedback">Support</a> •
-  <a href="#how-to-contribute">Contribute</a> •
-  <a href="#contributors">Contributors</a> •
   <a href="#licensing">Licensing</a>
 </p>
 
@@ -141,12 +139,6 @@ $ sysrepoctl -i ./yang/ietf-ipv4-unicast-routing@2018-03-13.yang
 $ sysrepoctl -i ./yang/ietf-ipv6-unicast-routing@2018-03-13.yang -s ./yang
 ```
 
-
-## Code of Conduct
-
-This project has adopted the [Contributor Covenant](https://www.contributor-covenant.org/) in version 2.1 as our code of conduct. Please see the details in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). All contributors must abide by the code of conduct.
-
-
 ## Working Language
 
 We decided to apply _English_ as the primary project language.
@@ -174,23 +166,14 @@ The following channels are available for discussions, feedback, and support requ
 | **Issues**         | <a href="/../../issues/new/choose" title="General Discussion"><img src="https://img.shields.io/github/issues/telekom/sysrepo-plugins?style=flat-square"></a> </a>                            |
 | **Other Requests** | <a href="mailto:opensource@telekom.de" title="Email Open Source Team"><img src="https://img.shields.io/badge/email-Open%20Source%20Team-green?logo=mail.ru&style=flat-square&logoColor=white"></a> |
 
+## Code of Conduct
 
-## How to Contribute
+This project has adopted the [Contributor Covenant](https://www.contributor-covenant.org/) in version 2.1 as our code of conduct. Please see the details in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). All contributors must abide by the code of conduct.
 
-Contribution and feedback is encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](./CONTRIBUTING.md). By participating in this project, you agree to abide by its [Code of Conduct](./CODE_OF_CONDUCT.md) at all times.
-
-
-## Contributors
-
-Our commitment to open source means that we are enabling -in fact encouraging- all interested parties to contribute and become part of its developer community.
-
+By participating in this project, you agree to abide by its [Code of Conduct](./CODE_OF_CONDUCT.md) at all times.
 
 ## Licensing
 
-Copyright (C) 2024 Deutsche Telekom AG.
-
-Licensed under the **BSD 3-Clause License** (the "License"); you may not use this file except in compliance with the License.
-
-You may obtain a copy of the License by reviewing the file [LICENSE](./LICENSE) in the repository.
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the [LICENSE](./LICENSE) for the specific language governing permissions and limitations under the License.
+This project follows the [REUSE standard for software licensing](https://reuse.software/).    
+Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.    
+You can find a guide for developers at https://telekom.github.io/reuse-template/.   

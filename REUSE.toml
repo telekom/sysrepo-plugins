@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2024 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: CC0-1.0    
+
+# See https://reuse.software/spec-3.2/#reusetoml for specification
+version = 1
+
+[[annotations]]
+path = [
+    ".clang-format",
+    "**/README.md",
+    "**/requirements.txt",
+    "**/.gitignore",
+    "**/robotidy.toml"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2024 Deutsche Telekom AG"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = [
+    "plugins/ietf-system-plugin/tests/integration/robot-ietf-system/**/*.resource",
+    "plugins/ietf-system-plugin/tests/integration/robot-ietf-system/**/*.robot",
+    "plugins/ietf-interfaces-plugin/tests/integration/robot-ietf-interfaces/**/*.resource",
+    "plugins/ietf-interfaces-plugin/tests/integration/robot-ietf-interfaces/**/*.robot",
+    "plugins/ietf-interfaces-plugin/tests/integration/robot-ietf-routing/**/*.resource",
+    "plugins/ietf-interfaces-plugin/tests/integration/robot-ietf-routing/**/*.robot",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2024 Deutsche Telekom AG"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = ["**/*.yang"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2024 IETF Trust and the persons"
+SPDX-License-Identifier = "BSD-2-Clause"

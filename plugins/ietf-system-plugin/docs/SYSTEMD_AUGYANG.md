@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2024 Deutsche Telekom AG
+
+SPDX-License-Identifier: CC0-1.0    
+-->
+
 # Plugin Configuration: systemd vs augyang
 
 This document provides guidelines for configuring sysrepo plugins based on the use of systemd and augyang. It outlines the scenarios in which each configuration method should be employed, ensuring clarity and consistency in plugin development and usage.
