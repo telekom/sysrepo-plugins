@@ -50,7 +50,7 @@ Besides the usual C++ development environment, the following additional dependen
 * [sysrepo](https://github.com/sysrepo/sysrepo)
 * [sysrepo-cpp](https://github.com/sysrepo/sysrepo-cpp)
 * [libsystemd](https://github.com/systemd/systemd)
-* [sdbus-cpp](https://github.com/Kistler-Group/sdbus-cpp)
+* [sdbus-cpp](https://github.com/Kistler-Group/sdbus-cpp) >= 2.0.0
 * [libnl](https://github.com/thom311/libnl)
 
 The following software is additionally required on the target system:
