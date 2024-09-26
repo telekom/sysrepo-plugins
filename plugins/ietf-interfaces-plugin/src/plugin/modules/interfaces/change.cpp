@@ -69,9 +69,28 @@ sr::ErrorCode InterfaceNameModuleChangeCb::operator()(sr::Session session, uint3
             switch (change.operation) {
             case sysrepo::ChangeOperation::Created: {
                 // create a new interface using the NetlinkContext API
+
+                // due to bridge component ref addition, first check if we have changes in the addition
+                // of the interface that includes /ietf-interfaces:interfaces/interface/bridge-port/component-name
+                // and validate its name and type == bridge existance
+
+                for(sysrepo::Change br_change : session.getChanges("/ietf-interfaces:interfaces/interface[name='" + name_value + "']/bridge-port/component-name")){
+                    // if it gets to here, than this interface is trying to associate with some bridge interface
+                    if(br_change.operation == sr::ChangeOperation::Created || br_change.operation == sr::ChangeOperation::Modified){
+                        const std::string br_name = br_change.node.asTerm().valueStr().data();
+                        std::optional<BridgeRef> br_opt = nl_ctx.getBridgeByName(br_name);
+
+                        if(!br_opt){
+                            SRPLG_LOG_ERR(getModuleLogPrefix(), "Invalid bridge %s !", br_name.c_str());   
+                            return sr::ErrorCode::OperationFailed;
+                        }
+                    }  
+                }
+
                 try {
                     std::string type_str = change.node.findPath(type_xpath)->asTerm().valueStr().data();
                     nl_ctx.createInterface(name_value, type_str, true);
+
                 } catch (std::exception& e) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Error creating interface: %s", e.what());
                     return sr::ErrorCode::OperationFailed;
@@ -2812,12 +2831,11 @@ sr::ErrorCode InterfaceMaxFrameSizeModuleChangeCb::operator()(sr::Session sessio
  * @param ctx Plugin module change context.
  *
  */
-InterfaceParentInterfaceModuleChangeCb::InterfaceParentInterfaceModuleChangeCb(std::shared_ptr<InterfacesModuleChangesContext> ctx) { m_ctx = ctx; }
+InterfaceBridgePortChangeCb::InterfaceBridgePortChangeCb(std::shared_ptr<InterfacesModuleChangesContext> ctx) { m_ctx = ctx; }
 
 /**
  * sysrepo-plugin-generator: Generated module change operator() for path
- * /ietf-interfaces:interfaces/interface[name='%s']/ietf-if-extensions:parent-interface.
- *
+ * /ietf-interfaces:interfaces/interface[name='%s']/bridge-port/component-name"
  * @param session An implicit session for the callback.
  * @param subscriptionId ID the subscription associated with the callback.
  * @param moduleName The module name used for subscribing.
@@ -2829,9 +2847,79 @@ InterfaceParentInterfaceModuleChangeCb::InterfaceParentInterfaceModuleChangeCb(s
  * @return Error code.
  *
  */
-sr::ErrorCode InterfaceParentInterfaceModuleChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
+sr::ErrorCode InterfaceBridgePortChangeCb::operator()(sr::Session session, uint32_t subscriptionId, std::string_view moduleName,
     std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
 {
     sr::ErrorCode error = sr::ErrorCode::Ok;
+    switch (event) {
+        case sysrepo::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges("/ietf-interfaces:interfaces/interface/bridge-port/component-name")) {
+
+                const std::string bridge_val = change.node.asTerm().valueStr().data();
+                // get the netlink context
+                NlContext& nl_ctx = NlContext::getInstance();
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                case sysrepo::ChangeOperation::Modified: {
+
+                    nl_ctx.refillCache();
+
+                    const std::string name_val = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
+
+                    std::optional<BridgeRef> bridge_opt = nl_ctx.getBridgeByName(bridge_val);
+
+                    if (!bridge_opt.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot find bridge %s", bridge_val.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+                    try {
+                        bridge_opt->addInterfaceToBridge(name_val);
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot bridge interface %s, reason: %s", name_val.c_str(), e.what());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    break;
+                }
+                case sysrepo::ChangeOperation::Deleted: {
+
+                    const std::string name_val = srpc::extractListKeyFromXPath("interface", "name", change.node.path());
+
+                    //Interface node is deleted, so no point of removing bridge port
+                    for(sysrepo::Change interface_change : session.getChanges("/ietf-interfaces:interfaces/interface[name='" + name_val + "']")){
+                        if(interface_change.operation == sr::ChangeOperation::Deleted){
+                            return sr::ErrorCode::Ok;
+                        }
+                    }
+
+                    nl_ctx.refillCache();
+
+                    std::optional<BridgeRef> bridge_opt = nl_ctx.getBridgeByName(bridge_val);
+
+                    if (!bridge_opt.has_value()) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot find bridge %s", bridge_val.c_str());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+                    try {
+                        bridge_opt->removeInterfaceFromBridge(name_val);
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Cannot remove bridge interface %s, reason: %s", name_val.c_str(), e.what());
+                        return sr::ErrorCode::CallbackFailed;
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
     return error;
 }
