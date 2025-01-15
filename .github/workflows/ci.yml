@@ -199,7 +199,6 @@ jobs:
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-if-extensions@2020-07-29.yang
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ieee802-dot1q-types.yang
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-if-vlan-encapsulation@2020-07-13.yang
-          sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-ip@2018-02-22.yang
           sysrepoctl -c ietf-interfaces -e if-mib
           sysrepoctl -c ietf-if-extensions -e sub-interfaces
           sysrepoctl -i plugins/ietf-routing-plugin/yang/ietf-routing@2018-03-13.yang
