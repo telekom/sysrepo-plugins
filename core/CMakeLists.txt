@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2024 Deutsche Telekom AG.
-#
 # This source code is licensed under BSD 3-Clause License (the "License").
 # You may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     https://opensource.org/licenses/BSD-3-Clause
 #
-# SPDX-FileCopyrightText: 2024 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
 # SPDX-FileContributor: Sartura d.d.
 #
 # SPDX-License-Identifier: BSD-3-Clause
