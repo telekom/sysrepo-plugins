@@ -1,4 +1,5 @@
-# telekom / sysrepo-plugins
+#
+# telekom / ietf-routing-plugin
 #
 # This program is made available under the terms of the
 # BSD 3-Clause license which is available at

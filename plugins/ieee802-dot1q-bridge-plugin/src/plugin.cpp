@@ -75,7 +75,7 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
         SRPLG_LOG_INF(ctx->getPluginName(), "Registered module %s", mod->getName());
     }
 
-    SRPLG_LOG_INF("ietf-system-plugin", "Created plugin subscriptions");
+    SRPLG_LOG_INF("ieee802-dot1q-bridge-plugin", "Created plugin subscriptions");
 
     return static_cast<int>(error);
 }
