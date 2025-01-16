@@ -1,4 +1,4 @@
-# ietf-system plugin integration tests
+# ietf-interfaces plugin integration tests
 
 This directory contains the integration tests and required data for the ietf-interfaces plugin.
 
