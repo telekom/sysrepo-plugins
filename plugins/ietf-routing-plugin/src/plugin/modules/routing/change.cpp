@@ -856,7 +856,15 @@ namespace sub::change {
                     // just delete the route, the nhs will automaticaly delete
                     std::string del_route = srpc::extractListKeysFromXpath("route", route_change.node.path())["destination-prefix"];
                     // try catch here!!
-                    nl_ctx.deleteRoute(del_route);
+                    try {
+                        nl_ctx.deleteRoute(del_route);
+                    } catch (std::exception& e) {
+                        if (!strcmp(e.what(), "deleteRoute(), Route not found!")) {
+                            SRPLG_LOG_WRN(getModuleLogPrefix(), "Non-existing route '%s' can not be deleted", del_route.c_str());
+                            break;
+                        }
+                        error = sr::ErrorCode::CallbackFailed;
+                    }
                     break;
                 }
                 default:
