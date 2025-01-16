@@ -176,6 +176,11 @@ public:
      */
     std::string getDestinationString();
 
+    /**
+     * @brief get the Protocol in a string format.
+     */
+    std::string getProtocolString();
+
 private:
     using RtnlRoute = struct rtnl_route; ///< Route type alias.
     using RtnlRouteDeleter = NlDeleter<RtnlRoute>; ///< Deleter type alias.

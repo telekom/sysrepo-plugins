@@ -350,6 +350,21 @@ std::string RouteRef::getDestinationString()
     return buf_str;
 }
 
+std::string RouteRef::getProtocolString()
+{
+    std::string buf_str;
+    uint8_t proto = getProtocol();
+
+    if (proto == RTPROT_KERNEL) {
+        buf_str = "kernel";
+    } else if (proto == RTPROT_STATIC) {
+        buf_str = "static";
+    } else if (proto == RTPROT_DHCP) {
+        buf_str = "dhcp";
+    }
+
+    return buf_str;
+}
 
 NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
     : m_ifindex(ifindex)
