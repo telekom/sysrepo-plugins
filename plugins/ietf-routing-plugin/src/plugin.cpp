@@ -134,6 +134,11 @@ inline void fillInitialRunninDS(sysrepo::Session& m_sess)
 
     for (auto&& main_table_ipv4_route : route_map[254][RouteFamily::RT_INET]) {
         int idx_count = 0;
+
+        // only add static route entries to running datastore
+        if (main_table_ipv4_route.getProtocol() != RTPROT_STATIC)
+            continue;
+
         for (auto&& nhs : main_table_ipv4_route.getNextHops()) {
 
             // handle zero case of ipv4 address
