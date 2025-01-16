@@ -139,6 +139,11 @@ public:
     std::string getIanaType(void);
 
     /**
+     * @breif get VLAN interface's parent interface
+     */
+    std::string getVlanParentInterface();
+
+    /**
      * @brief Get the family specific mtu
      * @return MTU
      */
