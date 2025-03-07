@@ -92,9 +92,8 @@ jobs:
         run: |
           git clone https://github.com/cesnet/libyang
           cd libyang
-          git checkout v2.1.148
           CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
-          cmake --build build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
@@ -103,9 +102,9 @@ jobs:
         run: |
           git clone https://github.com/cesnet/libyang-cpp
           cd libyang-cpp
-          git checkout a7837cbc99766746d8381313d77ed7d5bfebe7b5
+          git checkout 1533458346b4f395b1187c646b61bbcb1fddc615
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
-          cmake --build build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
@@ -114,9 +113,8 @@ jobs:
         run: |
           git clone https://github.com/sysrepo/sysrepo
           cd sysrepo
-          git checkout v2.2.150
           CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
-          cmake --build build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
@@ -125,9 +123,10 @@ jobs:
         run: |
           git clone https://github.com/sysrepo/sysrepo-cpp
           cd sysrepo-cpp
-          git checkout 430ae8ce0c4e47fbdcaa4433d2c4e7a8ed94fb1e
+          git checkout 80e9659b41ea1de2e20d62f94319fe5af26adcee
+          sed -i 's/ sysrepo<3 / /' CMakeLists.txt
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
-          cmake --build build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
@@ -137,7 +136,7 @@ jobs:
           git clone --recurse-submodules https://github.com/telekom/sysrepo-plugins-common
           cd sysrepo-plugins-common
           CC=${{matrix.config.cc}} cmake -B build
-          cmake --build build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
@@ -147,7 +146,7 @@ jobs:
           git clone --recurse-submodules https://github.com/sartura/umgmt
           cd umgmt
           CC=${{matrix.config.cc}} cmake -B build
-          cmake --build build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
@@ -166,8 +165,8 @@ jobs:
         run: |
           git clone --recurse-submodules https://github.com/Kistler-Group/sdbus-cpp
           cd sdbus-cpp
-          CC=${{matrix.config.cc}} cmake -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build
+          CC=${{matrix.config.cc}} cmake -B build
+          cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
 
