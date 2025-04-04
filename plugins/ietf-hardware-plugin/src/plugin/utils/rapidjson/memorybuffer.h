@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
 // SPDX-License-Identifier: MIT
+
+
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -32,9 +34,8 @@ RAPIDJSON_NAMESPACE_BEGIN
     1. StringBuffer has Encoding but MemoryBuffer is only a byte buffer. 
     2. StringBuffer::GetString() returns a null-terminated string. MemoryBuffer::GetBuffer() returns a buffer without terminator.
 
-    	param Allocator type for allocating memory buffer.
-    
-ote implements Stream concept
+    \tparam Allocator type for allocating memory buffer.
+    \note implements Stream concept
 */
 template <typename Allocator = CrtAllocator>
 struct GenericMemoryBuffer {

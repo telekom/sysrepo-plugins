@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
 // SPDX-License-Identifier: MIT
+
+
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -29,8 +31,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 
 //! Wrapper of C file stream for output using fwrite().
 /*!
-    
-ote implements Stream concept
+    \note implements Stream concept
 */
 class FileWriteStream {
 public:

@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
 // SPDX-License-Identifier: MIT
+
+
 // ISO C9x  compliant inttypes.h for Microsoft Visual Studio
 // Based on ISO/IEC 9899:TC2 Committee draft (May 6, 2005) WG14/N1124 
 // 
@@ -283,4 +285,36 @@ typedef struct {
 // 7.8.2.2 The imaxdiv function
 
 // This is modified version of div() function from Microsoft's div.c found
-// in %MSVC.NET%
+// in %MSVC.NET%\crt\src\div.c
+#ifdef STATIC_IMAXDIV // [
+static
+#else // STATIC_IMAXDIV ][
+_inline
+#endif // STATIC_IMAXDIV ]
+imaxdiv_t __cdecl imaxdiv(intmax_t numer, intmax_t denom)
+{
+   imaxdiv_t result;
+
+   result.quot = numer / denom;
+   result.rem = numer % denom;
+
+   if (numer < 0 && result.rem > 0) {
+      // did division wrong; must fix up
+      ++result.quot;
+      result.rem -= denom;
+   }
+
+   return result;
+}
+
+// 7.8.2.3 The strtoimax and strtoumax functions
+#define strtoimax _strtoi64
+#define strtoumax _strtoui64
+
+// 7.8.2.4 The wcstoimax and wcstoumax functions
+#define wcstoimax _wcstoi64
+#define wcstoumax _wcstoui64
+
+#endif // _MSC_VER >= 1800
+
+#endif // _MSC_INTTYPES_H_ ]

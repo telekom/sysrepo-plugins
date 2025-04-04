@@ -81,7 +81,7 @@ Besides the usual C++ development environment, the following additional dependen
 * [sysrepo-plugins-common](https://github.com/telekom/sysrepo-plugins-common)
 * [libsensors](https://github.com/lm-sensors/lm-sensors)
 * [lshw](https://ezix.org/project/wiki/HardwareLiSter)
-* [libprocps](https://gitlab.com/procps-ng/procps)
+* [procps](https://gitlab.com/procps-ng/procps)
 * pthreads
 * df
 
