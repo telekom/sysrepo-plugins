@@ -605,6 +605,7 @@ std::vector<BridgeSlaveRef> BridgeRef::getSlaveInterfaces()
     err = rtnl_link_alloc_cache(m_socket.get(), AF_BRIDGE, &cache);
 
     if (err < 0) {
+        clean();
         throw std::runtime_error(nl_geterror(err));
     }
 
