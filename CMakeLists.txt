@@ -10,7 +10,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 project(sysrepo-plugins)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -33,8 +33,8 @@ add_subdirectory(core)
 
 # get name of the core library
 get_directory_property(
-    CORE_LIBRARY_NAME 
-    DIRECTORY core 
+    CORE_LIBRARY_NAME
+    DIRECTORY core
     DEFINITION CORE_LIBRARY_NAME
 )
 
