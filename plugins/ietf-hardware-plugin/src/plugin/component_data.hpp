@@ -4,7 +4,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2021 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -12,7 +12,6 @@
 #define COMPONENT_DATA_H
 
 #include <stdint.h>
-#include <utils/globals.h>
 
 #include <iostream>
 #include <list>
@@ -20,6 +19,8 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+
+#include "utils/globals.h"
 
 namespace hardware {
 

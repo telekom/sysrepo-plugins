@@ -10,7 +10,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 project(ietf-hardware-plugin)
 
 set(PLUGIN_LIRBARY_NAME srplg-ietf-hardware)
@@ -22,28 +22,39 @@ find_package(LIBYANG REQUIRED)
 find_package(SYSREPO REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
-find_package(NL REQUIRED)
 
-set(
-    PLUGIN_CORE_SOURCES
+find_library(libsensors sensors)
 
-    src/plugin/context.cpp
-)
-
-set(
-    MODULE_SOURCES
-
-    src/plugin/modules/interfaces.cpp
-    src/plugin/modules/interfaces/oper.cpp
-    src/plugin/modules/interfaces/change.cpp
-    src/plugin/modules/interfaces/context.cpp
-    src/plugin/modules/interfaces/common.cpp
-)
+# set(
+#     MODULE_SOURCES
+#
+#     # src/plugin/plugin.cpp
+#     # src/plugin/modules/interfaces/oper.cpp
+#     # src/plugin/modules/interfaces/change.cpp
+#     # src/plugin/modules/interfaces/context.cpp
+#     # src/plugin/modules/interfaces/common.cpp
+# )
+#
+# set(
+#     PLUGIN_CORE_SOURCES
+#
+#     # src/plugin/context.cpp
+#     ${MODULE_SOURCES}
+# )
 
 set(
     PLUGIN_SOURCES
 
+    src/plugin/component_data.hpp
+    src/plugin/hardware_sensors.hpp
+    src/plugin/sensor_data.hpp
     src/plugin.cpp
+)
+
+set(
+    PLUGIN_HEADERS
+
+    src/plugin.hpp
 )
 
 set(
@@ -57,20 +68,17 @@ set(
 add_library(
     ${PLUGIN_CORE_LIBRARY_NAME}
     STATIC
-    ${PLUGIN_CORE_SOURCES}
-    ${MODULE_SOURCES}
+    # ${PLUGIN_CORE_SOURCES}
+    ${PLUGIN_SOURCES}
 )
 
 target_include_directories(
     ${PLUGIN_CORE_LIBRARY_NAME}
 
-    PRIVATE ${LIBYANG_INCLUDE_DIRS}
-    PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
-    PRIVATE ${NL_INCLUDE_DIRS}
-    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
 )
 
 target_compile_options(
@@ -92,9 +100,8 @@ target_include_directories(
     PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
-    PRIVATE ${NL_INCLUDE_DIRS}
-    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -107,7 +114,7 @@ target_link_libraries(
     ${SYSREPOCPP_LIBRARIES}
     ${LIBYANGCPP_LIBRARIES}
     ${CORE_LIBRARY_NAME}
-    ${NL_LIBRARIES}
+    sensors
 )
 
 # plugin as a library
@@ -124,9 +131,8 @@ target_include_directories(
     PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
-    PRIVATE ${NL_INCLUDE_DIRS}
-    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -138,5 +144,5 @@ target_link_libraries(
     ${SYSREPOCPP_LIBRARIES}
     ${LIBYANGCPP_LIBRARIES}
     ${CORE_LIBRARY_NAME}
-    ${NL_LIBRARIES}
+    sensors
 )

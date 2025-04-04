@@ -1,21 +1,24 @@
-// telekom / sysrepo-plugin-hardware
+//
+// telekom / sysrepo-plugins
 //
 // This program is made available under the terms of the
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2021 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
+//
 
-#include <callback.h>
+#include "plugin.hpp"
+#include "plugin/callback.hpp"
+// #include "plugin/component_data.hpp"
+// #include "plugin/hardware_sensors.hpp"
+// #include "plugin/sensor_data.hpp"
+
 #include <stdio.h>
 #include <sysrepo-cpp/Connection.hpp>
-
-extern "C" {
-void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* private_data);
-int sr_plugin_init_cb(sr_session_ctx_t* session, void** private_data);
-}
 
 struct HardwareModel {
     std::shared_ptr<sysrepo::Subscription> sub;

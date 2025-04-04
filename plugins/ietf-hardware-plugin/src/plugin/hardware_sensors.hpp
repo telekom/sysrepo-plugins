@@ -4,15 +4,15 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2021 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
 #ifndef HARDWARE_SENSORS_H
 #define HARDWARE_SENSORS_H
 
-#include <sensor_data.h>
-#include <utils/globals.h>
+#include "sensor_data.hpp"
+#include "utils/globals.h"
 
 #include <chrono>
 #include <condition_variable>

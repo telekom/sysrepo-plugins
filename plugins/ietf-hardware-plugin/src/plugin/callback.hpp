@@ -4,21 +4,22 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2021 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
-#include <component_data.h>
-#include <sensor_data.h>
-#include <utils/rapidjson/document.h>
-#include <utils/rapidjson/istreamwrapper.h>
+#include "component_data.hpp"
+#include "sensor_data.hpp"
+
+#include "hardware_sensors.hpp"
+#include "utils/rapidjson/document.h"
+#include "utils/rapidjson/istreamwrapper.h"
 
 #include <chrono>
 #include <fstream>
-#include <hardware_sensors.h>
 #include <mutex>
 #include <sysrepo-cpp/Enum.hpp>
 
