@@ -35,7 +35,7 @@ jobs:
             options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
             # no expect because stdout seems to be redirected
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev libprocps-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev procps",
           }
           - {
             name: "Release, clang",
@@ -44,7 +44,7 @@ jobs:
             cxx: "clang",
             options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev libprocps-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev procps",
           }
           - {
             name: "Debug, gcc",
@@ -53,7 +53,7 @@ jobs:
             cxx: "g++",
             options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev libprocps-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev procps",
           }
           - {
             name: "Debug, clang",
@@ -62,7 +62,7 @@ jobs:
             cxx: "clang",
             options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev libprocps-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev procps",
           }
           - {
             name: "ASAN and UBSAN",
@@ -71,7 +71,7 @@ jobs:
             cxx: "clang",
             options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev libprocps-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev procps",
           }
 
     steps:
