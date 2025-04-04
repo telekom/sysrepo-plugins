@@ -20,7 +20,7 @@
 #include <srpcpp.hpp>
 
 #include "plugin/modules/interfaces.hpp"
-#include "sysrepo.h"
+#include <sysrepo.h>
 
 namespace sr = sysrepo;
 

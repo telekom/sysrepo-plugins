@@ -29,8 +29,8 @@
 #include "neighbor.hpp"
 #include "route.hpp"
 #include "cache.hpp"
-#include "netlink/route/nexthop.h"
 #include "bridge.hpp"
+#include <netlink/route/nexthop.h>
 
 /**
  * @brief Default constructor. Allocates each member of the class.

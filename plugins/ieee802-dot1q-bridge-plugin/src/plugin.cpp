@@ -23,7 +23,7 @@
 
 #include "plugin/modules/bridging.hpp"
 
-#include "sysrepo.h"
+#include <sysrepo.h>
 
 namespace sr = sysrepo;
 

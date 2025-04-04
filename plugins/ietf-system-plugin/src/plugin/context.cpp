@@ -13,7 +13,7 @@
 
 #include "context.hpp"
 #include "srpcpp/context.hpp"
-#include "sysrepo-cpp/Session.hpp"
+#include <sysrepo-cpp/Session.hpp>
 
 namespace ietf::sys {
 /**

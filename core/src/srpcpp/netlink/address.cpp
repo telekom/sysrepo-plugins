@@ -12,8 +12,8 @@
 //
 
 #include "address.hpp"
-#include "netlink/addr.h"
-#include "netlink/route/addr.h"
+#include <netlink/addr.h>
+#include <netlink/route/addr.h>
 #include <linux/if_addr.h>
 #include <stdexcept>
 

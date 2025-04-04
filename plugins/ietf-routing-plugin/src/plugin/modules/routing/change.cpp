@@ -13,7 +13,7 @@
 
 #include "change.hpp"
 #include "plugin/modules/routing/common.hpp"
-#include "sysrepo-cpp/Enum.hpp"
+#include <sysrepo-cpp/Enum.hpp>
 #include "plugin/modules/routing/api/nexthop.hpp"
 #include "plugin/modules/routing/api/rib.hpp"
 

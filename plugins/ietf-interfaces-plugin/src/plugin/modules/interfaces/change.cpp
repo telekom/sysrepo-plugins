@@ -13,7 +13,7 @@
 
 #include "change.hpp"
 #include "common.hpp"
-#include "sysrepo-cpp/Enum.hpp"
+#include <sysrepo-cpp/Enum.hpp>
 
 #include <stdexcept>
 #include <sysrepo.h>

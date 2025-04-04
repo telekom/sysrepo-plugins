@@ -21,8 +21,8 @@
 
 #include "plugin/modules/routing.hpp"
 
-#include "sysrepo.h"
-#include "sysrepo-cpp/utils/exception.hpp"
+#include <sysrepo.h>
+#include <sysrepo-cpp/utils/exception.hpp>
 
 namespace sr = sysrepo;
 

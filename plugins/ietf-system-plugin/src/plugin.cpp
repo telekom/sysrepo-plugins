@@ -44,7 +44,7 @@
 #include "plugin/modules/auth.hpp"
 #endif
 
-#include "sysrepo.h"
+#include <sysrepo.h>
 
 namespace sr = sysrepo;
  
