@@ -21,6 +21,8 @@ set(SYSREPO_PLUGINS_MINOR_VERSION 1)
 set(SYSREPO_PLUGINS_MICRO_VERSION 3)
 set(SYSREPO_PLUGINS_VERSION ${SYSREPO_PLUGINS_MAJOR_VERSION}.${SYSREPO_PLUGINS_MINOR_VERSION}.${SYSREPO_PLUGINS_MICRO_VERSION})
 
+include(CompileOptions.cmake)
+
 option(BUILD_SYSTEM_PLUGIN "Build the ietf-system-plugin" ON)
 option(BUILD_INTERFACES_PLUGIN "Build the ietf-interfaces-plugin" ON)
 option(BUILD_ROUTING_PLUGIN "Build the ietf-routing-plugin" ON)
