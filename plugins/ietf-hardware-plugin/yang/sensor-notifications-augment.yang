@@ -1,0 +1,101 @@
+module sensor-notifications-augment {
+  yang-version 1.1;
+  namespace "http://terastrm.net/ns/yang/sensor-notifications-augment";
+  prefix sensor-notif;
+
+  import ietf-hardware {
+    prefix hw;
+  }
+
+  import iana-hardware {
+    prefix ianahw;
+  }
+
+  organization
+    "Deutsche Telekom AG.";
+
+  revision 2021-05-14 {
+    description
+      "Initial revision.";
+  }
+
+  augment "/hw:hardware/hw:component" {
+    if-feature hw:hardware-sensor;
+    container sensor-notifications {
+      when 'derived-from-or-self(../hw:class,
+                             "ianahw:sensor")' {
+        description
+          "Sensor data nodes present for any component of type
+           'sensor'";
+      }
+      description "Configure threshold notifications for sensors values that are being
+        monitored.";
+      leaf poll-interval {
+        type uint32 {
+          range 1..max;
+        }
+        description "Interval between consecutive sensor data collection triggers";
+        default 60;
+        units "seconds";
+      }
+      list threshold {
+        description "Configure threshold notifications for sensors values that are being
+          monitored.";
+        key name;
+        leaf name {
+          type string;
+        }
+        leaf value {
+          type hw:sensor-value;
+            description "Send notification when the sensor-value exceeds the
+              configured threshold";
+        }
+      }
+    }
+
+    notification sensor-threshold-crossed {
+      description "Notifications to be sent when a sensor value crosses
+                  a configured threshold.";
+
+      leaf threshold-name {
+        type leafref {
+          path "/hw:hardware/hw:component[hw:name=current()/../../hw:name]"
+               + "/sensor-notifications/threshold/name";
+          require-instance false;
+        }
+        description
+          "Name of the sensor-threshold.";
+      }
+
+      leaf threshold-value {
+        type leafref {
+          path "/hw:hardware/hw:component[hw:name=current()/../../hw:name]"
+            + "/sensor-notifications/threshold/value";
+          require-instance false;
+        }
+      }
+
+      choice direction {
+        case rising {
+          leaf rising {
+            type empty;
+          }
+        }
+        case falling {
+          leaf falling {
+            type empty;
+          }
+        }
+      }
+
+      leaf sensor-value {
+        config false;
+        type leafref {
+          path "/hw:hardware/hw:component[hw:name=current()/../../hw:name]"
+            + "/hw:sensor-data/hw:value";
+            require-instance false;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+<hardware xmlns="urn:ietf:params:xml:ns:yang:ietf-hardware">
+    <component>
+        <name>core</name>
+        <class xmlns:iana-hardware="urn:ietf:params:xml:ns:yang:iana-hardware">iana-hardware:unknown</class>
+        <uri>Test-URI1</uri>
+        <uri>Test-URI2</uri>
+        <parent>ubuntu-55hppv2</parent>
+        <parent-rel-pos>0</parent-rel-pos>
+        <asset-id>Test-Asset1</asset-id>
+    </component>
+    <component>
+        <name>renamed-cpu</name>
+        <class xmlns:iana-hardware="urn:ietf:params:xml:ns:yang:iana-hardware">iana-hardware:cpu</class>
+        <parent>core</parent>
+        <parent-rel-pos>4</parent-rel-pos>
+        <alias>Test-Alias1</alias>
+    </component>
+    <component>
+        <name>memory</name>
+        <class xmlns:iana-hardware="urn:ietf:params:xml:ns:yang:iana-hardware">iana-hardware:unknown</class>
+        <alias>Test-Alias</alias>
+    </component>
+    <component>
+        <name>coretemp/temp1</name>
+        <class xmlns:iana-hardware="urn:ietf:params:xml:ns:yang:iana-hardware">iana-hardware:sensor</class>
+        <sensor-notifications xmlns="http://terastrm.net/ns/yang/sensor-notifications-augment">
+            <poll-interval>20</poll-interval>
+            <threshold>
+                <name>critical</name>
+                <value>75</value>
+            </threshold>
+            <threshold>
+                <name>toolow</name>
+                <value>60</value>
+            </threshold>
+        </sensor-notifications>
+    </component>
+    <component>
+        <name>dell_smm/fan1</name>
+        <class xmlns:iana-hardware="urn:ietf:params:xml:ns:yang:iana-hardware">iana-hardware:sensor</class>
+        <sensor-notifications xmlns="http://terastrm.net/ns/yang/sensor-notifications-augment">
+            <poll-interval>30</poll-interval>
+            <threshold>
+                <name>critical</name>
+                <value>2900</value>
+            </threshold>
+            <threshold>
+                <name>toolow</name>
+                <value>1400</value>
+            </threshold>
+        </sensor-notifications>
+    </component>
+</hardware>

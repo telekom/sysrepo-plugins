@@ -35,6 +35,12 @@ More information about the `ietf-access-control-list` YANG module can be found i
 [RFC 8519: YANG Data Model for Network Access Control Lists (ACLs)](https://datatracker.ietf.org/doc/html/rfc8519/)
 
 
+ietf-hardware-plugin is based on the `ietf-hardware` YANG module which provides
+"definitions for managing hardware".
+More information about the `ietf-hardware` YANG module can be found in
+[RFC 8348: A YANG Data Model for Hardware Management](https://datatracker.ietf.org/doc/html/rfc8348)
+
+
 ietf-interfaces-plugin is based on the `ietf-interfaces` YANG module which provides
 "a collection of YANG definitions for managing network interfaces".
 More information about the `ietf-interfaces` YANG module can be found in
@@ -67,6 +73,11 @@ Besides the usual C++ development environment, the following additional dependen
 * [libnl](https://github.com/thom311/libnl)
 * [umgmt](https://github.com/sartura/umgmt)
 * [sysrepo-plugins-common](https://github.com/telekom/sysrepo-plugins-common)
+* [libsensors](https://github.com/lm-sensors/lm-sensors)
+* [lshw](https://ezix.org/project/wiki/HardwareLiSter)
+* pthreads
+
+Not all plugins need all the above listed dependencies. Please refer to the CMakeLists.txt of each plugin.
 
 The following software is additionally required on the target system:
 
