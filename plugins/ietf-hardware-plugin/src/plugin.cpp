@@ -13,9 +13,6 @@
 
 #include "plugin.hpp"
 #include "plugin/callback.hpp"
-// #include "plugin/component_data.hpp"
-// #include "plugin/hardware_sensors.hpp"
-// #include "plugin/sensor_data.hpp"
 
 #include <stdio.h>
 #include <sysrepo-cpp/Connection.hpp>
