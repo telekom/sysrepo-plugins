@@ -24,26 +24,39 @@ The goal of this project is to provide a method of configuring generic Linux sys
 Sysrepo Plugins is a collection of plugins based on multiple YANG modules. More information about the specific YANG module can be found in each YANG model and/or RFC.
 
 
-ietf-system-plugin is based on the `ietf-system` YANG module which provides
-"configuration and identification of some common system properties within a
-device containing a NETCONF server". More information about the specific YANG
-module can be found in [RFC 7317: A YANG Data Model for System Management](https://datatracker.ietf.org/doc/html/rfc7317).
+ieee802-dot1q-bridge-plugin is based on the `ieee802-dot1q-bridge` YANG module which provides a
+"bridge configuration model for specific IEEE 802.1Q Bridges (Two Port MAC Relays, Customer VLAN Bridges, Provider Bridges)".
+More information can be found in the following IEEE standards: 802.1Q-2018, 802.1Qcx-2020, 802.1Qcr-2020.
+
+
+ietf-access-control-list-plugin is based on the `ietf-access-control-list` YANG module which provides
+"the configuration and monitoring of Access Control Lists (ACLs)".
+More information about the `ietf-access-control-list` YANG module can be found in
+[RFC 8519: YANG Data Model for Network Access Control Lists (ACLs)](https://datatracker.ietf.org/doc/html/rfc8519/)
 
 
 ietf-interfaces-plugin is based on the `ietf-interfaces` YANG module which provides
 "a collection of YANG definitions for managing network interfaces".
-More information about the specific YANG module can be found in [RFC 7223: A YANG Data Model for Interface Management](https://datatracker.ietf.org/doc/html/rfc7223).
+More information about the `ietf-interfaces` YANG module can be found in
+[RFC 7223: A YANG Data Model for Interface Management](https://datatracker.ietf.org/doc/html/rfc7223).
 
 
 ietf-routing-plugin is based on the `ietf-routing` YANG module which provides
 "generic components of a routing data model" and `ietf-ipv4-unicast-routing` and `ietf-ipv6-unicast-routing`
 which augment `ietf-routing` with IPv4 and IPv6 specific data.
-More information about `ietf-routing` is available in [RFC 8022: A YANG Data Model for Routing Management](https://datatracker.ietf.org/doc/html/rfc8022)
+More information about the `ietf-routing` YANG module can be found in
+[RFC 8022: A YANG Data Model for Routing Management](https://datatracker.ietf.org/doc/html/rfc8022)
+
+
+ietf-system-plugin is based on the `ietf-system` YANG module which provides
+"configuration and identification of some common system properties within a device containing a NETCONF server".
+More information about the `ietf-system` YANG module can be found in
+[RFC 7317: A YANG Data Model for System Management](https://datatracker.ietf.org/doc/html/rfc7317).
 
 
 ## Development
 
-Besides the usual C++ development environment, the following additional dependencies are required:
+Besides the usual C++ development environment, the following additional dependencies are required to build all the plugins:
 
 * [libyang](https://github.com/CESNET/libyang)
 * [libyang-cpp](https://github.com/CESNET/libyang-cpp)
@@ -176,6 +189,6 @@ By participating in this project, you agree to abide by its [Code of Conduct](./
 
 ## Licensing
 
-This project follows the [REUSE standard for software licensing](https://reuse.software/).    
-Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.    
-You can find a guide for developers at https://telekom.github.io/reuse-template/.   
+This project follows the [REUSE standard for software licensing](https://reuse.software/).
+Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.
+You can find a guide for developers at https://telekom.github.io/reuse-template/.
