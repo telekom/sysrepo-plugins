@@ -550,6 +550,8 @@ namespace sub::change {
                     // delete address should be unsupported
                     return sr::ErrorCode::Unsupported;
                     break;
+                default:
+                    break;
                 }
             }
 
@@ -658,13 +660,14 @@ namespace sub::change {
                 }
 
                 switch (change.operation) {
-                case sysrepo::ChangeOperation::Created: {
+                case sysrepo::ChangeOperation::Created:
                     route_map[destination_prefix][NextHopOperations::TO_CREATE].push_back(NextHopHelper(next_hop_address, ifindex));
                     break;
-                }
 
                 case sysrepo::ChangeOperation::Deleted:
                     route_map[destination_prefix][NextHopOperations::TO_DELETE].push_back(NextHopHelper(next_hop_address, ifindex));
+                    break;
+                default:
                     break;
                 }
             }
@@ -854,7 +857,7 @@ namespace sub::change {
                     nl_ctx.deleteRoute(del_route);
                     break;
                 }
-                case sysrepo::ChangeOperation::Moved:
+                default:
                     break;
                 }
             }
