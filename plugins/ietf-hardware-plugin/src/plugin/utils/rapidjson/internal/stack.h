@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -31,7 +33,7 @@ namespace internal {
 // Stack
 
 //! A type-unsafe stack for storing different types of data.
-/*! \tparam Allocator Allocator for allocating stack memory.
+/*! 	param Allocator Allocator for allocating stack memory.
 */
 template <typename Allocator>
 class Stack {

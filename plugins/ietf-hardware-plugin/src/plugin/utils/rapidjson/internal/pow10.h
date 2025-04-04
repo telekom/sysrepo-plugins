@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -23,7 +25,7 @@ namespace internal {
 //! Computes integer powers of 10 in double (10.0^n).
 /*! This function uses lookup table for fast and accurate results.
     \param n non-negative exponent. Must <= 308.
-    \return 10.0^n
+    eturn 10.0^n
 */
 inline double Pow10(int n) {
     static const double e[] = { // 1e-0...1e308: 309 * 8 bytes = 2472 bytes

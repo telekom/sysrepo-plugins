@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -29,8 +31,9 @@ RAPIDJSON_NAMESPACE_BEGIN
 /*!
     \ingroup RAPIDJSON_ERRORS
     \param parseErrorCode Error code obtained in parsing.
-    \return the error message.
-    \note User can make a copy of this function for localization.
+    eturn the error message.
+    
+ote User can make a copy of this function for localization.
         Using switch-case is safer for future modification of error codes.
 */
 inline const RAPIDJSON_ERROR_CHARTYPE* GetParseError_En(ParseErrorCode parseErrorCode) {
@@ -48,7 +51,7 @@ inline const RAPIDJSON_ERROR_CHARTYPE* GetParseError_En(ParseErrorCode parseErro
     
         case kParseErrorArrayMissCommaOrSquareBracket:  return RAPIDJSON_ERROR_STRING("Missing a comma or ']' after an array element.");
 
-        case kParseErrorStringUnicodeEscapeInvalidHex:  return RAPIDJSON_ERROR_STRING("Incorrect hex digit after \\u escape in string.");
+        case kParseErrorStringUnicodeEscapeInvalidHex:  return RAPIDJSON_ERROR_STRING("Incorrect hex digit after \u escape in string.");
         case kParseErrorStringUnicodeSurrogateInvalid:  return RAPIDJSON_ERROR_STRING("The surrogate pair in string is invalid.");
         case kParseErrorStringEscapeInvalid:            return RAPIDJSON_ERROR_STRING("Invalid escape character in string.");
         case kParseErrorStringMissQuotationMark:        return RAPIDJSON_ERROR_STRING("Missing a closing quotation mark in string.");
@@ -69,8 +72,9 @@ inline const RAPIDJSON_ERROR_CHARTYPE* GetParseError_En(ParseErrorCode parseErro
 /*!
     \ingroup RAPIDJSON_ERRORS
     \param validateErrorCode Error code obtained from validator.
-    \return the error message.
-    \note User can make a copy of this function for localization.
+    eturn the error message.
+    
+ote User can make a copy of this function for localization.
         Using switch-case is safer for future modification of error codes.
 */
 inline const RAPIDJSON_ERROR_CHARTYPE* GetValidateError_En(ValidateErrorCode validateErrorCode) {

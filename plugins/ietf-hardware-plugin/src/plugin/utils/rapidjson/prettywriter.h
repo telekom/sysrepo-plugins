@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -39,10 +41,10 @@ enum PrettyFormatOptions {
 
 //! Writer with indentation and spacing.
 /*!
-    \tparam OutputStream Type of output os.
-    \tparam SourceEncoding Encoding of source string.
-    \tparam TargetEncoding Encoding of output stream.
-    \tparam StackAllocator Type of allocator for allocating memory of stack.
+    	param OutputStream Type of output os.
+    	param SourceEncoding Encoding of source string.
+    	param TargetEncoding Encoding of output stream.
+    	param StackAllocator Type of allocator for allocating memory of stack.
 */
 template<typename OutputStream, typename SourceEncoding = UTF8<>, typename TargetEncoding = UTF8<>, typename StackAllocator = CrtAllocator, unsigned writeFlags = kWriteDefaultFlags>
 class PrettyWriter : public Writer<OutputStream, SourceEncoding, TargetEncoding, StackAllocator, writeFlags> {
@@ -68,12 +70,14 @@ public:
 #endif
 
     //! Set custom indentation.
-    /*! \param indentChar       Character for indentation. Must be whitespace character (' ', '\\t', '\\n', '\\r').
+    /*! \param indentChar       Character for indentation. Must be whitespace character (' ', '\t', '\n', '\r').
         \param indentCharCount  Number of indent characters for each indentation level.
-        \note The default indentation is 4 spaces.
+        
+ote The default indentation is 4 spaces.
     */
     PrettyWriter& SetIndent(Ch indentChar, unsigned indentCharCount) {
-        RAPIDJSON_ASSERT(indentChar == ' ' || indentChar == '\t' || indentChar == '\n' || indentChar == '\r');
+        RAPIDJSON_ASSERT(indentChar == ' ' || indentChar == '	' || indentChar == '
+' || indentChar == '');
         indentChar_ = indentChar;
         indentCharCount_ = indentCharCount;
         return *this;
@@ -143,7 +147,8 @@ public:
         bool empty = Base::level_stack_.template Pop<typename Base::Level>(1)->valueCount == 0;
 
         if (!empty) {
-            Base::os_->Put('\n');
+            Base::os_->Put('
+');
             WriteIndent();
         }
         bool ret = Base::EndValue(Base::WriteEndObject());
@@ -167,7 +172,8 @@ public:
         bool empty = Base::level_stack_.template Pop<typename Base::Level>(1)->valueCount == 0;
 
         if (!empty && !(formatOptions_ & kFormatSingleLineArray)) {
-            Base::os_->Put('\n');
+            Base::os_->Put('
+');
             WriteIndent();
         }
         bool ret = Base::EndValue(Base::WriteEndArray());
@@ -196,7 +202,8 @@ public:
         \param json A well-formed JSON value. It should not contain null character within [0, length - 1] range.
         \param length Length of the json.
         \param type Type of the root of json.
-        \note When using PrettyWriter::RawValue(), the result json may not be indented correctly.
+        
+ote When using PrettyWriter::RawValue(), the result json may not be indented correctly.
     */
     bool RawValue(const Ch* json, size_t length, Type type) {
         RAPIDJSON_ASSERT(json != 0);
@@ -218,7 +225,8 @@ protected:
                 }
 
                 if (!(formatOptions_ & kFormatSingleLineArray)) {
-                    Base::os_->Put('\n');
+                    Base::os_->Put('
+');
                     WriteIndent();
                 }
             }
@@ -226,7 +234,8 @@ protected:
                 if (level->valueCount > 0) {
                     if (level->valueCount % 2 == 0) {
                         Base::os_->Put(',');
-                        Base::os_->Put('\n');
+                        Base::os_->Put('
+');
                     }
                     else {
                         Base::os_->Put(':');
@@ -234,7 +243,8 @@ protected:
                     }
                 }
                 else
-                    Base::os_->Put('\n');
+                    Base::os_->Put('
+');
 
                 if (level->valueCount % 2 == 0)
                     WriteIndent();

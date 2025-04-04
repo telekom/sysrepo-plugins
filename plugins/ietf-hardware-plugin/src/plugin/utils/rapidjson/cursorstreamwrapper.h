@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 //
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -33,7 +35,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 
 //! Cursor stream wrapper for counting line and column number if error exists.
 /*!
-    \tparam InputStream     Any stream that implements Stream Concept
+    	param InputStream     Any stream that implements Stream Concept
 */
 template <typename InputStream, typename Encoding = UTF8<> >
 class CursorStreamWrapper : public GenericStreamWrapper<InputStream, Encoding> {
@@ -46,7 +48,8 @@ public:
     // counting line and column number
     Ch Take() {
         Ch ch = this->is_.Take();
-        if(ch == '\n') {
+        if(ch == '
+') {
             line_ ++;
             col_ = 0;
         } else {

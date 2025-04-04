@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -22,10 +24,11 @@ RAPIDJSON_NAMESPACE_BEGIN
 namespace internal {
 
 //! Custom strlen() which works on different character types.
-/*! \tparam Ch Character type (e.g. char, wchar_t, short)
+/*! 	param Ch Character type (e.g. char, wchar_t, short)
     \param s Null-terminated input string.
-    \return Number of characters in the string. 
-    \note This has the same semantics as strlen(), the return value is not number of Unicode codepoints.
+    eturn Number of characters in the string. 
+    
+ote This has the same semantics as strlen(), the return value is not number of Unicode codepoints.
 */
 template <typename Ch>
 inline SizeType StrLen(const Ch* s) {

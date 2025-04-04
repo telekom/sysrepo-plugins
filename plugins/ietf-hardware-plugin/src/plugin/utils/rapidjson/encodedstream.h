@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
+// SPDX-License-Identifier: MIT
 // Tencent is pleased to support the open source community by making RapidJSON available.
 // 
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -32,8 +34,8 @@ RAPIDJSON_NAMESPACE_BEGIN
 
 //! Input byte stream wrapper with a statically bound encoding.
 /*!
-    \tparam Encoding The interpretation of encoding of the stream. Either UTF8, UTF16LE, UTF16BE, UTF32LE, UTF32BE.
-    \tparam InputByteStream Type of input byte stream. For example, FileReadStream.
+    	param Encoding The interpretation of encoding of the stream. Either UTF8, UTF16LE, UTF16BE, UTF32LE, UTF32BE.
+    	param InputByteStream Type of input byte stream. For example, FileReadStream.
 */
 template <typename Encoding, typename InputByteStream>
 class EncodedInputStream {
@@ -93,8 +95,8 @@ private:
 
 //! Output byte stream wrapper with statically bound encoding.
 /*!
-    \tparam Encoding The interpretation of encoding of the stream. Either UTF8, UTF16LE, UTF16BE, UTF32LE, UTF32BE.
-    \tparam OutputByteStream Type of input byte stream. For example, FileWriteStream.
+    	param Encoding The interpretation of encoding of the stream. Either UTF8, UTF16LE, UTF16BE, UTF32LE, UTF32BE.
+    	param OutputByteStream Type of input byte stream. For example, FileWriteStream.
 */
 template <typename Encoding, typename OutputByteStream>
 class EncodedOutputStream {
@@ -128,8 +130,8 @@ private:
 
 //! Input stream wrapper with dynamically bound encoding and automatic encoding detection.
 /*!
-    \tparam CharType Type of character for reading.
-    \tparam InputByteStream type of input byte stream to be wrapped.
+    	param CharType Type of character for reading.
+    	param InputByteStream type of input byte stream to be wrapped.
 */
 template <typename CharType, typename InputByteStream>
 class AutoUTFInputStream {
@@ -226,8 +228,8 @@ private:
 
 //! Output stream wrapper with dynamically bound encoding and automatic encoding detection.
 /*!
-    \tparam CharType Type of character for writing.
-    \tparam OutputByteStream type of output byte stream to be wrapped.
+    	param CharType Type of character for writing.
+    	param OutputByteStream type of output byte stream to be wrapped.
 */
 template <typename CharType, typename OutputByteStream>
 class AutoUTFOutputStream {
