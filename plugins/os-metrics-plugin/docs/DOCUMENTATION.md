@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+SPDX-FileContributor: Sartura d.d.
+SPDX-License-Identifier: BSD-3-Clause
+-->
+
 ## Running and testing the plugin
 The necessary .yang files need to be installed in sysrepo from the `yang` directory
 

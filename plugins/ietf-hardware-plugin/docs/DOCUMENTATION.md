@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+SPDX-FileContributor: Sartura d.d.
+SPDX-License-Identifier: BSD-3-Clause
+-->
+
 # IETF-Hardware plugin documentation
 
 ## Running and testing the plugin
