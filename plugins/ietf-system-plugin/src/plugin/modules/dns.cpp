@@ -33,8 +33,8 @@ namespace ietf::sys::dns {
      * @brief Default constructor.
      */
     DnsServer::DnsServer()
-        : Port(0)
-        , InterfaceIndex(SYSTEMD_IFINDEX)
+        : InterfaceIndex(SYSTEMD_IFINDEX)
+        , Port(0)
     {
     }
 

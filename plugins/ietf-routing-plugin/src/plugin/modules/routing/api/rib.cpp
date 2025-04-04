@@ -24,8 +24,8 @@ namespace ietf::rt {
  * @brief Default constructor needed for std::map<K, V>.
  */
 RoutingInformationBase::Object::Object()
-    : m_default(false)
-    , m_family(AddressFamily::Other)
+    : m_family(AddressFamily::Other)
+    , m_default(false)
 {
 }
 

@@ -353,8 +353,8 @@ std::string RouteRef::getDestinationString()
 
 
 NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
-    : m_address(address)
-    , m_ifindex(ifindex)
+    : m_ifindex(ifindex)
+    , m_address(address)
 {}
 
 int NextHopHelper::getIfindex() {
