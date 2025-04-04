@@ -1,0 +1,41 @@
+<system-metrics xmlns="http://terastrm.net/ns/yang/os-metrics">
+<memory>
+    <usage-monitoring>
+        <poll-interval>30</poll-interval>
+        <threshold>
+            <name>tooHigh</name>
+            <value>50</value>
+        </threshold>
+        <threshold>
+            <name>tooHigh2</name>
+            <value>60</value>
+        </threshold>
+    </usage-monitoring>
+</memory>
+<filesystems>
+    <filesystem>
+        <mount-point>/</mount-point>
+        <usage-monitoring>
+            <poll-interval>15</poll-interval>
+            <threshold>
+                <name>highfs1</name>
+                <value>60</value>
+            </threshold>
+            <threshold>
+                <name>highfs2</name>
+                <value>50</value>
+            </threshold>
+        </usage-monitoring>
+    </filesystem>
+    <filesystem>
+        <mount-point>/snap/core20/1081</mount-point>
+        <usage-monitoring>
+            <poll-interval>10</poll-interval>
+            <threshold>
+                <name>highfs3</name>
+                <value>45</value>
+            </threshold>
+        </usage-monitoring>
+    </filesystem>
+</filesystems>
+</system-metrics>

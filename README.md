@@ -60,6 +60,12 @@ More information about the `ietf-system` YANG module can be found in
 [RFC 7317: A YANG Data Model for System Management](https://datatracker.ietf.org/doc/html/rfc7317).
 
 
+os-metrics-plugin is based on the `os-metrics` YANG module which provides
+"a metrics module and implementation to get more information out of Debian system".
+More information about the `os-metrics` YANG module can be found in
+[OS Metrics](./plugins/os-metrics-plugin/yang/os-metrics.yang).
+
+
 ## Development
 
 Besides the usual C++ development environment, the following additional dependencies are required to build all the plugins:
@@ -75,7 +81,9 @@ Besides the usual C++ development environment, the following additional dependen
 * [sysrepo-plugins-common](https://github.com/telekom/sysrepo-plugins-common)
 * [libsensors](https://github.com/lm-sensors/lm-sensors)
 * [lshw](https://ezix.org/project/wiki/HardwareLiSter)
+* [libprocps](https://gitlab.com/procps-ng/procps)
 * pthreads
+* df
 
 Not all plugins need all the above listed dependencies. Please refer to the CMakeLists.txt of each plugin.
 
