@@ -25,23 +25,6 @@ find_package(SYSREPOCPP REQUIRED)
 
 find_library(libsensors sensors)
 
-# set(
-#     MODULE_SOURCES
-#
-#     # src/plugin/plugin.cpp
-#     # src/plugin/modules/interfaces/oper.cpp
-#     # src/plugin/modules/interfaces/change.cpp
-#     # src/plugin/modules/interfaces/context.cpp
-#     # src/plugin/modules/interfaces/common.cpp
-# )
-#
-# set(
-#     PLUGIN_CORE_SOURCES
-#
-#     # src/plugin/context.cpp
-#     ${MODULE_SOURCES}
-# )
-
 set(
     PLUGIN_SOURCES
 
@@ -49,11 +32,6 @@ set(
     src/plugin/hardware_sensors.hpp
     src/plugin/sensor_data.hpp
     src/plugin.cpp
-)
-
-set(
-    PLUGIN_HEADERS
-
     src/plugin.hpp
 )
 
@@ -61,14 +39,12 @@ set(
     EXECUTABLE_SOURCES
 
     src/main.c
-    src/plugin.cpp
 )
 
 # core library
 add_library(
     ${PLUGIN_CORE_LIBRARY_NAME}
     STATIC
-    # ${PLUGIN_CORE_SOURCES}
     ${PLUGIN_SOURCES}
 )
 
