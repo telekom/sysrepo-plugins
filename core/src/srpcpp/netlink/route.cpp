@@ -224,7 +224,6 @@ void RouteRef::removeNextHop(NextHopHelper& nh_obj)
     }
 
     auto nexthop_callback = [](rtnl_nexthop* nh, void* args) {
-        char addr_buff[50] = { 0 };
         nl_addr* addr = NULL;
 
         addr = rtnl_route_nh_get_gateway(nh);

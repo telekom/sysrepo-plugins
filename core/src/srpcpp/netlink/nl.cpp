@@ -729,7 +729,6 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
     nl_addr* route_addr = NULL;
     nl_addr* dst_addr = NULL;
     rtnl_route* route = NULL;
-    char buff[100] = { 0 };
     int err = 0;
     bool is_zero = false;
 
