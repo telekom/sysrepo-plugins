@@ -16,7 +16,7 @@
 #include "plugin/modules/routing/api/rib.hpp"
 #include "srpcpp/netlink/address.hpp"
 #include "srpcpp/netlink/route.hpp"
-#include "sysrepo.h"
+#include <sysrepo.h>
 #include "common.hpp"
 #include <optional>
 #include <sstream>

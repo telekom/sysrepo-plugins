@@ -13,7 +13,7 @@
 
 #include "change.hpp"
 #include "common.hpp"
-#include "sysrepo-cpp/Enum.hpp"
+#include <sysrepo-cpp/Enum.hpp>
 
 #include <stdexcept>
 #include <sysrepo.h>
@@ -363,7 +363,7 @@ sr::ErrorCode InterfaceLinkUpDownTrapEnableModuleChangeCb::operator()(sr::Sessio
         for (auto& change : session.getChanges("/ietf-interfaces:interfaces/interface/link-up-down-trap-enable")) {
 
             const auto& value = change.node.asTerm().value();
-            const auto& name_value = std::get<std::string>(value);
+            // const auto& name_value = std::get<std::string>(value);
 
             switch (change.operation) {
             case sysrepo::ChangeOperation::Created:

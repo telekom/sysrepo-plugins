@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "libyang-cpp/DataNode.hpp"
+#include <libyang-cpp/DataNode.hpp>
 #include <string>
 #include <map>
 

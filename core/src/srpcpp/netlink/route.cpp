@@ -224,7 +224,6 @@ void RouteRef::removeNextHop(NextHopHelper& nh_obj)
     }
 
     auto nexthop_callback = [](rtnl_nexthop* nh, void* args) {
-        char addr_buff[50] = { 0 };
         nl_addr* addr = NULL;
 
         addr = rtnl_route_nh_get_gateway(nh);
@@ -353,8 +352,8 @@ std::string RouteRef::getDestinationString()
 
 
 NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
-    : m_address(address)
-    , m_ifindex(ifindex)
+    : m_ifindex(ifindex)
+    , m_address(address)
 {}
 
 int NextHopHelper::getIfindex() {

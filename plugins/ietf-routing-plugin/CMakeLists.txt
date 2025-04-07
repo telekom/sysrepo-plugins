@@ -10,7 +10,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 project(ietf-routing-plugin)
 
 set(PLUGIN_LIRBARY_NAME srplg-ietf-routing)

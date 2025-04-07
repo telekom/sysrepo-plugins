@@ -34,8 +34,7 @@ jobs:
             cxx: "g++",
             options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            # no expect because stdout seems to be redirected
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Release, clang",
@@ -44,7 +43,7 @@ jobs:
             cxx: "clang",
             options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Debug, gcc",
@@ -53,7 +52,7 @@ jobs:
             cxx: "g++",
             options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Debug, clang",
@@ -62,7 +61,7 @@ jobs:
             cxx: "clang",
             options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "ASAN and UBSAN",
@@ -71,7 +70,7 @@ jobs:
             cxx: "clang",
             options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
             packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev",
+            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
 
     steps:
@@ -86,6 +85,17 @@ jobs:
           if ${{matrix.config.packages != ''}}
             then ${{matrix.config.packager}} install ${{matrix.config.packages}}
           fi
+
+      # libproc2-dev (more precise 'procps >= v4.0.0') does not provide "prod/readproc.h"
+      - name: Deps-procps
+        shell: bash
+        run: |
+          git clone --depth=1 --branch=v3.3.17 https://gitlab.com/procps-ng/procps
+          cd procps
+          ./autogen.sh
+          ./configure
+          make -j
+          sudo make install
 
       - name: Deps-libyang
         shell: bash
@@ -212,6 +222,12 @@ jobs:
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-ethertypes@2019-03-04.yang
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-packet-fields@2019-03-04.yang
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-access-control-list@2019-03-04.yang
+          sysrepoctl -i plugins/ietf-hardware-plugin/yang/iana-hardware.yang
+          sysrepoctl -i plugins/ietf-hardware-plugin/yang/ietf-hardware.yang
+          sysrepoctl -i plugins/ietf-hardware-plugin/yang/sensor-notifications-augment.yang
+          sysrepoctl -c ietf-hardware -e hardware-sensor -e entity-mib
+          sysrepoctl -i plugins/os-metrics-plugin/yang/os-metrics.yang
+          sysrepoctl -c os-metrics -e usage-notifications
 
       - name: Test
         shell: bash

@@ -321,7 +321,7 @@ bool InterfaceRef::getForwarding(AddressFamily fam) {
 }
 
 bool InterfaceRef::isIPVEnabled(AddressFamily fam, CacheRef<RouteAddressRef>& addr_cache) {
-    //this functuon checks if there is ipv 4/6 address present, which means that has ipv x interface
+    // this function checks if there is IPv4/v6 address present, which means that has IPv x interface
 
     for (RouteAddressRef& addr : addr_cache) {
         if (addr.getFamily() == fam && addr.getInterfaceIndex() == this->getIndex()) {

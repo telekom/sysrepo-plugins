@@ -1516,6 +1516,8 @@ namespace sub::change {
                             // vids node
                             vids_data = change.node.asTerm().valueStr().data();
                             break;
+                        default:
+                            break;
                         }
                         }
                     }
@@ -1569,6 +1571,8 @@ namespace sub::change {
                             vids_data = change.node.asTerm().valueStr().data();
                             break;
                         }
+                        default:
+                            break;
                         }
                     }
 

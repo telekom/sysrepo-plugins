@@ -10,10 +10,9 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.12)
 project(sysrepo-plugins-core VERSION 0.1.0)
 
-set(CMAKE_CXX_STANDARD 20)
 set(CORE_LIBRARY_NAME ${PROJECT_NAME})
 set(CORE_LIBRARY_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
 

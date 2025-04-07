@@ -742,8 +742,6 @@ namespace ietf::sys::sub::change {
         std::optional<std::string_view> subXPath, sr::Event event,
         uint32_t requestId)
     {
-        sr::ErrorCode error = sr::ErrorCode::Ok;
-
         switch (event) {
         case sysrepo::Event::Change:
             for (auto& change : session.getChanges(subXPath->data())) {

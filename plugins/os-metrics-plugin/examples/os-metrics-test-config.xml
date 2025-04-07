@@ -1,0 +1,56 @@
+<!--
+
+ telekom / sysrepo-plugins
+
+ This program is made available under the terms of the
+ BSD 3-Clause license which is available at
+ https://opensource.org/licenses/BSD-3-Clause
+
+ SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+ SPDX-FileContributor: Sartura d.d.
+
+ SPDX-License-Identifier: BSD-3-Clause
+
+-->
+
+<system-metrics xmlns="http://terastrm.net/ns/yang/os-metrics">
+<memory>
+    <usage-monitoring>
+        <poll-interval>30</poll-interval>
+        <threshold>
+            <name>tooHigh</name>
+            <value>50</value>
+        </threshold>
+        <threshold>
+            <name>tooHigh2</name>
+            <value>60</value>
+        </threshold>
+    </usage-monitoring>
+</memory>
+<filesystems>
+    <filesystem>
+        <mount-point>/</mount-point>
+        <usage-monitoring>
+            <poll-interval>15</poll-interval>
+            <threshold>
+                <name>highfs1</name>
+                <value>60</value>
+            </threshold>
+            <threshold>
+                <name>highfs2</name>
+                <value>50</value>
+            </threshold>
+        </usage-monitoring>
+    </filesystem>
+    <filesystem>
+        <mount-point>/snap/core20/1081</mount-point>
+        <usage-monitoring>
+            <poll-interval>10</poll-interval>
+            <threshold>
+                <name>highfs3</name>
+                <value>45</value>
+            </threshold>
+        </usage-monitoring>
+    </filesystem>
+</filesystems>
+</system-metrics>
