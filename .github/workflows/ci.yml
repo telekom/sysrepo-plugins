@@ -112,7 +112,6 @@ jobs:
         run: |
           git clone https://github.com/cesnet/libyang-cpp
           cd libyang-cpp
-          git checkout 1533458346b4f395b1187c646b61bbcb1fddc615
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
           sudo cmake --install build
@@ -133,7 +132,6 @@ jobs:
         run: |
           git clone https://github.com/sysrepo/sysrepo-cpp
           cd sysrepo-cpp
-          git checkout 80e9659b41ea1de2e20d62f94319fe5af26adcee
           sed -i 's/ sysrepo<3 / /' CMakeLists.txt
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
