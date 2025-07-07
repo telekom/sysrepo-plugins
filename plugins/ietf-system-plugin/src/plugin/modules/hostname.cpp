@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include <sysrepo.h>
+#include <sysrepo-cpp/Changes.hpp>
 
 /**
  * @brief Return the logging prefix of the current module.

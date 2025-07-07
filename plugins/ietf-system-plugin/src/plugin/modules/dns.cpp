@@ -14,6 +14,7 @@
 #include "dns.hpp"
 #include "plugin/ip.hpp"
 #include "srpcpp/common.hpp"
+#include <sysrepo-cpp/Changes.hpp>
 #include <sysrepo-cpp/Enum.hpp>
 
 #include <plugin/sdbus.hpp>

@@ -16,6 +16,7 @@
 #include "core/common.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
+#include <sysrepo-cpp/Subscription.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
 #include <srpcpp.hpp>
 

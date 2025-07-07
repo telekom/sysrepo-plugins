@@ -14,6 +14,7 @@
 #include "ntp.hpp"
 #include <srpcpp.hpp>
 #include "plugin/common.hpp"
+#include <sysrepo-cpp/Changes.hpp>
 
 namespace ietf::sys::ntp::change {
     /**

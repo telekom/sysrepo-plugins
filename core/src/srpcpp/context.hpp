@@ -13,8 +13,9 @@
 
 #pragma once
 
-#include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/Connection.hpp>
+#include <sysrepo-cpp/Session.hpp>
+#include <sysrepo-cpp/Subscription.hpp>
 
 namespace srpc
 {

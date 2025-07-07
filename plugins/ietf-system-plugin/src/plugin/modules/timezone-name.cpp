@@ -18,6 +18,7 @@
 #include <filesystem>
 
 #include <sysrepo.h>
+#include <sysrepo-cpp/Changes.hpp>
 
 #include "plugin/context.hpp"
 #include "plugin/sdbus.hpp"

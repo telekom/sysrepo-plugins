@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <sysrepo-cpp/Connection.hpp>
+#include <sysrepo-cpp/Subscription.hpp>
 
 extern "C" {
 void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* private_data);
