@@ -13,6 +13,7 @@
 
 #include "change.hpp"
 #include "common.hpp"
+#include <sysrepo-cpp/Changes.hpp>
 #include <sysrepo-cpp/Enum.hpp>
 #include <sysrepo.h>
 #include <unordered_set>

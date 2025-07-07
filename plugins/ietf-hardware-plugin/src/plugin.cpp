@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <sysrepo-cpp/Connection.hpp>
+#include <sysrepo-cpp/Subscription.hpp>
 
 struct HardwareModel {
     std::shared_ptr<sysrepo::Subscription> sub;

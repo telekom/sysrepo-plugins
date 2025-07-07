@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <list>
+
 #include <sysrepo-cpp/Session.hpp>
 
 namespace srpc

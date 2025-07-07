@@ -100,7 +100,7 @@ jobs:
       - name: Deps-libyang
         shell: bash
         run: |
-          git clone https://github.com/cesnet/libyang
+          git clone --depth=1 --branch=devel https://github.com/cesnet/libyang
           cd libyang
           CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
@@ -110,7 +110,7 @@ jobs:
       - name: Deps-libyang-cpp
         shell: bash
         run: |
-          git clone https://github.com/cesnet/libyang-cpp
+          git clone --depth=1 https://github.com/cesnet/libyang-cpp
           cd libyang-cpp
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
@@ -120,7 +120,7 @@ jobs:
       - name: Deps-sysrepo
         shell: bash
         run: |
-          git clone https://github.com/sysrepo/sysrepo
+          git clone --depth=1 --branch=devel https://github.com/sysrepo/sysrepo
           cd sysrepo
           CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
@@ -130,7 +130,7 @@ jobs:
       - name: Deps-sysrepo-cpp
         shell: bash
         run: |
-          git clone https://github.com/sysrepo/sysrepo-cpp
+          git clone --depth=1 https://github.com/sysrepo/sysrepo-cpp
           cd sysrepo-cpp
           sed -i 's/ sysrepo<3 / /' CMakeLists.txt
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
@@ -141,7 +141,7 @@ jobs:
       - name: Deps-srpc
         shell: bash
         run: |
-          git clone --recurse-submodules https://github.com/telekom/sysrepo-plugins-common
+          git clone --depth=1 --recurse-submodules https://github.com/telekom/sysrepo-plugins-common
           cd sysrepo-plugins-common
           CC=${{matrix.config.cc}} cmake -B build
           cmake --build build -j
@@ -151,7 +151,7 @@ jobs:
       - name: Deps-umgmt
         shell: bash
         run: |
-          git clone --recurse-submodules https://github.com/sartura/umgmt
+          git clone --depth=1 --recurse-submodules https://github.com/sartura/umgmt
           cd umgmt
           CC=${{matrix.config.cc}} cmake -B build
           cmake --build build -j
@@ -171,7 +171,7 @@ jobs:
       - name: Deps-sdbus-cpp
         shell: bash
         run: |
-          git clone --recurse-submodules https://github.com/Kistler-Group/sdbus-cpp
+          git clone --depth=1 --recurse-submodules https://github.com/Kistler-Group/sdbus-cpp
           cd sdbus-cpp
           CC=${{matrix.config.cc}} cmake -B build
           cmake --build build -j

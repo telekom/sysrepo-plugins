@@ -11,14 +11,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
 
-#include "change.hpp"
-#include "plugin/modules/routing/common.hpp"
-#include <sysrepo-cpp/Enum.hpp>
-#include "plugin/modules/routing/api/nexthop.hpp"
-#include "plugin/modules/routing/api/rib.hpp"
-
 #include <stdexcept>
 #include <sysrepo.h>
+
+#include <sysrepo-cpp/Changes.hpp>
+#include <sysrepo-cpp/Enum.hpp>
+
+#include "change.hpp"
+#include "plugin/modules/routing/common.hpp"
+#include "plugin/modules/routing/api/nexthop.hpp"
+#include "plugin/modules/routing/api/rib.hpp"
 
 namespace ietf::rt {
 namespace sub::change {
