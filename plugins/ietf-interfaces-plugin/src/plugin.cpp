@@ -113,6 +113,7 @@ void fillInitialRunningDs(sysrepo::Session& s) {
     //here we loop through the interfaces
     for (auto& interface : interfaces) {
         std::string if_name = interface.getName();
+        std::string iana_type = interface.getIanaType();
 
         // how we handle mtu? 
         // ipv4 mtu is in range 68 - 65565 
@@ -121,8 +122,10 @@ void fillInitialRunningDs(sysrepo::Session& s) {
         // we make an intersection of the value for both interfaces
         uint32_t mtu = interface.getMTU();
 
-        s.setItem("/ietf-interfaces:interfaces/interface[name='" + if_name + "']/type", interface.getIanaType());
-        //fix the type from rtnl_link_get_arptype(); <linux/if_arp.h>
+        s.setItem("/ietf-interfaces:interfaces/interface[name='" + if_name + "']/type", iana_type);
+        if (iana_type == "iana-if-type:l2vlan")
+            s.setItem("/ietf-interfaces:interfaces/interface[name='" + if_name + "']/ietf-if-extensions:parent-interface", interface.getVlanParentInterface());
+
         s.setItem("/ietf-interfaces:interfaces/interface[name='" + if_name + "']/enabled", (interface.getOperationalStatus() == IF_OPER_UP ? "true" : "false"));
 
         //map ipv4 with interfaces

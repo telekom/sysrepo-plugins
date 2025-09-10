@@ -17,6 +17,8 @@
 #include <netlink/route/qdisc.h>
 #include <netlink/route/tc.h>
 #include <netlink/route/link/bridge.h>
+#include <netlink/route/link/vlan.h>
+#include <net/if.h>
 #include <memory>
 #include <stdexcept>
 #include <linux/if.h>
@@ -256,14 +258,17 @@ std::string InterfaceRef::getIanaType() {
 
     const char* rtnl_type = rtnl_link_get_type(m_link.get());
 
-    //bridge is handled by type since by arp num its a eth interface
+    // bridge is handled by type since by arp num its a eth interface
     if (rtnl_type && std::string(rtnl_type) == "bridge") {
         return iana_prefix + "bridge";
     }
 
-    //if its not bridge, handle arptype
-    unsigned int type = rtnl_link_get_arptype(m_link.get());
+    // if its not bridge, check if it's a vlan interface
+    if (rtnl_link_is_vlan(m_link.get()))
+        return iana_prefix + "l2vlan";
 
+    // if its neither vlan nor bridge, handle arptype
+    unsigned int type = rtnl_link_get_arptype(m_link.get());
 
     switch (type) {
     case ARPHRD_ETHER:
@@ -286,6 +291,16 @@ std::string InterfaceRef::getIanaType() {
     // types can be added, and maped from the <linux/if_arp.h> header as a key,
     // and from the identities of the iana-if-type model.
 
+}
+
+std::string InterfaceRef::getVlanParentInterface() {
+
+    char parent_iface[IFNAMSIZ];
+
+    if (if_indextoname(rtnl_link_get_link(m_link.get()), parent_iface) == NULL)
+        return std::string();
+
+    return std::string(parent_iface);
 }
 
 bool InterfaceRef::getForwarding(AddressFamily fam) {
