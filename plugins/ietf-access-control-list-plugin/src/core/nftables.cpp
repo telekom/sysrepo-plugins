@@ -32,7 +32,7 @@ std::optional<NFTTable> NFTables::getTable(const std::string& name, NFT_Types fa
             const nlohmann::json tb = table_obj["table"];
             NFT_Types tb_type = NFT_INVALID_TYPE;
             for (auto it = nft_types.begin(); it != nft_types.end(); ++it)
-                if (it->second == tb["family"]) {
+                if (it->second == tb["family"].get<std::string>()) {
                     tb_type = it->first;
                     break;
                 }
