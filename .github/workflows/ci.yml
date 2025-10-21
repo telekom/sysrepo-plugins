@@ -138,16 +138,6 @@ jobs:
           sudo cmake --install build
           sudo ldconfig
 
-      - name: Deps-srpc
-        shell: bash
-        run: |
-          git clone --depth=1 --recurse-submodules https://github.com/telekom/sysrepo-plugins-common
-          cd sysrepo-plugins-common
-          CC=${{matrix.config.cc}} cmake -B build
-          cmake --build build -j
-          sudo cmake --install build
-          sudo ldconfig
-
       - name: Deps-umgmt
         shell: bash
         run: |
