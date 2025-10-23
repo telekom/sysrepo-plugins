@@ -15,14 +15,17 @@ name: sysrepo-plugins CI
 
 on:
   push:
-    branches: [ "main", "devel" ]
+    branches: &branches [ "main", "devel" ]
   pull_request:
-    branches: [ "main", "devel" ]
+    branches: *branches
 
 jobs:
   build:
     name: ${{matrix.config.name}}
     runs-on: ubuntu-latest
+    env:
+      PACKAGES: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev libnftables-dev nlohmann-json3-dev"
+      COMMON_OPTIONS: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1"
     strategy:
       fail-fast: false
       matrix:
@@ -32,45 +35,31 @@ jobs:
             build-type: "Release",
             cc: "gcc",
             cxx: "g++",
-            options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Release, clang",
             build-type: "Release",
             cc: "clang",
             cxx: "clang",
-            options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Debug, gcc",
             build-type: "Debug",
             cc: "gcc",
             cxx: "g++",
-            options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Debug, clang",
             build-type: "Debug",
             cc: "clang",
             cxx: "clang",
-            options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "ASAN and UBSAN",
             build-type: "Debug",
             cc: "clang",
             cxx: "clang",
-            options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
+            options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined",
           }
 
     steps:
@@ -81,10 +70,8 @@ jobs:
       - name: Deps-packages
         shell: bash
         run: |
-          ${{matrix.config.packager}} update
-          if ${{matrix.config.packages != ''}}
-            then ${{matrix.config.packager}} install ${{matrix.config.packages}}
-          fi
+          sudo apt-get update
+          sudo apt-get install ${{ env.PACKAGES }}
 
       # libproc2-dev (more precise 'procps >= v4.0.0') does not provide "prod/readproc.h"
       - name: Deps-procps
@@ -172,7 +159,7 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}
         run: |
-          CC=${{matrix.config.cc}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build-type}} ${{matrix.config.options}}
+          CC=${{matrix.config.cc}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build-type}} ${{env.COMMON_OPTIONS}} ${{matrix.config.options}}
 
       - name: Build
         shell: bash

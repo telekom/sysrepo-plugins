@@ -18,7 +18,6 @@
 #include <optional>
 #include <string_view>
 #include "srpcpp/netlink.hpp"
-#include "srpc/common.h"
 #include "common.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
