@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 //
 // telekom / sysrepo-plugins
 //
