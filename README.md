@@ -172,6 +172,12 @@ $ sysrepoctl -i ./yang/ietf-ipv4-unicast-routing@2018-03-13.yang
 $ sysrepoctl -i ./yang/ietf-ipv6-unicast-routing@2018-03-13.yang -s ./yang
 ```
 
+For the access control list plugin, the following models have to be installed, including enabling of the following features:
+```bash
+$ sysrepoctl -i ./yang/ietf-access-control-list@2019-03-04.yang -s ./yang
+$ sudo sysrepoctl -c ietf-access-control-list --enable-feature eth --enable-feature match-on-eth --enable-feature ipv4 --enable-feature match-on-tcp --enable-feature match-on-udp --enable-feature match-on-icmp --enable-feature ipv6 --enable-feature match-on-ipv6
+```
+
 ## Working Language
 
 We decided to apply _English_ as the primary project language.
