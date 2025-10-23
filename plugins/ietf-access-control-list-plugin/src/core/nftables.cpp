@@ -13,7 +13,7 @@ std::list<NFTTable> NFTables::getTables()
             tables_table_list.push_back(NFTTable(table_obj["family"], table_obj["name"]));
         };
     }
-    return std::move(tables_table_list);
+    return tables_table_list;
 }
 
 std::optional<NFTTable> NFTables::getTable(const std::string& name, NFT_Types family)
@@ -104,7 +104,7 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
 
     //if no exception is thrown, we construct NFTChain
 
-    return std::move(NFTChain(name, type, hook, priority, policy, this->getTableName(), this->getFamily()));
+    return NFTChain(name, type, hook, priority, policy, this->getTableName(), this->getFamily());
 }
 
 void NFTTable::deleteChain(const NFT_Types table_type, const std::string& table_name, const std::string& chain_name)
@@ -192,7 +192,7 @@ nlohmann::json NFTCommand::exec_cmd(const std::string& command)
         m_json = nlohmann::json::parse("{}");
     }
 
-    return std::move(m_json);
+    return m_json;
 }
 
 NFTCommand::NFTCommand()
@@ -417,17 +417,17 @@ std::optional<Match> NFTChain::findRule(const Match& rule)
 }
 
 NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name, const NFT_Types table_type) :
+    m_table_name(table_name),
     m_chain_name(chain_name),
     m_chain_type(type),
-    m_chain_priority(priority),
     m_chain_hook(hook),
+    m_chain_priority(priority),
     m_chain_policy(policy),
-    m_table_name(table_name),
     m_table_type(table_type)
 {}
 
 
-Match::Match() : m_operator("=="), m_handle(-1) {}
+Match::Match() : m_handle(-1), m_operator("==") {}
 
 Match& Match::Operator(const std::string& oper)
 {

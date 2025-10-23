@@ -74,7 +74,7 @@ namespace ietf::acl {
                     type = nft::helper::ianaToNFTType(table_type_str);
                     if (type == NFT_Types::NFT_INVALID_TYPE) {
                         //type cannot be obtained
-                        SRPLG_LOG_ERR(PLUGIN_NAME, "Invalid type %s on table %s", table_type_str, table_name.c_str());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "Invalid type %s on table %s", table_type_str.c_str(), table_name.c_str());
                         return sr::ErrorCode::NotFound;
                     }
 
@@ -195,8 +195,8 @@ namespace ietf::acl {
                             table->addChain(chain_name, NFT_Chain_Types::CHAIN_FILTER, NFT_Chain_Hooks::CH_HOOK_INPUT, 0, policy);
                         }
                         catch (...) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Failed to create chain %s", chain_name.c_str());
                             return sr::ErrorCode::CallbackFailed;
-                            SRPLG_LOG_ERR(PLUGIN_NAME, "Failed to create chain %s", chain_name);
                         }
                         break;
                     }
@@ -237,8 +237,8 @@ namespace ietf::acl {
                                 table->deleteChain(type, name_key, chain_name);
                             }
                             catch (...) {
+                                SRPLG_LOG_ERR(PLUGIN_NAME, "Failed to delete chain %s", chain_name.c_str());
                                 return sr::ErrorCode::CallbackFailed;
-                                SRPLG_LOG_ERR(PLUGIN_NAME, "Failed to delete chain %s", chain_name);
                             }
                         }
                         break;
