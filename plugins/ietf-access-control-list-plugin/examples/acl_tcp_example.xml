@@ -1,0 +1,63 @@
+<!-- The following XML example represents a configuration where TCP
+     traffic from:
+        source ports 16384, 16385, 16386, and 16387 is dropped,
+        destination ports 16666, 16667, 16668, and 16669 is dropped,
+        source port is not equal to 21 and,
+        destination port is less than or equal to 666
+
+    note:
+        only port-range or operator are allowed on source/destination
+-->
+<acls xmlns="urn:ietf:params:xml:ns:yang:ietf-access-control-list"
+      xmlns:if="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+  <acl>
+    <name>sample-port-acl</name>
+    <type>ipv4-acl-type</type>
+    <aces>
+      <ace>
+        <name>rule1</name>
+        <matches>
+          <tcp>
+            <sequence-number>22</sequence-number>
+            <acknowledgement-number>32</acknowledgement-number>
+            <data-offset>8</data-offset>
+            <flags>cwr</flags>
+            <window-size>33</window-size>
+            <urgent-pointer>35</urgent-pointer>
+            <source-port>
+              <lower-port>16384</lower-port>
+              <upper-port>16387</upper-port>
+            </source-port>
+          </tcp>
+
+         <!-- <tcp>
+            <destination-port>
+              <lower-port>16666</lower-port>
+              <upper-port>16669</upper-port>
+            </destination-port>
+          </tcp>
+
+          <tcp>
+            <source-port>
+              <operator>neq</operator>
+              <port>21</port>
+            </source-port>
+          </tcp> -->
+
+          <tcp>
+            <destination-port>
+              <operator>lte</operator>
+              <port>666</port>
+            </destination-port>
+          </tcp>
+
+          <egress-interface>lo</egress-interface>
+          <ingress-interface>enp0s3</ingress-interface>
+        </matches>
+        <actions>
+          <forwarding>drop</forwarding>
+        </actions>
+      </ace>
+    </aces>
+  </acl>
+</acls>
