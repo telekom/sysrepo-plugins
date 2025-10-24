@@ -61,7 +61,7 @@ More information about the `ietf-system` YANG module can be found in
 
 
 os-metrics-plugin is based on the `os-metrics` YANG module which provides
-"a metrics module and implementation to get more information out of Debian system".
+"a metrics module and implementation to get more information out of Debian systems".
 More information about the `os-metrics` YANG module can be found in
 [OS Metrics](./plugins/os-metrics-plugin/yang/os-metrics.yang).
 
@@ -114,13 +114,13 @@ $ cd build
 $ cmake ..
 ```
 
-If systemd is present on the system an additional cmake flag is required:
+If systemd is present on the system, an additional cmake flag is required:
 ```bash
 $ mkdir build
 $ cd build
 $ cmake -DSYSTEMD_IFINDEX=1 ..
 ```
-note: SYSTEMD_IFINDEX cmake flag is the index of the interface you wish to configure DNS on (to get a list of indexes for all interfaces, use: `ip link`)
+Note: SYSTEMD_IFINDEX cmake flag is the index of the interface you wish to configure DNS on (to get a list of indexes for all interfaces, use: `ip link`)
 
 After configuring the build process with CMake, run the make command to build the plugin:
 ```bash
@@ -129,14 +129,14 @@ $ make -j
 
 ### Build artifacts
 
-Plugins will be built as a standalone applications and also as a `sysrepo-plugind` modules. For example, for the main ietf-system plugin there are two build artifacts:
+Plugins will be built as standalone applications and also as `sysrepo-plugind` modules. For example, for the main ietf-system plugin there are two build artifacts:
 - **ietf-system-plugin**: standalone application
 - **libsrplg-ietf-system.so**: `sysrepo-plugind` module which exposes the plugin init and cleanup callbacks and can be installed by invoking the following command: `sysrepo-plugind -P libsrplg-ietf-system.so`
 
 
 ### Sysrepo/YANG requirements
 
-Each plugin requires the YANG modules from it's `yang/` folder to be loaded into the Sysrepo datastore. This can be achieved, for example for the system plugin, by invoking the following commands:
+Each plugin requires the YANG modules from its `yang/` folder to be loaded into the Sysrepo datastore. This can be achieved, for example for the system plugin, by invoking the following commands:
 ```bash
 $ sysrepoctl -i ./yang/iana-crypt-hash@2014-08-06.yang
 $ sysrepoctl -i ./yang/ietf-system@2014-08-06.yang
