@@ -255,7 +255,7 @@ struct Callback {
 
             std::string const toPrint(
                 values.value()
-                    .printStr(libyang::DataFormat::JSON, libyang::PrintFlags::WithSiblings)
+                    .printStr(libyang::DataFormat::JSON, libyang::PrintFlags::Siblings)
                     .value());
             logMessage(SR_LL_DBG, toPrint);
         } catch (const std::exception& e) {
