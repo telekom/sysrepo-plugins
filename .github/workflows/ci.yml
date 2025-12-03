@@ -24,7 +24,7 @@ jobs:
     name: ${{matrix.config.name}}
     runs-on: ubuntu-latest
     env:
-      PACKAGES: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev libnftables-dev nlohmann-json3-dev"
+      PACKAGES: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libnftables-dev nlohmann-json3-dev"
       COMMON_OPTIONS: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1"
     strategy:
       fail-fast: false
@@ -80,7 +80,7 @@ jobs:
           git clone --depth=1 --branch=v3.3.17 https://gitlab.com/procps-ng/procps
           cd procps
           ./autogen.sh
-          ./configure
+          ./configure --disable-nls
           make -j
           sudo make install
 
