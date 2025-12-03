@@ -44,7 +44,7 @@ std::uint32_t RouteRef::getTable() const { return rtnl_route_get_table(m_route.g
  */
 std::string RouteRef::getTableName() const
 {
-    char table_buffer[32];
+    char table_buffer[32] = { 0 };
 
     rtnl_route_table2str(getTable(), table_buffer, sizeof(table_buffer));
 

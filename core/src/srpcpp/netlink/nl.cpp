@@ -85,14 +85,22 @@ NlContext::NlContext()
 
     m_routeCache = NlUniquePtr<struct nl_cache>(route_cache, nl_cache_free);
 
-    error = rtnl_route_read_table_names("/etc/iproute2/rt_tables");
-    if (error != 0) {
-        throw std::runtime_error("Unable to read routing table names");
+    // don't error if file is not existing
+    error = access("/etc/iproute2/rt_tables", F_OK | R_OK);
+    if (error == 0){
+        error = rtnl_route_read_table_names("/etc/iproute2/rt_tables");
+        if (error != 0) {
+            throw std::runtime_error("Unable to read routing table names");
+        }
     }
 
-    error = rtnl_route_read_protocol_names("/etc/iproute2/rt_protos");
-    if (error != 0) {
-        throw std::runtime_error("Unable to read routing protocol names");
+    // don't error if file is not existing
+    error = access("/etc/iproute2/rt_protos", F_OK | R_OK);
+    if (error == 0){
+        error = rtnl_route_read_table_names("/etc/iproute2/rt_protos");
+        if (error != 0) {
+            throw std::runtime_error("Unable to read routing protocol names");
+        }
     }
 }
 
