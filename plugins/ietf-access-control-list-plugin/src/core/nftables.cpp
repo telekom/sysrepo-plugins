@@ -402,7 +402,16 @@ std::list<Match> NFTChain::getRules()
             else {
                 std::string val;
                 if (match["match"]["right"].is_string()) {
+                    // Single IP - append /32 for IPv4 host addresses
                     val = match["match"]["right"];
+                    if (val.find('/') == std::string::npos && val.find('.') != std::string::npos) {
+                        val += "/32";
+                    }
+                }
+                else if (match["match"]["right"].contains("prefix")) {
+                    // Network prefix - convert to CIDR notation
+                    auto& prefix = match["match"]["right"]["prefix"];
+                    val = std::string(prefix["addr"]) + "/" + std::to_string(prefix["len"].get<int>());
                 }
                 else {
                     val = match["match"]["right"].dump();
