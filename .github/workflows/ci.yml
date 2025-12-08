@@ -173,10 +173,7 @@ jobs:
         run: |
           sysrepoctl -i plugins/ietf-system-plugin/yang/iana-crypt-hash@2014-08-06.yang
           sysrepoctl -i plugins/ietf-system-plugin/yang/ietf-system@2014-08-06.yang
-          sysrepoctl -c ietf-system -e timezone-name
-          sysrepoctl -c ietf-system -e ntp
-          sysrepoctl -c ietf-system -e authentication
-          sysrepoctl -c ietf-system -e local-users
+          sysrepoctl -c ietf-system -e timezone-name -e ntp -e authentication -e local-users
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-interfaces@2018-02-20.yang
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/iana-if-type@2017-01-19.yang
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-ip@2018-02-22.yang
@@ -197,6 +194,7 @@ jobs:
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-ethertypes@2019-03-04.yang
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-packet-fields@2019-03-04.yang
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-access-control-list@2019-03-04.yang
+          sysrepoctl -c ietf-access-control-list -e match-on-eth -e match-on-ipv4 -e match-on-ipv6 -e match-on-tcp -e match-on-udp -e match-on-icmp -e eth -e ipv4 -e ipv6
           sysrepoctl -i plugins/ietf-hardware-plugin/yang/iana-hardware.yang
           sysrepoctl -i plugins/ietf-hardware-plugin/yang/ietf-hardware.yang
           sysrepoctl -i plugins/ietf-hardware-plugin/yang/sensor-notifications-augment.yang
