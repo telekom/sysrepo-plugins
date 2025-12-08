@@ -20,6 +20,68 @@
 
 namespace ietf::acl {
     namespace sub::change {
+
+        /**
+         * Helper function to check if the parent ACL is being deleted.
+         * When deleting the whole ACL, child node deletions should be skipped
+         * since the table deletion will clean up everything in nftables.
+         *
+         * @param session The sysrepo session.
+         * @param table_name The ACL/table name to check.
+         * @return true if the parent ACL's type node is being deleted.
+         */
+        static bool isParentAclDeleted(sr::Session& session, const std::string& table_name) {
+            for (sr::Change deleted_change : session.getChanges(
+                "/ietf-access-control-list:acls/acl[name='" + table_name + "']/type")) {
+                if (deleted_change.operation == sr::ChangeOperation::Deleted) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Helper function to convert IANA operator to nftables operator.
+         *
+         * @param iana_op The IANA operator string (eq, neq, lte, gte).
+         * @return The nftables operator string (==, !=, <=, >=), or empty if unknown.
+         */
+        static std::string ianaToNftOperator(const std::string& iana_op) {
+            if (iana_op == "eq") return "==";
+            if (iana_op == "neq") return "!=";
+            if (iana_op == "lte") return "<=";
+            if (iana_op == "gte") return ">=";
+            return "";
+        }
+
+        /**
+         * Helper function to get the operator for a port rule from the sibling node.
+         * The port xpath is like: .../destination-port/port
+         * The operator xpath is: .../destination-port/operator
+         *
+         * @param session The sysrepo session.
+         * @param port_xpath The xpath to the port node.
+         * @return The nftables operator string, or empty if not found.
+         */
+        static std::string getPortOperator(sr::Session& session, const std::string& port_xpath) {
+            // Replace "/port" at the end with "/operator"
+            std::string op_xpath = port_xpath;
+            size_t pos = op_xpath.rfind("/port");
+            if (pos != std::string::npos) {
+                op_xpath.replace(pos, 5, "/operator");
+                try {
+                    auto op_node = session.getOneNode(op_xpath.c_str());
+                    std::string iana_op = op_node.asTerm().valueStr().data();
+                    return ianaToNftOperator(iana_op);
+                }
+                catch (...) {
+                    // Operator node doesn't exist (using range instead)
+                    return "";
+                }
+            }
+            return "";
+        }
+
         /**
          * sysrepo-plugin-generator: Generated default constructor.
          *
@@ -396,6 +458,12 @@ namespace ietf::acl {
 
                     //obtaining chain name
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     //obtaining table type
@@ -492,6 +560,12 @@ namespace ietf::acl {
 
                     //obtaining chain name
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     //obtaining table type
@@ -591,6 +665,12 @@ namespace ietf::acl {
 
                     //obtaining chain name
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     //obtaining table type
@@ -723,6 +803,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -806,6 +892,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -889,6 +981,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -972,6 +1070,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1055,6 +1159,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1138,6 +1248,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1221,6 +1337,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1341,6 +1463,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1424,6 +1552,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1507,6 +1641,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1590,6 +1730,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1673,6 +1819,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1793,6 +1945,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1876,6 +2034,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -1959,6 +2123,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2042,6 +2212,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2125,6 +2301,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2208,6 +2390,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2291,6 +2479,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2336,10 +2530,16 @@ namespace ietf::acl {
 
                     std::string field_name = is_source ? "sport" : "dport";
 
+                    // Get the operator from the sibling node (if using operator/port format)
+                    std::string nft_operator = getPortOperator(session, xpath);
+
                     switch (change.operation) {
                     case sr::ChangeOperation::Created: {
                         std::string port = change.node.asTerm().valueStr().data();
                         rule.Protocol("tcp").Field(field_name).Value(port);
+                        if (!nft_operator.empty()) {
+                            rule.Operator(nft_operator);
+                        }
                         try {
                             chain->addRule(rule);
                         }
@@ -2350,11 +2550,25 @@ namespace ietf::acl {
                         break;
                     }
                     case sr::ChangeOperation::Modified: {
+                        // Check if previousValue is available
+                        if (!change.previousValue.has_value()) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot get previous value for port modification");
+                            return sr::ErrorCode::CallbackFailed;
+                        }
                         std::string port = change.node.asTerm().valueStr().data();
                         std::string old_port = change.previousValue->data();
                         rule.Protocol("tcp").Field(field_name).Value(port);
+                        if (!nft_operator.empty()) {
+                            rule.Operator(nft_operator);
+                        }
                         try {
-                            chain->deleteRule(Match().Protocol("tcp").Field(field_name).Value(old_port));
+                            // Delete old rule with operator
+                            Match old_rule;
+                            old_rule.Protocol("tcp").Field(field_name).Value(old_port);
+                            if (!nft_operator.empty()) {
+                                old_rule.Operator(nft_operator);
+                            }
+                            chain->deleteRule(old_rule);
                             chain->addRule(rule);
                         }
                         catch (NFTablesCommandExecException& e) {
@@ -2366,6 +2580,9 @@ namespace ietf::acl {
                     case sr::ChangeOperation::Deleted: {
                         std::string port = change.node.asTerm().valueStr().data();
                         rule.Protocol("tcp").Field(field_name).Value(port);
+                        if (!nft_operator.empty()) {
+                            rule.Operator(nft_operator);
+                        }
                         try {
                             chain->deleteRule(rule);
                         }
@@ -2422,6 +2639,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2505,6 +2728,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2550,10 +2779,16 @@ namespace ietf::acl {
 
                     std::string field_name = is_source ? "sport" : "dport";
 
+                    // Get the operator from the sibling node (if using operator/port format)
+                    std::string nft_operator = getPortOperator(session, xpath);
+
                     switch (change.operation) {
                     case sr::ChangeOperation::Created: {
                         std::string port = change.node.asTerm().valueStr().data();
                         rule.Protocol("udp").Field(field_name).Value(port);
+                        if (!nft_operator.empty()) {
+                            rule.Operator(nft_operator);
+                        }
                         try {
                             chain->addRule(rule);
                         }
@@ -2564,11 +2799,25 @@ namespace ietf::acl {
                         break;
                     }
                     case sr::ChangeOperation::Modified: {
+                        // Check if previousValue is available
+                        if (!change.previousValue.has_value()) {
+                            SRPLG_LOG_ERR(PLUGIN_NAME, "Cannot get previous value for port modification");
+                            return sr::ErrorCode::CallbackFailed;
+                        }
                         std::string port = change.node.asTerm().valueStr().data();
                         std::string old_port = change.previousValue->data();
                         rule.Protocol("udp").Field(field_name).Value(port);
+                        if (!nft_operator.empty()) {
+                            rule.Operator(nft_operator);
+                        }
                         try {
-                            chain->deleteRule(Match().Protocol("udp").Field(field_name).Value(old_port));
+                            // Delete old rule with operator
+                            Match old_rule;
+                            old_rule.Protocol("udp").Field(field_name).Value(old_port);
+                            if (!nft_operator.empty()) {
+                                old_rule.Operator(nft_operator);
+                            }
+                            chain->deleteRule(old_rule);
                             chain->addRule(rule);
                         }
                         catch (NFTablesCommandExecException& e) {
@@ -2580,6 +2829,9 @@ namespace ietf::acl {
                     case sr::ChangeOperation::Deleted: {
                         std::string port = change.node.asTerm().valueStr().data();
                         rule.Protocol("udp").Field(field_name).Value(port);
+                        if (!nft_operator.empty()) {
+                            rule.Operator(nft_operator);
+                        }
                         try {
                             chain->deleteRule(rule);
                         }
@@ -2636,6 +2888,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2719,6 +2977,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2839,6 +3103,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
@@ -2922,6 +3192,12 @@ namespace ietf::acl {
 
                     std::string table_name = srpc::extractListKeysFromXpath("acl", change.node.path().data())["name"];
                     std::string chain_name = srpc::extractListKeysFromXpath("ace", change.node.path().data())["name"];
+
+                    // Skip if parent ACL is being deleted
+                    if (change.operation == sr::ChangeOperation::Deleted && isParentAclDeleted(session, table_name)) {
+                        continue;
+                    }
+
                     std::string type_str;
 
                     try {
