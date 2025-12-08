@@ -130,7 +130,7 @@ namespace ietf::sys::ntp::change {
                                 try {
                                     assoc_type = NTP::parseAssocFromString(child.asTerm().valueStr().data());
                                 }
-                                catch (NtpUnknownAssociationTypeException) {
+                                catch (const NtpUnknownAssociationTypeException&) {
                                     ntp.raiseError();
                                 }
                             }
@@ -207,7 +207,7 @@ namespace ietf::sys::ntp::change {
                     try {
                         assoc_type = NTP::parseAssocFromString(to_create["association-type"]);
                     }
-                    catch (NtpUnknownAssociationTypeException) {
+                    catch (const NtpUnknownAssociationTypeException&) {
                         ntp.raiseError();
                     }
                     std::string ntp_server = to_create["address"];
@@ -223,7 +223,7 @@ namespace ietf::sys::ntp::change {
                     try {
                         assoc_type = NTP::parseAssocFromString(to_delete["association-type"]);
                     }
-                    catch (NtpUnknownAssociationTypeException) {
+                    catch (const NtpUnknownAssociationTypeException&) {
                         ntp.raiseError();
                     }
                     std::string ntp_server = to_delete["address"];

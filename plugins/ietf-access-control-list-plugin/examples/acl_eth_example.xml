@@ -1,0 +1,37 @@
+<!--
+
+ telekom / sysrepo-plugins
+
+ This program is made available under the terms of the
+ BSD 3-Clause license which is available at
+ https://opensource.org/licenses/BSD-3-Clause
+
+ SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+ SPDX-FileContributor: Sartura d.d.
+
+ SPDX-License-Identifier: BSD-3-Clause
+
+-->
+
+<acls xmlns="urn:ietf:params:xml:ns:yang:ietf-access-control-list"
+xmlns:eth="urn:ietf:params:xml:ns:yang:ietf-ethertypes">
+    <acl>
+        <name>sample-eth-acl</name>
+        <type>eth-acl-type</type>
+        <aces>
+            <ace>
+                <name>rule1</name>
+                <matches>
+                    <eth>
+                        <destination-mac-address>11:22:33:44:55:66</destination-mac-address>
+                        <source-mac-address>00:0f:54:0c:11:04</source-mac-address>
+                        <ethertype>vlan</ethertype>
+                    </eth>
+                </matches>
+                <actions>
+                    <forwarding>accept</forwarding>
+                </actions>
+            </ace>
+        </aces>
+    </acl>
+</acls>

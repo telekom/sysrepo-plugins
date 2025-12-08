@@ -12,6 +12,7 @@
 //
 
 #include "oper.hpp"
+#include <sysrepo.h>
 
 namespace ieee::br {
 namespace sub::oper {

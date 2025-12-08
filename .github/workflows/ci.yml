@@ -15,14 +15,17 @@ name: sysrepo-plugins CI
 
 on:
   push:
-    branches: [ "main", "devel" ]
+    branches: &branches [ "main", "devel" ]
   pull_request:
-    branches: [ "main", "devel" ]
+    branches: *branches
 
 jobs:
   build:
     name: ${{matrix.config.name}}
     runs-on: ubuntu-latest
+    env:
+      PACKAGES: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libnftables-dev nlohmann-json3-dev"
+      COMMON_OPTIONS: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1"
     strategy:
       fail-fast: false
       matrix:
@@ -32,45 +35,31 @@ jobs:
             build-type: "Release",
             cc: "gcc",
             cxx: "g++",
-            options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libsdbus-c++-dev libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Release, clang",
             build-type: "Release",
             cc: "clang",
             cxx: "clang",
-            options: "-DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Debug, gcc",
             build-type: "Debug",
             cc: "gcc",
             cxx: "g++",
-            options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "Debug, clang",
             build-type: "Debug",
             cc: "clang",
             cxx: "clang",
-            options: "-DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
           }
           - {
             name: "ASAN and UBSAN",
             build-type: "Debug",
             cc: "clang",
             cxx: "clang",
-            options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -DENABLE_TESTS=OFF -DENABLE_VALGRIND_TESTS=OFF -DBUILD_SYSTEM_PLUGIN=ON -DSYSTEMD_IFINDEX=1",
-            packager: "sudo apt-get",
-            packages: "libcmocka-dev libsystemd-dev ntp ssh libnl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-genl-3-dev libsensors-dev autopoint autoconf automake libtool-bin gettext libncurses-dev dejagnu libnuma-dev libsystemd-dev",
+            options: "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -DCMAKE_CXX_FLAGS=-fsanitize=address,undefined",
           }
 
     steps:
@@ -81,10 +70,8 @@ jobs:
       - name: Deps-packages
         shell: bash
         run: |
-          ${{matrix.config.packager}} update
-          if ${{matrix.config.packages != ''}}
-            then ${{matrix.config.packager}} install ${{matrix.config.packages}}
-          fi
+          sudo apt-get update
+          sudo apt-get install ${{ env.PACKAGES }}
 
       # libproc2-dev (more precise 'procps >= v4.0.0') does not provide "prod/readproc.h"
       - name: Deps-procps
@@ -93,14 +80,14 @@ jobs:
           git clone --depth=1 --branch=v3.3.17 https://gitlab.com/procps-ng/procps
           cd procps
           ./autogen.sh
-          ./configure
+          ./configure --disable-nls
           make -j
           sudo make install
 
       - name: Deps-libyang
         shell: bash
         run: |
-          git clone --depth=1 --branch=devel https://github.com/cesnet/libyang
+          git clone --depth=1 https://github.com/cesnet/libyang
           cd libyang
           CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
@@ -120,7 +107,7 @@ jobs:
       - name: Deps-sysrepo
         shell: bash
         run: |
-          git clone --depth=1 --branch=devel https://github.com/sysrepo/sysrepo
+          git clone --depth=1 https://github.com/sysrepo/sysrepo
           cd sysrepo
           CC=${{matrix.config.cc}} cmake -B build -DBUILD_TESTING=OFF
           cmake --build build -j
@@ -134,16 +121,6 @@ jobs:
           cd sysrepo-cpp
           sed -i 's/ sysrepo<3 / /' CMakeLists.txt
           CC=${{matrix.config.cxx}} cmake -B build -DBUILD_TESTING=OFF
-          cmake --build build -j
-          sudo cmake --install build
-          sudo ldconfig
-
-      - name: Deps-srpc
-        shell: bash
-        run: |
-          git clone --depth=1 --recurse-submodules https://github.com/telekom/sysrepo-plugins-common
-          cd sysrepo-plugins-common
-          CC=${{matrix.config.cc}} cmake -B build
           cmake --build build -j
           sudo cmake --install build
           sudo ldconfig
@@ -182,7 +159,7 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}
         run: |
-          CC=${{matrix.config.cc}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build-type}} ${{matrix.config.options}}
+          CC=${{matrix.config.cc}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build-type}} ${{env.COMMON_OPTIONS}} ${{matrix.config.options}}
 
       - name: Build
         shell: bash
@@ -196,10 +173,7 @@ jobs:
         run: |
           sysrepoctl -i plugins/ietf-system-plugin/yang/iana-crypt-hash@2014-08-06.yang
           sysrepoctl -i plugins/ietf-system-plugin/yang/ietf-system@2014-08-06.yang
-          sysrepoctl -c ietf-system -e timezone-name
-          sysrepoctl -c ietf-system -e ntp
-          sysrepoctl -c ietf-system -e authentication
-          sysrepoctl -c ietf-system -e local-users
+          sysrepoctl -c ietf-system -e timezone-name -e ntp -e authentication -e local-users
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-interfaces@2018-02-20.yang
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/iana-if-type@2017-01-19.yang
           sysrepoctl -i plugins/ietf-interfaces-plugin/yang/ietf-ip@2018-02-22.yang
@@ -220,6 +194,7 @@ jobs:
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-ethertypes@2019-03-04.yang
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-packet-fields@2019-03-04.yang
           sysrepoctl -i plugins/ietf-access-control-list-plugin/yang/ietf-access-control-list@2019-03-04.yang
+          sysrepoctl -c ietf-access-control-list -e match-on-eth -e match-on-ipv4 -e match-on-ipv6 -e match-on-tcp -e match-on-udp -e match-on-icmp -e eth -e ipv4 -e ipv6
           sysrepoctl -i plugins/ietf-hardware-plugin/yang/iana-hardware.yang
           sysrepoctl -i plugins/ietf-hardware-plugin/yang/ietf-hardware.yang
           sysrepoctl -i plugins/ietf-hardware-plugin/yang/sensor-notifications-augment.yang
