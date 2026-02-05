@@ -334,7 +334,9 @@ std::string RouteRef::getDestinationString()
     nl_addr* addr = rtnl_route_get_dst(m_route.get());
 
     if (nl_addr_iszero(addr)) {
-        return (std::string("0.0.0.0/" + std::to_string(nl_addr_get_prefixlen(addr))));
+        int family = nl_addr_get_family(addr);
+        std::string zero_addr = (family == AF_INET6) ? "::" : "0.0.0.0";
+        return zero_addr + "/" + std::to_string(nl_addr_get_prefixlen(addr));
     }
 
     error = nl_addr2str(addr, buffer, sizeof(buffer));

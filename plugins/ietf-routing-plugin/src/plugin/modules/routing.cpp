@@ -92,6 +92,26 @@ std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks()
             .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv4/route/next-hop/next-hop-list/next-hop/outgoing-interface",
             .Callback = ietf::rt::sub::change::V4RouteNextHopNextHopListNextHopOutgoingInterfaceModuleChangeCb(m_changeContext),
         },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv6-unicast-routing:ipv6/route",
+            .Callback = ietf::rt::sub::change::V6RouteModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv6/route/next-hop/next-hop-list/next-hop",
+            .Callback = ietf::rt::sub::change::V6RouteNextHopNextHopListNextHopModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv6/route/next-hop/next-hop-list/next-hop/next-hop-address",
+            .Callback = ietf::rt::sub::change::V6RouteNextHopNextHopListNextHopNextHopAddressModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv6/route/next-hop/next-hop-list/next-hop/outgoing-interface",
+            .Callback = ietf::rt::sub::change::V6RouteNextHopNextHopListNextHopOutgoingInterfaceModuleChangeCb(m_changeContext),
+        },
 
     };
 }

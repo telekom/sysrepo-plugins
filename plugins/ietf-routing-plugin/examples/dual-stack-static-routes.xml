@@ -1,0 +1,99 @@
+<!--
+
+ telekom / sysrepo-plugins
+
+ This program is made available under the terms of the
+ BSD 3-Clause license which is available at
+ https://opensource.org/licenses/BSD-3-Clause
+
+ SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+ SPDX-FileContributor: Sartura d.d.
+
+ SPDX-License-Identifier: BSD-3-Clause
+
+-->
+
+<!--
+  Dual-stack static route example for testing IPv4/IPv6 RIB separation.
+
+  This configuration adds both IPv4 and IPv6 static routes including
+  default routes (0.0.0.0/0 and ::/0). The IPv6 default route triggers
+  the bug where getDestinationString() incorrectly returned "0.0.0.0/0"
+  for a zero IPv6 address, causing a crash when written to an
+  ietf-ipv6-unicast-routing:destination-prefix node.
+
+  Usage:
+    sysrepocfg --import=dual-stack-static-routes.xml -d running -m ietf-routing
+
+  Verify operational data (should not crash):
+    sysrepocfg -X -d operational -m ietf-routing
+-->
+
+<routing xmlns="urn:ietf:params:xml:ns:yang:ietf-routing">
+  <control-plane-protocols>
+    <control-plane-protocol>
+      <type>static</type>
+      <name>static</name>
+      <static-routes>
+        <!-- IPv4 routes -->
+        <ipv4 xmlns="urn:ietf:params:xml:ns:yang:ietf-ipv4-unicast-routing">
+          <!-- Default IPv4 route -->
+          <route>
+            <destination-prefix>0.0.0.0/0</destination-prefix>
+            <next-hop>
+              <next-hop-list>
+                <next-hop>
+                  <index>nh0</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>192.168.99.1</next-hop-address>
+                </next-hop>
+              </next-hop-list>
+            </next-hop>
+          </route>
+          <!-- Regular IPv4 route -->
+          <route>
+            <destination-prefix>10.10.10.0/24</destination-prefix>
+            <next-hop>
+              <next-hop-list>
+                <next-hop>
+                  <index>nh1</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>192.168.99.1</next-hop-address>
+                </next-hop>
+              </next-hop-list>
+            </next-hop>
+          </route>
+        </ipv4>
+        <!-- IPv6 routes -->
+        <ipv6 xmlns="urn:ietf:params:xml:ns:yang:ietf-ipv6-unicast-routing">
+          <!-- Default IPv6 route (this triggers the bug before the fix) -->
+          <route>
+            <destination-prefix>::/0</destination-prefix>
+            <next-hop>
+              <next-hop-list>
+                <next-hop>
+                  <index>nh0</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>fe80::1</next-hop-address>
+                </next-hop>
+              </next-hop-list>
+            </next-hop>
+          </route>
+          <!-- Regular IPv6 route -->
+          <route>
+            <destination-prefix>2001:db8::/32</destination-prefix>
+            <next-hop>
+              <next-hop-list>
+                <next-hop>
+                  <index>nh1</index>
+                  <outgoing-interface>enp0s3</outgoing-interface>
+                  <next-hop-address>fe80::1</next-hop-address>
+                </next-hop>
+              </next-hop-list>
+            </next-hop>
+          </route>
+        </ipv6>
+      </static-routes>
+    </control-plane-protocol>
+  </control-plane-protocols>
+</routing>
