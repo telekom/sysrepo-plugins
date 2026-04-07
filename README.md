@@ -136,7 +136,15 @@ Plugins will be built as standalone applications and also as `sysrepo-plugind` m
 
 ### Sysrepo/YANG requirements
 
-Each plugin requires the YANG modules from its `yang/` folder to be loaded into the Sysrepo datastore. This can be achieved, for example for the system plugin, by invoking the following commands:
+Each plugin requires the YANG modules from its `yang/` folder to be loaded into the Sysrepo datastore.
+
+To install **all** YANG modules and enable the required features for every plugin at once, run the provided helper script:
+```bash
+$ cd plugins
+$ ./install_yang_modules.sh
+```
+
+Alternatively, you can install them manually per plugin. For example for the system plugin, by invoking the following commands:
 ```bash
 $ sysrepoctl -i ./yang/iana-crypt-hash@2014-08-06.yang
 $ sysrepoctl -i ./yang/ietf-system@2014-08-06.yang

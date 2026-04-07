@@ -73,7 +73,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install ${{ env.PACKAGES }}
 
-      # libproc2-dev (more precise 'procps >= v4.0.0') does not provide "prod/readproc.h"
+      # libproc2-dev ('procps >= v4.0.0') does not provide "prod/readproc.h"
       - name: Deps-procps
         shell: bash
         run: |
