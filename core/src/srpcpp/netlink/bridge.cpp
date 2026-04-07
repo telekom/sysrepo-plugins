@@ -1092,9 +1092,9 @@ std::string BridgeRef::rawNumParser(std::vector<uint16_t> nums)
 
 // BridgeVid helper class
 
-BridgeVlanID::BridgeVlanID(uint16_t vid, uint16_t flags)
+BridgeVlanID::BridgeVlanID(uint16_t vid, uint16_t init_flags)
     : vlan_id(vid)
-    , flags(flags) {};
+    , flags(init_flags) {};
 
 bool BridgeVlanID::getUntaggedFlag()
 {
@@ -1117,12 +1117,12 @@ bool BridgeVlanID::operator<(const BridgeVlanID& other) const
     return this->vlan_id < other.vlan_id;
 };
 
-BridgeFDBEntry::BridgeFDBEntry(std::array<uint8_t, 6> mac, std::array<uint8_t, 6> slave_mac, uint16_t vid, int ifindex)
+BridgeFDBEntry::BridgeFDBEntry(std::array<uint8_t, 6> init_mac, std::array<uint8_t, 6> init_slave_mac, uint16_t init_vid, int init_ifindex)
 {
-    this->mac = mac;
-    this->vid = vid;
-    this->ifindex = ifindex;
-    this->slave_mac = slave_mac;
+    this->mac = init_mac;
+    this->vid = init_vid;
+    this->ifindex = init_ifindex;
+    this->slave_mac = init_slave_mac;
 
     // parse string mac on costruction
     std::ostringstream oss;

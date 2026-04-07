@@ -90,7 +90,7 @@ struct Callback {
         auto const& modules = session.getContext().modules();
         auto module = std::find_if(
             modules.begin(), modules.end(),
-            [moduleName](libyang::Module const& module) { return moduleName == module.name(); });
+            [moduleName](libyang::Module const& m) { return moduleName == m.name(); });
 
         try {
             if (module != std::end(modules) && module->featureEnabled("hardware-sensor")) {

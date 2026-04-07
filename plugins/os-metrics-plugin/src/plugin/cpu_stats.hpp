@@ -144,10 +144,10 @@ struct CpuStats : public CoreStats {
         while (std::string(line).find("cpu") != std::string::npos) {
             stream = std::istringstream(line);
             stream.ignore(5, ' ');  // ignore cpu keyword
-            std::vector<size_t> cpu_times;
-            for (size_t time; stream >> time; cpu_times.push_back(time))
+            std::vector<size_t> core_times;
+            for (size_t time; stream >> time; core_times.push_back(time))
                 ;
-            CpuStats coreStats(cpu_times);
+            CpuStats coreStats(core_times);
             mCoreTimes.emplace_back(coreStats);
             std::getline(proc_stat, line);
         }

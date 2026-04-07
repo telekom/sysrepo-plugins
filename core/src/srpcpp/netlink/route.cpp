@@ -281,8 +281,8 @@ void RouteRef::addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, c
         };
 
         // first we obtain and then delete the nexthops, since otherwise it messes in-loop deletion
-        for (rtnl_nexthop* nh : next_hops_to_remove) {
-            rtnl_route_remove_nexthop(current_route, nh);
+        for (rtnl_nexthop* nh_remove : next_hops_to_remove) {
+            rtnl_route_remove_nexthop(current_route, nh_remove);
         }
     }
 

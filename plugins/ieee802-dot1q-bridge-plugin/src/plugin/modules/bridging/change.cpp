@@ -763,9 +763,9 @@ namespace sub::change {
 
                     std::string keys;
 
-                    for (sysrepo::Change change : collection) {
-                        if (change.operation == sysrepo::ChangeOperation::Created || change.operation == sysrepo::ChangeOperation::Modified) {
-                            keys = change.node.path();
+                    for (sysrepo::Change change_collection : collection) {
+                        if (change_collection.operation == sysrepo::ChangeOperation::Created || change_collection.operation == sysrepo::ChangeOperation::Modified) {
+                            keys = change_collection.node.path();
                             break;
                         }
                     }
@@ -1510,12 +1510,12 @@ namespace sub::change {
                     // Deleted and Created vids node with previous values must be taken from the session changes.
                     std::string vids_data;
 
-                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+                    for (sysrepo::Change change_vids : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
 
-                        switch (change.operation) {
+                        switch (change_vids.operation) {
                         case sr::ChangeOperation::Created: {
                             // vids node
-                            vids_data = change.node.asTerm().valueStr().data();
+                            vids_data = change_vids.node.asTerm().valueStr().data();
                             break;
                         default:
                             break;
@@ -1564,12 +1564,12 @@ namespace sub::change {
                     // Deleted and Created vids node with previous values must be taken from the session changes.
                     std::string vids_data;
 
-                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+                    for (sysrepo::Change change_vids : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
 
-                        switch (change.operation) {
+                        switch (change_vids.operation) {
                         case sr::ChangeOperation::Deleted: {
                             // vids node
-                            vids_data = change.node.asTerm().valueStr().data();
+                            vids_data = change_vids.node.asTerm().valueStr().data();
                             break;
                         }
                         default:

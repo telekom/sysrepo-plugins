@@ -50,12 +50,12 @@ namespace ietf::sys::dns {
         try {
             this->Address = std::make_unique<ip::Ipv4Address>(address);
         }
-        catch (const std::runtime_error& err) {
+        catch (const std::runtime_error&) {
             // unable to set ipv4 - ipv6 must pass, if not - throw exception
             try {
                 this->Address = std::make_unique<ip::Ipv6Address>(address);
             }
-            catch (const std::runtime_error& err) {
+            catch (const std::runtime_error&) {
                 // Note: should not ever be possible due to YANG regex for an IP address
                 throw std::runtime_error("Invalid IP address received");
             }

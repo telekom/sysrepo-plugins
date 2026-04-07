@@ -57,8 +57,8 @@ static bool setXpath(sysrepo::Session& session,
                                                                   std::string_view moduleName) {
     auto const& modules = session.getContext().modules();
     auto module =
-        std::find_if(modules.begin(), modules.end(), [moduleName](libyang::Module const& module) {
-            return moduleName == module.name();
+        std::find_if(modules.begin(), modules.end(), [moduleName](libyang::Module const& m) {
+            return moduleName == m.name();
         });
     if (module == std::end(modules)) {
         return std::nullopt;
