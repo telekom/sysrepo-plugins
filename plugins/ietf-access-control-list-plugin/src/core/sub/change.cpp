@@ -14,9 +14,9 @@
 #include "change.hpp"
 #include "sysrepo.h"
 #include <iostream>
+#include "core/common.hpp"
 #include "core/nftables.hpp"
 #include "core/nft_helper.hpp"
-#include <list>
 
 namespace ietf::acl {
 namespace sub::change {

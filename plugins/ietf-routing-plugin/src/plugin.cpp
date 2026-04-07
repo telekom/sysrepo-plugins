@@ -17,8 +17,6 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
 
-#include <srpcpp.hpp>
-
 #include "plugin/modules/routing.hpp"
 
 #include <sysrepo.h>

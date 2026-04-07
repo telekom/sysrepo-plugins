@@ -12,13 +12,10 @@
 //
 
 #include "plugin.hpp"
-#include "plugin/common.hpp"
 #include "plugin/context.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
-
-#include <srpcpp.hpp>
 
 #ifdef SYSTEM_MODULE
 #include "plugin/modules/system.hpp"

@@ -18,7 +18,6 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/Subscription.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
-#include <srpcpp.hpp>
 
 #include "modules/acl.hpp"
 #include "core/nftables.hpp"

@@ -14,7 +14,6 @@
 #include "plugin.hpp"
 #include "plugin/callback.hpp"
 
-#include <stdio.h>
 #include <sysrepo-cpp/Connection.hpp>
 #include <sysrepo-cpp/Subscription.hpp>
 
