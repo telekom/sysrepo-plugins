@@ -49,7 +49,7 @@ struct Callback {
                 "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-15min-load",
                 std::format("{:.2f}", loadavg[2]));
         } else {
-            logMessage(SR_LL_ERR, "getloadavg call failed");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "getloadavg call failed");
         }
         return ErrorCode::Ok;
     }
@@ -114,7 +114,7 @@ struct Callback {
             MemoryMonitoring::getInstance().populateConfigData(session, moduleName);
             MemoryMonitoring::getInstance().startThread();
         } else {
-            logMessage(SR_LL_WRN, "Feature not enabled: usage-notifications");
+            SRPLG_LOG_WRN(PLUGIN_NAME, "Feature not enabled: usage-notifications");
         }
         return ErrorCode::Ok;
     }
@@ -133,7 +133,7 @@ struct Callback {
             FilesystemMonitoring::getInstance().populateConfigData(session, moduleName);
             FilesystemMonitoring::getInstance().startThreads();
         } else {
-            logMessage(SR_LL_WRN, "Feature not enabled: usage-notifications");
+            SRPLG_LOG_WRN(PLUGIN_NAME, "Feature not enabled: usage-notifications");
         }
         return ErrorCode::Ok;
     }

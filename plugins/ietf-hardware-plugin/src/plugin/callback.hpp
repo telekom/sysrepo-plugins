@@ -42,7 +42,7 @@ struct Callback {
         uint32_t /* request_id */)
     {
         printCurrentConfig(session, moduleName);
-        logMessage(SR_LL_DBG, "Processing received configuration.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Processing received configuration.");
         HardwareSensors::getInstance().notifyAndJoin();
         ComponentData::populateConfigData(session, moduleName);
         HardwareSensors::getInstance().startThreads();
@@ -60,10 +60,10 @@ struct Callback {
 
         int rc = system("/usr/bin/lshw -json > " COMPONENTS_LOCATION);
         if (rc == -1) {
-            logMessage(SR_LL_ERR, "lshw command failed");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "lshw command failed");
             return ErrorCode::CallbackFailed;
         }
-        logMessage(SR_LL_DBG, "lshw command returned:" + std::to_string(rc));
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("lshw command returned:" + std::to_string(rc)).c_str());
         std::string const set_xpath("/ietf-hardware:hardware");
 
         // +--ro last-change?   yang:date-and-time
@@ -76,14 +76,14 @@ struct Callback {
 
         std::ifstream ifs(COMPONENTS_LOCATION, std::ifstream::in);
         if (ifs.fail()) {
-            logMessage(SR_LL_ERR, "Can't open: " COMPONENTS_LOCATION);
+            SRPLG_LOG_ERR(PLUGIN_NAME, "Can't open: " COMPONENTS_LOCATION);
             return ErrorCode::CallbackFailed;
         }
         IStreamWrapper isw(ifs);
         Document doc;
         doc.ParseStream(isw);
         if (!doc.IsObject() && !doc.IsArray()) {
-            logMessage(SR_LL_ERR, "lshw json root-node is not an object or array");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "lshw json root-node is not an object or array");
             return ErrorCode::CallbackFailed;
         }
 
@@ -100,7 +100,7 @@ struct Callback {
                 HardwareSensors::getInstance().parseSensorData(hwComponents);
             }
         } catch (std::exception const& e) {
-            logMessage(SR_LL_WRN, "hardware-sensors nodes failure: " + std::string(e.what()));
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", ("hardware-sensors nodes failure: " + std::string(e.what())).c_str());
         }
 
         for (auto const& c : hwComponents) {
@@ -109,7 +109,7 @@ struct Callback {
         }
 
         if (!parent) {
-            logMessage(SR_LL_ERR, "No nodes were set");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No nodes were set");
             return ErrorCode::CallbackFailed;
         }
         return ErrorCode::Ok;
@@ -262,9 +262,9 @@ struct Callback {
                 values.value()
                     .printStr(libyang::DataFormat::JSON, libyang::PrintFlags::Siblings)
                     .value());
-            logMessage(SR_LL_DBG, toPrint);
+            SRPLG_LOG_DBG(PLUGIN_NAME, "%s", toPrint.c_str());
         } catch (const std::exception& e) {
-            logMessage(SR_LL_WRN, e.what());
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", e.what());
         }
     }
 

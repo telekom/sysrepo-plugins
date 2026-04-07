@@ -90,10 +90,10 @@ struct FilesystemStats {
         int rc = system("/bin/df -T > " FILESYSTEM_STATS_LOCATION
                         "&& /bin/df -i > " FILESYSTEM_STATS_LOCATION2);
         if (rc == -1) {
-            logMessage(SR_LL_ERR, "df command failed");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "df command failed");
             return;
         }
-        logMessage(SR_LL_DBG, "df command returned:" + std::to_string(rc));
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("df command returned:" + std::to_string(rc)).c_str());
         std::string token, inodesToken;
         std::ifstream file(FILESYSTEM_STATS_LOCATION), fileinodes(FILESYSTEM_STATS_LOCATION2);
         file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -115,7 +115,7 @@ struct FilesystemStats {
                 inodesTotal = buf.f_files;
                 inodesUsed = inodesTotal - buf.f_ffree;
             } else {
-                logMessage(SR_LL_ERR, "statvfs call failed");
+                SRPLG_LOG_ERR(PLUGIN_NAME, "statvfs call failed");
             }
             if (inodesTotal == 0) {
                 fs.inodeUsed = 0;
@@ -159,7 +159,7 @@ struct FilesystemStats {
         std::string_view moduleName)
     {
         std::lock_guard lk(mMtx);
-        logMessage(SR_LL_DBG, "Setting xpath values for filesystems statistics");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for filesystems statistics");
         for (auto const& v : fsMap) {
             v.second.setXpathValues(session, parent, moduleName);
         }

@@ -108,7 +108,7 @@ struct Sensor : public ComponentData {
         bool /*setPhysicalID = false*/) const override
     {
         std::string sensorPath = mainXpath + "/component[name='" + name + "']";
-        logMessage(SR_LL_DBG, "Setting values for component: " + name);
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Setting values for component: " + name).c_str());
 
         setXpath(session, parent, sensorPath + "/class", classType);
         setXpath(session, parent, sensorPath + "/sensor-data/value", std::to_string(value));
@@ -161,13 +161,13 @@ struct Sensor : public ComponentData {
         if (subf->flags & SENSORS_MODE_R) {
             int rc = sensors_get_value(cn, subf->number, &val);
             if (rc < 0) {
-                logMessage(SR_LL_WRN, std::string("Couldn't get sensor value. Error code: ") + std::to_string(rc));
+                SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("Couldn't get sensor value. Error code: ") + std::to_string(rc)).c_str());
             } else {
-                logMessage(SR_LL_DBG, std::string("Got sensor: ") + cn->prefix + "/" + feature->name + " value " + std::to_string(val));
+                SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Got sensor: ") + cn->prefix + "/" + feature->name + " value " + std::to_string(val)).c_str());
                 result = val * std::pow(10, precision);
             }
         } else {
-            logMessage(SR_LL_WRN, std::string("Couldn't read sensor: ") + cn->prefix + "/" + feature->name + "/" + subf->name);
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("Couldn't read sensor: ") + cn->prefix + "/" + feature->name + "/" + subf->name).c_str());
         }
 
         return result;

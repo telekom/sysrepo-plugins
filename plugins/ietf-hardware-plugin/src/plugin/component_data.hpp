@@ -69,7 +69,7 @@ struct ComponentData {
         bool setPhysicalID = false) const
     {
         std::string componentPath(mainXpath + "/component[name='" + name + "']");
-        logMessage(SR_LL_DBG, "Setting values for component: " + name);
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Setting values for component: " + name).c_str());
         // +--rw name              string
         // +--rw class             identityref
         // +--ro physical-index?   int32 {entity-mib}?
@@ -261,7 +261,7 @@ struct ComponentData {
                 physicalID = std::nullopt;
             }
         } catch (std::exception const& e) {
-            logMessage(SR_LL_WRN, std::string("Couldn't convert physical-id: ") + e.what());
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("Couldn't convert physical-id: ") + e.what()).c_str());
         }
     }
 
@@ -270,7 +270,7 @@ struct ComponentData {
         std::string const data_xpath(std::string("/") + std::string(module_name) + ":hardware");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            logMessage(SR_LL_ERR, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for population.");
             return;
         }
         std::shared_ptr<ComponentData> component;

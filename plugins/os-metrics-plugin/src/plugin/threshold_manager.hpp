@@ -122,7 +122,7 @@ struct MemoryMonitoring : public UsageMonitoring {
         if (mThread.joinable()) {
             mThread.join();
         }
-        logMessage(SR_LL_DBG, "Thread for memory thresholds started.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Thread for memory thresholds started.");
         mThread = std::thread(&MemoryMonitoring::runFunc, this);
     }
 
@@ -132,11 +132,11 @@ struct MemoryMonitoring : public UsageMonitoring {
         while (mCV.wait_for(lk, std::chrono::seconds(mPollInterval)) == std::cv_status::timeout) {
             long double value = MemoryStats::getInstance().getUsage();
             for (auto const& [name, thrValue] : mMemoryThesholds) {
-                logMessage(SR_LL_DBG, std::string("Trigger notification for: ") + name + ": " + std::to_string(value));
+                SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Trigger notification for: ") + name + ": " + std::to_string(value)).c_str());
                 checkAndTriggerNotification(name, thrValue, value, "memory");
             }
         }
-        logMessage(SR_LL_DBG, "Thread for memory thresholds ended.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Thread for memory thresholds ended.");
     }
 
     void populateConfigData(sysrepo::Session& session, std::string_view moduleName)
@@ -144,7 +144,7 @@ struct MemoryMonitoring : public UsageMonitoring {
         std::string const data_xpath(std::string("/") + std::string(moduleName) + ":system-metrics/memory");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            logMessage(SR_LL_ERR, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for population.");
             return;
         }
         std::shared_ptr<std::pair<std::string, Threshold>> threshold;
@@ -233,7 +233,7 @@ struct FilesystemMonitoring : public UsageMonitoring {
                 numThreadsStopped++;
             }
         }
-        logMessage(SR_LL_DBG, std::to_string(numThreadsStopped) + " filesystem threads stopped, out of: " + std::to_string(mFsThreads.size()) + " started.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::to_string(numThreadsStopped) + " filesystem threads stopped, out of: " + std::to_string(mFsThreads.size()) + " started.").c_str());
         mFsThreads.clear();
     }
 
@@ -243,7 +243,7 @@ struct FilesystemMonitoring : public UsageMonitoring {
             return;
         }
         for (auto const& [name, _] : mFsThresholds) {
-            logMessage(SR_LL_DBG, "Starting thread for filesystem: " + name + ".");
+            SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Starting thread for filesystem: " + name + ".").c_str());
             mFsThreads[name] = std::thread(&FilesystemMonitoring::runFunc, this, name);
         }
     }
@@ -256,17 +256,17 @@ struct FilesystemMonitoring : public UsageMonitoring {
             while (mCV.wait_for(lk, std::chrono::seconds(std::get<0>(itr->second))) == std::cv_status::timeout) {
                 std::optional<long double> usageValue = FilesystemStats::getInstance().getUsage(name);
                 if (!usageValue) {
-                    logMessage(SR_LL_WRN, std::string("No filesystem found: ") + name);
+                    SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("No filesystem found: ") + name).c_str());
                     break;
                 }
                 for (auto const& [thrName, thrValue] : std::get<1>(itr->second)) {
-                    logMessage(SR_LL_DBG, std::string("Trigger notification for: ") + thrName + ": " + std::to_string(usageValue.value()));
+                    SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Trigger notification for: ") + thrName + ": " + std::to_string(usageValue.value())).c_str());
                     checkAndTriggerNotification(thrName, thrValue, usageValue.value(), "filesystem",
                         name);
                 }
             }
         }
-        logMessage(SR_LL_DBG, "Thread for filesystem: " + name + " ended.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Thread for filesystem: " + name + " ended.").c_str());
     }
 
     void populateConfigData(sysrepo::Session& session, std::string_view moduleName)
@@ -274,7 +274,7 @@ struct FilesystemMonitoring : public UsageMonitoring {
         std::string const data_xpath(std::string("/") + std::string(moduleName) + ":system-metrics/filesystems");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            logMessage(SR_LL_ERR, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for population.");
             return;
         }
 

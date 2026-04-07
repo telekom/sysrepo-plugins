@@ -40,7 +40,7 @@ struct MemoryStats {
         std::string_view moduleName)
     {
         std::lock_guard lk(mMtx);
-        logMessage(SR_LL_DBG, "Setting xpath values for memory statistics");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for memory statistics");
         std::string memoryPath("/" + std::string(moduleName) + ":system-metrics/memory/statistics/");
         setXpath(session, parent, memoryPath + "free", std::to_string(mFree / 1024ULL));
         setXpath(session, parent, memoryPath + "swap-free-mb", std::to_string(mSwapFree / 1024ULL));

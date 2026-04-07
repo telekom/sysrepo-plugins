@@ -61,7 +61,7 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/)
             processes_state_spath);
         theModel.sub = std::make_shared<sysrepo::Subscription>(std::move(sub));
     } catch (std::exception const& e) {
-        logMessage(SR_LL_ERR, std::string("sr_plugin_init_cb: ") + e.what());
+        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", (std::string("sr_plugin_init_cb: ") + e.what()).c_str());
         theModel.sub.reset();
         return SR_ERR_OPERATION_FAILED;
     }
@@ -72,5 +72,5 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/)
 void sr_plugin_cleanup_cb(sr_session_ctx_t* /*session*/, void* /*private_data*/)
 {
     theModel.sub.reset();
-    logMessage(SR_LL_DBG, "plugin cleanup finished.");
+    SRPLG_LOG_DBG(PLUGIN_NAME, "plugin cleanup finished.");
 }

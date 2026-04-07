@@ -137,7 +137,7 @@ struct CpuStats : public CoreStats {
         std::optional<libyang::DataNode>& parent,
         std::string_view moduleName)
     {
-        logMessage(SR_LL_DBG, "Setting xpath values for cpu statistics");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for cpu statistics");
         CoreStats::setXpathValues(session, parent, moduleName, std::nullopt);
         for (size_t i = 0; i < mCoreTimes.size(); i++) {
             mCoreTimes[i].setXpathValues(session, parent, moduleName, i);

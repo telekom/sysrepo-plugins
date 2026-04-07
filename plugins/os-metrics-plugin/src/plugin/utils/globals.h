@@ -18,24 +18,7 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo.h>
 
-static void logMessage(sr_log_level_t log, std::string const& msg)
-{
-    static std::string const _("OS-Metrics");
-    switch (log) {
-    case SR_LL_ERR:
-        SRPLG_LOG_ERR(_.c_str(), "%s", msg.c_str());
-        break;
-    case SR_LL_WRN:
-        SRPLG_LOG_WRN(_.c_str(), "%s", msg.c_str());
-        break;
-    case SR_LL_INF:
-        SRPLG_LOG_INF(_.c_str(), "%s", msg.c_str());
-        break;
-    case SR_LL_DBG:
-    default:
-        SRPLG_LOG_DBG(_.c_str(), "%s", msg.c_str());
-    }
-}
+#define PLUGIN_NAME "OS-Metrics"
 
 static bool setXpath(sysrepo::Session& session,
     std::optional<libyang::DataNode>& parent,
@@ -49,8 +32,8 @@ static bool setXpath(sysrepo::Session& session,
             parent = session.getContext().newPath(node_xpath, value);
         }
     } catch (std::runtime_error const& e) {
-        logMessage(SR_LL_WRN,
-            "At path " + node_xpath + ", value " + value + " " + ", error: " + e.what());
+        SRPLG_LOG_WRN(PLUGIN_NAME, "%s",
+            ("At path " + node_xpath + ", value " + value + " " + ", error: " + e.what()).c_str());
         return false;
     }
     return true;
@@ -83,9 +66,9 @@ static void printCurrentConfig(sysrepo::Session& session,
             values.value()
                 .printStr(libyang::DataFormat::JSON, libyang::PrintFlags::Siblings)
                 .value());
-        logMessage(SR_LL_DBG, toPrint);
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", toPrint.c_str());
     } catch (const std::exception& e) {
-        logMessage(SR_LL_WRN, e.what());
+        SRPLG_LOG_WRN(PLUGIN_NAME, "%s", e.what());
     }
 }
 

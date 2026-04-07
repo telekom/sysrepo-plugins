@@ -50,7 +50,7 @@ private:
         std::shared_ptr<SensorThreshold> sensThr,
         int32_t sensorValue)
     {
-        logMessage(SR_LL_INF, "Sensor threshold triggered for: " + componentName + " value " + std::to_string(sensorValue) + ". Sending Notification...");
+        SRPLG_LOG_INF(PLUGIN_NAME, "%s", ("Sensor threshold triggered for: " + componentName + " value " + std::to_string(sensorValue) + ". Sending Notification...").c_str());
 
         std::string notifPath("/ietf-hardware:hardware/component[name='");
         notifPath += componentName + "']/sensor-notifications-augment:sensor-threshold-crossed";
@@ -87,11 +87,11 @@ private:
                 try {
                     checkAndTriggerNotification(component->name, sensThr, value.value());
                 } catch (std::exception& ex) {
-                    logMessage(SR_LL_WRN, "Sending notification failed: " + std::string(ex.what()));
+                    SRPLG_LOG_WRN(PLUGIN_NAME, "%s", ("Sending notification failed: " + std::string(ex.what())).c_str());
                 }
             }
         }
-        logMessage(SR_LL_DBG, "Thread for component: " + component->name + " ended.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Thread for component: " + component->name + " ended.").c_str());
     }
 
 public:
@@ -124,7 +124,7 @@ public:
                 numThreadsStopped++;
             }
         }
-        logMessage(SR_LL_DBG, std::to_string(numThreadsStopped) + " threads stopped, out of: " + std::to_string(mThreads.size()) + " started.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::to_string(numThreadsStopped) + " threads stopped, out of: " + std::to_string(mThreads.size()) + " started.").c_str());
         mThreads.clear();
     }
 
@@ -132,7 +132,7 @@ public:
     {
         for (auto const& configData : ComponentData::hwConfigData) {
             if (configData && !configData->sensorThresholds.empty()) {
-                logMessage(SR_LL_DBG, "Starting thread for component: " + configData->name + ".");
+                SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Starting thread for component: " + configData->name + ".").c_str());
                 mThreads[configData->name] = std::thread(&HardwareSensors::runFunc, this, configData);
             }
         }
