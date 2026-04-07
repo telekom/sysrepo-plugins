@@ -38,17 +38,14 @@ struct Callback {
         double loadavg[3];
         if (getloadavg(loadavg, 3) != -1) {
             setXpath(session, parent,
-                     "/" + std::string(moduleName) +
-                         ":system-metrics/cpu-statistics/average-load/avg-1min-load",
-                     std::to_string(loadavg[0]));
+                "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-1min-load",
+                std::format("{:.2f}", loadavg[0]));
             setXpath(session, parent,
-                     "/" + std::string(moduleName) +
-                         ":system-metrics/cpu-statistics/average-load/avg-5min-load",
-                     std::to_string(loadavg[1]));
+                "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-5min-load",
+                std::format("{:.2f}", loadavg[1]));
             setXpath(session, parent,
-                     "/" + std::string(moduleName) +
-                         ":system-metrics/cpu-statistics/average-load/avg-15min-load",
-                     std::to_string(loadavg[2]));
+                "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-15min-load",
+                std::format("{:.2f}", loadavg[2]));
         } else {
             logMessage(SR_LL_ERR, "getloadavg call failed");
         }

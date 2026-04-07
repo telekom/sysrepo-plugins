@@ -68,7 +68,7 @@ More information about the `os-metrics` YANG module can be found in
 
 ## Development
 
-Besides the usual C++ development environment, the following additional dependencies are required to build all the plugins:
+A C++20 compatible compiler is required. Besides the usual C++ development environment, the following additional dependencies are required to build all the plugins:
 
 * [libyang](https://github.com/CESNET/libyang)
 * [libyang-cpp](https://github.com/CESNET/libyang-cpp)
