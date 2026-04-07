@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 #
 # SPDX-License-Identifier: CC0-1.0    
 
@@ -14,7 +14,7 @@ path = [
     "**/robotidy.toml"
 ]
 precedence = "closest"
-SPDX-FileCopyrightText = "2025 Deutsche Telekom AG"
+SPDX-FileCopyrightText = "2026 Deutsche Telekom AG"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
@@ -27,7 +27,7 @@ path = [
     "plugins/ietf-interfaces-plugin/tests/integration/robot-ietf-routing/**/*.robot",
 ]
 precedence = "closest"
-SPDX-FileCopyrightText = "2025 Deutsche Telekom AG"
+SPDX-FileCopyrightText = "2026 Deutsche Telekom AG"
 SPDX-License-Identifier = "BSD-3-Clause"
 
 [[annotations]]
