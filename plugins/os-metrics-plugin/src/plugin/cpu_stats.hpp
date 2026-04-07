@@ -26,22 +26,32 @@ namespace metrics {
 struct CoreStats {
 
     CoreStats()
-        : mUser(0), mNice(0), mSystem(0), mIdle(0), mIowait(0), mIrq(0), mSoftirq(0), mStolen(0),
-          mTotal(1){};
+        : mUser(0)
+        , mNice(0)
+        , mSystem(0)
+        , mIdle(0)
+        , mIowait(0)
+        , mIrq(0)
+        , mSoftirq(0)
+        , mStolen(0)
+        , mTotal(1) { };
 
-    CoreStats(std::vector<size_t> const& cpu_times) {
+    CoreStats(std::vector<size_t> const& cpu_times)
+    {
         populateValues(cpu_times);
     }
 
-    void printValues() const {
+    void printValues() const
+    {
         std::cout << mUser << " " << mUser << " " << mSystem << " " << mIdle << " " << mIowait
                   << " " << mIrq << " " << mSoftirq << " " << mStolen << " " << mTotal << std::endl;
     }
 
     void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName,
-                        std::optional<size_t> index) {
+        std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName,
+        std::optional<size_t> index)
+    {
         std::string basePath("/" + std::string(moduleName) + ":system-metrics/cpu-statistics");
         std::string cpuPath;
         if (index) {
@@ -81,7 +91,8 @@ struct CoreStats {
         setXpath(session, parent, basePath + cpuPath + "/stolen", stream.str());
     }
 
-    void populateValues(std::vector<size_t> const& cpu_times) {
+    void populateValues(std::vector<size_t> const& cpu_times)
+    {
         mUser = cpu_times[0];
         mNice = cpu_times[1];
         mSystem = cpu_times[2];
@@ -110,9 +121,11 @@ struct CpuStats : public CoreStats {
 
     CpuStats() = default;
 
-    CpuStats(std::vector<size_t> const& cpu_times) : CoreStats(cpu_times){};
+    CpuStats(std::vector<size_t> const& cpu_times)
+        : CoreStats(cpu_times) { };
 
-    void printValues() const {
+    void printValues() const
+    {
         CoreStats::printValues();
         for (auto const& c : mCoreTimes) {
             c.printValues();
@@ -120,8 +133,9 @@ struct CpuStats : public CoreStats {
     }
 
     void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName) {
+        std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName)
+    {
         logMessage(SR_LL_DBG, "Setting xpath values for cpu statistics");
         CoreStats::setXpathValues(session, parent, moduleName, std::nullopt);
         for (size_t i = 0; i < mCoreTimes.size(); i++) {
@@ -129,13 +143,14 @@ struct CpuStats : public CoreStats {
         }
     }
 
-    void readCpuTimes() {
+    void readCpuTimes()
+    {
         std::ifstream proc_stat("/proc/stat");
         std::string line;
         std::vector<size_t> cpu_times;
         std::getline(proc_stat, line);
         std::istringstream stream(line);
-        stream.ignore(5, ' ');  // ignore cpu keyword
+        stream.ignore(5, ' '); // ignore cpu keyword
         for (size_t time; stream >> time; cpu_times.push_back(time))
             ;
         CoreStats::populateValues(cpu_times);
@@ -143,7 +158,7 @@ struct CpuStats : public CoreStats {
         std::getline(proc_stat, line);
         while (std::string(line).find("cpu") != std::string::npos) {
             stream = std::istringstream(line);
-            stream.ignore(5, ' ');  // ignore cpu keyword
+            stream.ignore(5, ' '); // ignore cpu keyword
             std::vector<size_t> core_times;
             for (size_t time; stream >> time; core_times.push_back(time))
                 ;
@@ -156,6 +171,6 @@ struct CpuStats : public CoreStats {
     std::vector<CoreStats> mCoreTimes;
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // CPU_STATS_H
+#endif // CPU_STATS_H

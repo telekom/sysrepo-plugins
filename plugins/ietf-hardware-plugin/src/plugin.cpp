@@ -27,7 +27,8 @@ static HardwareModel theModel;
 
 std::string const HardwareModel::moduleName = "ietf-hardware";
 
-int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/) {
+int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/)
+{
     sysrepo::Connection conn;
     sysrepo::Session ses = conn.sessionStart();
     std::string const oper_xpath("/" + HardwareModel::moduleName + ":" + "hardware");
@@ -37,7 +38,7 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/) {
             HardwareModel::moduleName, &hardware::Callback::configurationCallback, std::nullopt, 0,
             sysrepo::SubscribeOptions::Enabled | sysrepo::SubscribeOptions::DoneOnly);
         sub.onOperGet(HardwareModel::moduleName, &hardware::Callback::operationalCallback,
-                      oper_xpath);
+            oper_xpath);
         theModel.sub = std::make_shared<sysrepo::Subscription>(std::move(sub));
     } catch (std::exception const& e) {
         logMessage(SR_LL_ERR, std::string("sr_plugin_init_cb: ") + e.what());
@@ -48,7 +49,8 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/) {
     return SR_ERR_OK;
 }
 
-void sr_plugin_cleanup_cb(sr_session_ctx_t* /*session*/, void* /*private_data*/) {
+void sr_plugin_cleanup_cb(sr_session_ctx_t* /*session*/, void* /*private_data*/)
+{
     theModel.sub.reset();
     logMessage(SR_LL_DBG, "plugin cleanup finished.");
 }

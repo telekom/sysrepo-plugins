@@ -30,7 +30,7 @@ public:
     /**
      * Aclentication module constructor. Allocates each context.
      */
-    AclModule(ietf::acl::PluginContext &ctx);
+    AclModule(ietf::acl::PluginContext& ctx);
 
     /**
      * Return the operational context from the module.

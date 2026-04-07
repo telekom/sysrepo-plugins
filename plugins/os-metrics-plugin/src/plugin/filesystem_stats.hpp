@@ -24,7 +24,8 @@ namespace metrics {
 
 struct Filesystem {
 
-    void printValues() const {
+    void printValues() const
+    {
         std::cout << "name: " << name << std::endl;
         std::cout << "mountPoint: " << mountPoint << std::endl;
         std::cout << "type: " << type << std::endl;
@@ -37,11 +38,10 @@ struct Filesystem {
     }
 
     void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName) const {
-        std::string filesystemPath("/" + std::string(moduleName) +
-                                   ":system-metrics/filesystems/filesystem[mount-point='" +
-                                   mountPoint + "']/statistics/");
+        std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName) const
+    {
+        std::string filesystemPath("/" + std::string(moduleName) + ":system-metrics/filesystems/filesystem[mount-point='" + mountPoint + "']/statistics/");
         setXpath(session, parent, filesystemPath + "name", name);
         setXpath(session, parent, filesystemPath + "type", type);
         setXpath(session, parent, filesystemPath + "total-blocks", std::to_string(totalBlocks));
@@ -67,14 +67,15 @@ struct Filesystem {
     uint64_t totalBlocks = 0;
     uint64_t usedBlocks = 0;
     uint64_t availableBlocks = 0;
-    uint64_t blocksize = 1;  // KB
+    uint64_t blocksize = 1; // KB
     long double inodeUsed = 0;
     long double spaceUsed = 0;
 };
 
 struct FilesystemStats {
 
-    static FilesystemStats& getInstance() {
+    static FilesystemStats& getInstance()
+    {
         static FilesystemStats instance;
         return instance;
     }
@@ -82,7 +83,8 @@ struct FilesystemStats {
     FilesystemStats(FilesystemStats const&) = delete;
     void operator=(FilesystemStats const&) = delete;
 
-    void readFilesystemStats() {
+    void readFilesystemStats()
+    {
         std::lock_guard lk(mMtx);
         int rc = system("/bin/df -T > " FILESYSTEM_STATS_LOCATION
                         "&& /bin/df -i > " FILESYSTEM_STATS_LOCATION2);
@@ -100,13 +102,12 @@ struct FilesystemStats {
             uint64_t inodesTotal;
             uint64_t inodesUsed;
             fs.name = token;
-            file >> fs.type >> fs.totalBlocks >> fs.usedBlocks >> fs.availableBlocks >> token >>
-                fs.mountPoint;
+            file >> fs.type >> fs.totalBlocks >> fs.usedBlocks >> fs.availableBlocks >> token >> fs.mountPoint;
             fileinodes >> token >> inodesTotal >> inodesUsed;
 
             struct statvfs buf;
             if (statvfs(fs.mountPoint.c_str(), &buf) == 0) {
-                fs.blocksize = buf.f_bsize / 1024;  // KB
+                fs.blocksize = buf.f_bsize / 1024; // KB
                 fs.totalBlocks = buf.f_blocks;
                 fs.availableBlocks = buf.f_bfree;
                 fs.usedBlocks = fs.totalBlocks - fs.availableBlocks;
@@ -132,7 +133,8 @@ struct FilesystemStats {
         }
     }
 
-    std::optional<long double> getUsage(std::string mountPoint) {
+    std::optional<long double> getUsage(std::string mountPoint)
+    {
         readFilesystemStats();
         std::lock_guard lk(mMtx);
         std::unordered_map<std::string, Filesystem>::iterator itr;
@@ -143,7 +145,8 @@ struct FilesystemStats {
         }
     }
 
-    void printValues() const {
+    void printValues() const
+    {
         for (auto const& v : fsMap) {
             v.second.printValues();
             std::cout << std::endl;
@@ -151,8 +154,9 @@ struct FilesystemStats {
     }
 
     void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName) {
+        std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName)
+    {
         std::lock_guard lk(mMtx);
         logMessage(SR_LL_DBG, "Setting xpath values for filesystems statistics");
         for (auto const& v : fsMap) {
@@ -166,6 +170,6 @@ private:
     std::unordered_map<std::string, Filesystem> fsMap;
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // FILESYSTEM_STATS_H
+#endif // FILESYSTEM_STATS_H

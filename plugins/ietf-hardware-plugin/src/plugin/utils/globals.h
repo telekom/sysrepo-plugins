@@ -15,15 +15,17 @@
 #include <sysrepo.h>
 
 #define COMPONENTS_LOCATION "/tmp/hardware_components.json"
-#define DEFAULT_POLL_INTERVAL 60  // seconds
+#define DEFAULT_POLL_INTERVAL 60 // seconds
 
 struct SensorsInitFail : public std::exception {
-    const char* what() const throw() override {
+    const char* what() const throw() override
+    {
         return "sensor_init() failure";
     }
 };
 
-static void logMessage(sr_log_level_t log, std::string const& msg) {
+static void logMessage(sr_log_level_t log, std::string const& msg)
+{
     std::string const _("IETF-Hardware");
     switch (log) {
     case SR_LL_ERR:
@@ -42,9 +44,10 @@ static void logMessage(sr_log_level_t log, std::string const& msg) {
 }
 
 static bool setXpath(sysrepo::Session& session,
-                     std::optional<libyang::DataNode>& parent,
-                     std::string const& node_xpath,
-                     std::string const& value) {
+    std::optional<libyang::DataNode>& parent,
+    std::string const& node_xpath,
+    std::string const& value)
+{
     try {
         if (parent) {
             parent.value().newPath(node_xpath, value);
@@ -53,10 +56,10 @@ static bool setXpath(sysrepo::Session& session,
         }
     } catch (std::runtime_error const& e) {
         logMessage(SR_LL_WRN,
-                   "At path " + node_xpath + ", value " + value + " " + ", error: " + e.what());
+            "At path " + node_xpath + ", value " + value + " " + ", error: " + e.what());
         return false;
     }
     return true;
 }
 
-#endif  // GLOBALS_H
+#endif // GLOBALS_H

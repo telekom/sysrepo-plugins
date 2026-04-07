@@ -248,11 +248,13 @@ void InterfaceRef::setForwarding(bool enabled, AddressFamily fam)
     // file path probably varies from system to system
 }
 
-bool InterfaceRef::isBridge(void) {
+bool InterfaceRef::isBridge(void)
+{
     return (bool)rtnl_link_is_bridge(m_link.get());
 }
 
-std::string InterfaceRef::getIanaType() {
+std::string InterfaceRef::getIanaType()
+{
 
     std::string iana_prefix = "iana-if-type:";
 
@@ -290,10 +292,10 @@ std::string InterfaceRef::getIanaType() {
 
     // types can be added, and maped from the <linux/if_arp.h> header as a key,
     // and from the identities of the iana-if-type model.
-
 }
 
-std::string InterfaceRef::getVlanParentInterface() {
+std::string InterfaceRef::getVlanParentInterface()
+{
 
     char parent_iface[IFNAMSIZ];
 
@@ -303,7 +305,8 @@ std::string InterfaceRef::getVlanParentInterface() {
     return std::string(parent_iface);
 }
 
-bool InterfaceRef::getForwarding(AddressFamily fam) {
+bool InterfaceRef::getForwarding(AddressFamily fam)
+{
 
     std::fstream fw_file;
     std::string ip_version;
@@ -332,10 +335,10 @@ bool InterfaceRef::getForwarding(AddressFamily fam) {
     fw_file.close();
 
     return (enabled_ch == '1' ? true : false);
-
 }
 
-bool InterfaceRef::isIPVEnabled(AddressFamily fam, CacheRef<RouteAddressRef>& addr_cache) {
+bool InterfaceRef::isIPVEnabled(AddressFamily fam, CacheRef<RouteAddressRef>& addr_cache)
+{
     // this function checks if there is IPv4/v6 address present, which means that has IPv x interface
 
     for (RouteAddressRef& addr : addr_cache) {

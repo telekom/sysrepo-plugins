@@ -42,7 +42,7 @@ protected:
     {
 
         try {
-            auto proxy = sdbus::createProxy(*m_connection ,m_srvc_name, m_obj_path);
+            auto proxy = sdbus::createProxy(*m_connection, m_srvc_name, m_obj_path);
             proxy->callMethod(m_setMethod).onInterface(m_interface).withArguments(data...);
         } catch (sdbus::Error& e) {
             SRPLG_LOG_ERR("sd-bus", "Error exporting data to sd-bus: %s", e.what());

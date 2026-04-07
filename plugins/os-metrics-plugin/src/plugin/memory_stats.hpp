@@ -25,7 +25,8 @@ namespace metrics {
 
 struct MemoryStats {
 
-    static MemoryStats& getInstance() {
+    static MemoryStats& getInstance()
+    {
         static MemoryStats instance;
         return instance;
     }
@@ -34,12 +35,12 @@ struct MemoryStats {
     void operator=(MemoryStats const&) = delete;
 
     void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName) {
+        std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName)
+    {
         std::lock_guard lk(mMtx);
         logMessage(SR_LL_DBG, "Setting xpath values for memory statistics");
-        std::string memoryPath("/" + std::string(moduleName) +
-                               ":system-metrics/memory/statistics/");
+        std::string memoryPath("/" + std::string(moduleName) + ":system-metrics/memory/statistics/");
         setXpath(session, parent, memoryPath + "free", std::to_string(mFree / 1024ULL));
         setXpath(session, parent, memoryPath + "swap-free-mb", std::to_string(mSwapFree / 1024ULL));
         setXpath(session, parent, memoryPath + "swap-total", std::to_string(mSwapTotal / 1024ULL));
@@ -47,11 +48,11 @@ struct MemoryStats {
         setXpath(session, parent, memoryPath + "total", std::to_string(mTotal / 1024ULL));
         setXpath(session, parent, memoryPath + "usable-mb", std::to_string(mUsable / 1024ULL));
         setXpath(session, parent, memoryPath + "used-buffers",
-                 std::to_string(mUsedBuffers / 1024ULL));
+            std::to_string(mUsedBuffers / 1024ULL));
         setXpath(session, parent, memoryPath + "used-cached",
-                 std::to_string(mUsedCached / 1024ULL));
+            std::to_string(mUsedCached / 1024ULL));
         setXpath(session, parent, memoryPath + "used-shared",
-                 std::to_string(mUsedShared / 1024ULL));
+            std::to_string(mUsedShared / 1024ULL));
         setXpath(session, parent, memoryPath + "hugepages-total", std::to_string(mHugePagesTotal));
         setXpath(session, parent, memoryPath + "hugepages-free", std::to_string(mHugePagesFree));
         setXpath(session, parent, memoryPath + "hugepage-size", std::to_string(mHugePageSize));
@@ -70,7 +71,8 @@ struct MemoryStats {
         }
     }
 
-    void readMemoryStats() {
+    void readMemoryStats()
+    {
         std::lock_guard lk(mMtx);
         std::string token;
         std::ifstream file("/proc/meminfo");
@@ -88,13 +90,15 @@ struct MemoryStats {
         mSwapUsed = mSwapTotal - mSwapFree;
     }
 
-    long double getUsage() {
+    long double getUsage()
+    {
         readMemoryStats();
         std::lock_guard lk(mMtx);
         return 100.0 - (mUsable / static_cast<long double>(mTotal) * 100.0);
     }
 
-    void printValues() const {
+    void printValues() const
+    {
         std::cout << "MemTotal:" << mTotal << std::endl;
         std::cout << "MemFree:" << mFree << std::endl;
         std::cout << "MemAvailable:" << mUsable << std::endl;
@@ -111,20 +115,30 @@ struct MemoryStats {
 
 private:
     MemoryStats()
-        : mFree(0), mSwapFree(0), mSwapTotal(0), mSwapUsed(0), mTotal(0), mUsable(0),
-          mUsedBuffers(0), mUsedCached(0), mUsedShared(0), mHugePagesTotal(0), mHugePagesFree(0),
-          mHugePageSize(0) {
-        assignMap = {{"MemTotal:", [this](uint64_t value) { mTotal = value; }},
-                     {"MemFree:", [this](uint64_t value) { mFree = value; }},
-                     {"MemAvailable:", [this](uint64_t value) { mUsable = value; }},
-                     {"SwapTotal:", [this](uint64_t value) { mSwapTotal = value; }},
-                     {"SwapFree:", [this](uint64_t value) { mSwapFree = value; }},
-                     {"Shmem:", [this](uint64_t value) { mUsedShared = value; }},
-                     {"Cached:", [this](uint64_t value) { mUsedCached = value; }},
-                     {"Buffers:", [this](uint64_t value) { mUsedBuffers = value; }},
-                     {"HugePages_Total:", [this](uint64_t value) { mHugePagesTotal = value; }},
-                     {"HugePages_Free:", [this](uint64_t value) { mHugePagesFree = value; }},
-                     {"Hugepagesize:", [this](uint64_t value) { mHugePageSize = value; }}};
+        : mFree(0)
+        , mSwapFree(0)
+        , mSwapTotal(0)
+        , mSwapUsed(0)
+        , mTotal(0)
+        , mUsable(0)
+        , mUsedBuffers(0)
+        , mUsedCached(0)
+        , mUsedShared(0)
+        , mHugePagesTotal(0)
+        , mHugePagesFree(0)
+        , mHugePageSize(0)
+    {
+        assignMap = { { "MemTotal:", [this](uint64_t value) { mTotal = value; } },
+            { "MemFree:", [this](uint64_t value) { mFree = value; } },
+            { "MemAvailable:", [this](uint64_t value) { mUsable = value; } },
+            { "SwapTotal:", [this](uint64_t value) { mSwapTotal = value; } },
+            { "SwapFree:", [this](uint64_t value) { mSwapFree = value; } },
+            { "Shmem:", [this](uint64_t value) { mUsedShared = value; } },
+            { "Cached:", [this](uint64_t value) { mUsedCached = value; } },
+            { "Buffers:", [this](uint64_t value) { mUsedBuffers = value; } },
+            { "HugePages_Total:", [this](uint64_t value) { mHugePagesTotal = value; } },
+            { "HugePages_Free:", [this](uint64_t value) { mHugePagesFree = value; } },
+            { "Hugepagesize:", [this](uint64_t value) { mHugePageSize = value; } } };
     }
 
     std::unordered_map<std::string, std::function<void(uint64_t)>> assignMap;
@@ -145,6 +159,6 @@ public:
     uint64_t mHugePageSize;
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // MEMORY_STATS_H
+#endif // MEMORY_STATS_H

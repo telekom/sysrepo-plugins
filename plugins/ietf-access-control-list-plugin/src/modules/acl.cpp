@@ -20,7 +20,8 @@
 #include <memory>
 #include <list>
 
-AclModule::AclModule(ietf::acl::PluginContext& ctx) : srpc::IModule<ietf::acl::PluginContext>(ctx)
+AclModule::AclModule(ietf::acl::PluginContext& ctx)
+    : srpc::IModule<ietf::acl::PluginContext>(ctx)
 {
     m_operContext = std::make_shared<AclOperationalContext>();
     m_changeContext = std::make_shared<AclModuleChangesContext>();
@@ -32,28 +33,25 @@ std::shared_ptr<srpc::IModuleContext> AclModule::getOperationalContext()
     return m_operContext;
 }
 
-
 std::shared_ptr<srpc::IModuleContext> AclModule::getModuleChangesContext()
 {
     return m_changeContext;
 }
-
 
 std::shared_ptr<srpc::IModuleContext> AclModule::getRpcContext()
 {
     return m_rpcContext;
 }
 
-
 std::list<srpc::OperationalCallback> AclModule::getOperationalCallbacks()
 {
-    //TODO
+    // TODO
     return std::list<srpc::OperationalCallback>();
 }
 
 std::list<srpc::ModuleChangeCallback> AclModule::getModuleChangeCallbacks()
 {
-    //TODO
+    // TODO
     return {
         srpc::ModuleChangeCallback {
             "ietf-access-control-list",
@@ -115,7 +113,7 @@ std::list<srpc::ModuleChangeCallback> AclModule::getModuleChangeCallbacks()
 
 std::list<srpc::RpcCallback> AclModule::getRpcCallbacks()
 {
-    //TODO
+    // TODO
     return std::list<srpc::RpcCallback>();
 }
 

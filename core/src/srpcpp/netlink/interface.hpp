@@ -41,11 +41,11 @@ struct InterfaceStats {
 };
 
 const std::unordered_map<std::string, std::string> InterfaceTypes = {
-      { "iana-if-type:ethernetCsmacd", "veth" },
-      { "iana-if-type:softwareLoopback", "vcan" },
-      //{ "iana-if-type:l2vlan", "vlan" },
-      { "iana-if-type:other", "dummy" },
-      { "iana-if-type:bridge", "bridge" },
+    { "iana-if-type:ethernetCsmacd", "veth" },
+    { "iana-if-type:softwareLoopback", "vcan" },
+    //{ "iana-if-type:l2vlan", "vlan" },
+    { "iana-if-type:other", "dummy" },
+    { "iana-if-type:bridge", "bridge" },
 };
 
 class InterfaceRef {
@@ -150,12 +150,12 @@ public:
     bool getForwarding(AddressFamily fam);
 
     /**
-    * @brief Check if ipv 4/6 is enabled by checking if it contains ipv fam specific address
-    * @param addr_cache RouteAddressCache - Address cache iterator class
-    * @return boolean state of ipv interface
-    */
-    bool isIPVEnabled(AddressFamily, CacheRef<RouteAddressRef>& );
-    
+     * @brief Check if ipv 4/6 is enabled by checking if it contains ipv fam specific address
+     * @param addr_cache RouteAddressCache - Address cache iterator class
+     * @return boolean state of ipv interface
+     */
+    bool isIPVEnabled(AddressFamily, CacheRef<RouteAddressRef>&);
+
 private:
     using RtnlLink = struct rtnl_link; ///< Route link type alias.
     using RtnlLinkDeleter = NlDeleter<RtnlLink>; ///< Deleter type alias.

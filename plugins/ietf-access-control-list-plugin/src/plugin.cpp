@@ -35,7 +35,8 @@ namespace sr = sysrepo;
  * @param mod Module to use.
  *
  */
-void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod)
+{
     const auto oper_callbacks = mod->getOperationalCallbacks();
 
     auto& sub_handle = ctx.getSubscriptionHandle();
@@ -59,8 +60,9 @@ void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContex
  * @param mod Module to use.
  *
  */
-void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
-    
+void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod)
+{
+
     const auto change_callbacks = mod->getModuleChangeCallbacks();
 
     auto& sub_handle = ctx.getSubscriptionHandle();
@@ -84,7 +86,8 @@ void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginConte
  * @param mod Module to use.
  *
  */
-void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod)
+{
     const auto rpc_callbacks = mod->getRpcCallbacks();
 
     auto& sub_handle = ctx.getSubscriptionHandle();
@@ -325,10 +328,14 @@ void loadExistingACLs(sr::Session& sess)
                                                     for (auto p = tcp_field->child(); p; p = p->nextSibling()) {
                                                         if (std::string(p->schema().name()) == "operator") {
                                                             std::string op = p->asTerm().valueStr().data();
-                                                            if (op == "lte") rule.Operator("<=");
-                                                            else if (op == "gte") rule.Operator(">=");
-                                                            else if (op == "eq") rule.Operator("==");
-                                                            else if (op == "neq") rule.Operator("!=");
+                                                            if (op == "lte")
+                                                                rule.Operator("<=");
+                                                            else if (op == "gte")
+                                                                rule.Operator(">=");
+                                                            else if (op == "eq")
+                                                                rule.Operator("==");
+                                                            else if (op == "neq")
+                                                                rule.Operator("!=");
                                                         }
                                                     }
 

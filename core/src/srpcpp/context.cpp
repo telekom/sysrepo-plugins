@@ -13,15 +13,15 @@
 
 #include "context.hpp"
 
-namespace srpc
-{
+namespace srpc {
 /**
  * Default constructor.
  *
  * @param sess Plugin session from the plugin init callback.
  *
  */
-BasePluginContext::BasePluginContext(sysrepo::Session sess) : m_sess(sess)
+BasePluginContext::BasePluginContext(sysrepo::Session sess)
+    : m_sess(sess)
 {
 }
 
@@ -31,7 +31,7 @@ BasePluginContext::BasePluginContext(sysrepo::Session sess) : m_sess(sess)
  * @return Plugin session from the init callback.
  *
  */
-sysrepo::Session &BasePluginContext::getSession()
+sysrepo::Session& BasePluginContext::getSession()
 {
     return m_sess;
 }
@@ -53,7 +53,7 @@ sysrepo::Connection BasePluginContext::getConnection()
  * @return Subscription handle.
  *
  */
-std::optional<sysrepo::Subscription> &BasePluginContext::getSubscriptionHandle()
+std::optional<sysrepo::Subscription>& BasePluginContext::getSubscriptionHandle()
 {
     return m_subHandle;
 }

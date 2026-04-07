@@ -17,11 +17,9 @@
 
 #include <sysrepo-cpp/Session.hpp>
 
-namespace srpc
-{
-class IAssignedPaths
-{
-  public:
+namespace srpc {
+class IAssignedPaths {
+public:
     /**
      * @brief Get the paths which the checker/applier is assigned for.
      *
@@ -33,40 +31,36 @@ class IAssignedPaths
 /**
  * @brief Interface used for applying datastore content to the system.
  */
-class IDatastoreApplier : public IAssignedPaths
-{
-  public:
+class IDatastoreApplier : public IAssignedPaths {
+public:
     /**
      * @brief Apply datastore content from the provided session to the system.
      *
      * @param session Session to use for retreiving datastore data.
      */
-    virtual void applyDatastoreValues(sysrepo::Session &session) = 0;
+    virtual void applyDatastoreValues(sysrepo::Session& session) = 0;
 };
 
 /**
  * @brief Interface used for loading content from the system to the datastore.
  */
-class IDatastoreLoader : public IAssignedPaths
-{
-  public:
+class IDatastoreLoader : public IAssignedPaths {
+public:
     /**
      * @brief Load data from the system into the datastore.
      *
      * @param session Session to use for storing data in the datastore.
      */
-    virtual void loadDataToDatastore(sysrepo::Session &session) = 0;
+    virtual void loadDataToDatastore(sysrepo::Session& session) = 0;
 };
-
 
 /**
  * @brief Enum used for receiving comparison status between datastore values and values found on the system.
  */
-enum class DatastoreValuesCheckStatus
-{
-    Equal,      ///< Values on the system are equal to those in the sysrepo datastore.
-    Partial,    ///< Values on the system are partially equal to those in the sysrepo datastore. There are more values
-                ///< contained on the system but all values from the datastore are contained on the system.
+enum class DatastoreValuesCheckStatus {
+    Equal, ///< Values on the system are equal to those in the sysrepo datastore.
+    Partial, ///< Values on the system are partially equal to those in the sysrepo datastore. There are more values
+             ///< contained on the system but all values from the datastore are contained on the system.
     NonExistant ///< Values from the datastore do not exist on the system.
 };
 
@@ -74,9 +68,8 @@ enum class DatastoreValuesCheckStatus
  * @brief Datastore values checking interface. Each class implementing this interface must check for datastore values on
  * the system and return the status code or throw an exception.
  */
-class IDatastoreChecker : public IAssignedPaths
-{
-  public:
+class IDatastoreChecker : public IAssignedPaths {
+public:
     /**
      * @brief Check for the datastore values on the system.
      *
@@ -84,7 +77,7 @@ class IDatastoreChecker : public IAssignedPaths
      *
      * @return Enum describing the output of values comparison.
      */
-    virtual DatastoreValuesCheckStatus checkDatastoreValues(sysrepo::Session &session) = 0;
+    virtual DatastoreValuesCheckStatus checkDatastoreValues(sysrepo::Session& session) = 0;
 };
 
 /**

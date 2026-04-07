@@ -17,15 +17,13 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/Subscription.hpp>
 
-namespace srpc
-{
+namespace srpc {
 /**
  * @brief Base of the plugin context. Each plugin context can inherit the given class and add its own properties to it
  * but must maintain the base properties.
  */
-class BasePluginContext
-{
-  public:
+class BasePluginContext {
+public:
     /**
      * Default constructor.
      *
@@ -40,7 +38,7 @@ class BasePluginContext
      * @return Plugin session from the init callback.
      *
      */
-    sysrepo::Session &getSession();
+    sysrepo::Session& getSession();
 
     /**
      * @brief Get the sysrepo connection.
@@ -56,14 +54,14 @@ class BasePluginContext
      * @return Subscription handle.
      *
      */
-    std::optional<sysrepo::Subscription> &getSubscriptionHandle();
+    std::optional<sysrepo::Subscription>& getSubscriptionHandle();
 
     /**
      * @brief Get the name of the plugin which uses this context.
      *
      * @return Plugin name string.
      */
-    virtual constexpr const char *getPluginName() = 0;
+    virtual constexpr const char* getPluginName() = 0;
 
     /**
      * sysrepo-plugin-generator: Generated default destructor for plugin context.
@@ -72,7 +70,7 @@ class BasePluginContext
     {
     }
 
-  private:
+private:
     sysrepo::Session m_sess; ///< Plugin session from the plugin init callback.
     std::optional<sysrepo::Subscription>
         m_subHandle; ///< Subscription handle used for creating subscriptions (change, oper and RPC).

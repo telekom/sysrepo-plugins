@@ -34,11 +34,12 @@ struct Callback {
     using IStreamWrapper = rapidjson::IStreamWrapper;
 
     static ErrorCode configurationCallback(Session session,
-                                           uint32_t subscriptionId,
-                                           std::string_view moduleName,
-                                           std::optional<std::string_view> /* subXPath */,
-                                           Event /* event */,
-                                           uint32_t /* request_id */) {
+        uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        Event /* event */,
+        uint32_t /* request_id */)
+    {
         printCurrentConfig(session, moduleName);
         logMessage(SR_LL_DBG, "Processing received configuration.");
         HardwareSensors::getInstance().notifyAndJoin();
@@ -48,12 +49,13 @@ struct Callback {
     }
 
     static ErrorCode operationalCallback(Session session,
-                                         uint32_t subscriptionId,
-                                         std::string_view moduleName,
-                                         std::optional<std::string_view> /* subXPath */,
-                                         std::optional<std::string_view> /* requestXPath */,
-                                         uint32_t /* requestId */,
-                                         std::optional<libyang::DataNode>& parent) {
+        uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        std::optional<std::string_view> /* requestXPath */,
+        uint32_t /* requestId */,
+        std::optional<libyang::DataNode>& parent)
+    {
 
         int rc = system("/usr/bin/lshw -json > " COMPONENTS_LOCATION);
         if (rc == -1) {
@@ -102,8 +104,7 @@ struct Callback {
 
         for (auto const& c : hwComponents) {
             c.second->setXpathForAllMembers(session, parent, set_xpath,
-                                            (module != std::end(modules)) &&
-                                                module->featureEnabled("entity-mib"));
+                (module != std::end(modules)) && module->featureEnabled("entity-mib"));
         }
 
         if (!parent) {
@@ -113,13 +114,15 @@ struct Callback {
         return ErrorCode::Ok;
     }
 
-    static std::string toIANAclass(std::string const& inputClass) {
+    static std::string toIANAclass(std::string const& inputClass)
+    {
         std::string returnedClass("iana-hardware:unknown");
-        static std::unordered_map<std::string, std::string> _{
-            {"storage", "iana-hardware:storage-drive"},
-            {"power", "iana-hardware:battery"},
-            {"processor", "iana-hardware:cpu"},
-            {"network", "iana-hardware:port"}};
+        static std::unordered_map<std::string, std::string> _ {
+            { "storage", "iana-hardware:storage-drive" },
+            { "power", "iana-hardware:battery" },
+            { "processor", "iana-hardware:cpu" },
+            { "network", "iana-hardware:port" }
+        };
 
         if (_.find(inputClass) != _.end()) {
             returnedClass = _.at(inputClass);
@@ -128,10 +131,11 @@ struct Callback {
     }
 
     static std::string parseAndSetComponent(Value const& parsee,
-                                            std::string const& parentName,
-                                            Value::ConstMemberIterator itr,
-                                            ComponentMap& hwComponents,
-                                            int32_t& parent_rel_pos) {
+        std::string const& parentName,
+        Value::ConstMemberIterator itr,
+        ComponentMap& hwComponents,
+        int32_t& parent_rel_pos)
+    {
         std::shared_ptr<ComponentData> component;
         if (itr != parsee.MemberEnd()) {
             component = std::make_shared<ComponentData>(itr->value.GetString());
@@ -142,8 +146,7 @@ struct Callback {
 
         // firmware node, skip this one and set the parent's firmware-rev
         // +--ro firmware-rev?     string
-        if (component->name == "firmware" && !parentName.empty() &&
-            (itr = parsee.FindMember("version")) != parsee.MemberEnd()) {
+        if (component->name == "firmware" && !parentName.empty() && (itr = parsee.FindMember("version")) != parsee.MemberEnd()) {
             if (hwComponents.find(parentName) != hwComponents.end() && hwComponents[parentName]) {
                 hwComponents[parentName]->firmwareRev = itr->value.GetString();
             }
@@ -213,22 +216,22 @@ struct Callback {
 
         // +--ro contains-child*   -> ../../component/name
         if ((itr = parsee.FindMember("children")) != parsee.MemberEnd()) {
-            hwComponents[component->name]->children =
-                parseAndSetComponents(itr->value.GetArray(), hwComponents, component->name);
+            hwComponents[component->name]->children = parseAndSetComponents(itr->value.GetArray(), hwComponents, component->name);
         }
 
         return component->name;
     }
 
     static std::list<std::string> parseAndSetComponents(Value const& parsee,
-                                                        ComponentMap& hwComponents,
-                                                        std::string const& parentName) {
+        ComponentMap& hwComponents,
+        std::string const& parentName)
+    {
         std::list<std::string> siblings;
         int32_t parent_rel_pos(0);
 
         if (!parsee.IsArray()) {
             std::string const name(parseAndSetComponent(parsee, parentName, parsee.MemberBegin(),
-                                                        hwComponents, parent_rel_pos));
+                hwComponents, parent_rel_pos));
             if (!name.empty()) {
                 siblings.emplace_back(name);
             }
@@ -246,7 +249,8 @@ struct Callback {
         return siblings;
     }
 
-    static void printCurrentConfig(Session& session, std::string_view module_name) {
+    static void printCurrentConfig(Session& session, std::string_view module_name)
+    {
         try {
             std::string xpath(std::string("/") + std::string(module_name) + std::string(":*//*"));
             auto values = session.getData(xpath);
@@ -263,15 +267,17 @@ struct Callback {
         }
     }
 
-    static std::unordered_map<std::string, std::string> const& getLSHWtoIETFmap() {
-        static std::unordered_map<std::string, std::string> const _{
-            {"description", "/description"}, {"vendor", "/mfg-name"},
-            {"serial", "/serial-num"},       {"product", "/model-name"},
-            {"version", "/hardware-rev"},    {"handle", "/alias"}};
+    static std::unordered_map<std::string, std::string> const& getLSHWtoIETFmap()
+    {
+        static std::unordered_map<std::string, std::string> const _ {
+            { "description", "/description" }, { "vendor", "/mfg-name" },
+            { "serial", "/serial-num" }, { "product", "/model-name" },
+            { "version", "/hardware-rev" }, { "handle", "/alias" }
+        };
         return _;
     }
 };
 
-}  // namespace hardware
+} // namespace hardware
 
-#endif  // CALLBACK_H
+#endif // CALLBACK_H

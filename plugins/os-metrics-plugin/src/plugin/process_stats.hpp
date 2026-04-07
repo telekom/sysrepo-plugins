@@ -24,12 +24,13 @@ namespace metrics {
 
 struct ProcessStats {
     using setFunction_t = const std::function<void(uint64_t,
-                                                   sysrepo::Session,
-                                                   std::optional<libyang::DataNode>&,
-                                                   std::string const&,
-                                                   int32_t)>;
+        sysrepo::Session,
+        std::optional<libyang::DataNode>&,
+        std::string const&,
+        int32_t)>;
 
-    static ProcessStats& getInstance() {
+    static ProcessStats& getInstance()
+    {
         static ProcessStats instance;
         return instance;
     }
@@ -37,60 +38,63 @@ struct ProcessStats {
     ProcessStats(ProcessStats const&) = delete;
     void operator=(ProcessStats const&) = delete;
 
-    static setFunction_t getSetFunction(std::string const& token) {
-        static std::unordered_map<std::string, setFunction_t> _{
-            {"syscr:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/io/read-count", std::to_string(value));
-             }},
-            {"syscw:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/io/write-count", std::to_string(value));
-             }},
-            {"read_bytes:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/io/read-kbytes", std::to_string(value / 1024));
-             }},
-            {"write_bytes:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/io/write-kbytes", std::to_string(value / 1024));
-             }},
-            {"voluntary_ctxt_switches:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/voluntary-ctx-switches", std::to_string(value));
-             }},
-            {"nonvoluntary_ctxt_switches:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/involuntary-ctx-switches",
-                          std::to_string(value));
-             }},
-            {"FDSize:",
-             [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
-                std::string const& path, int32_t tid) {
-                 setXpath(session, parent, path + "/open-file-descriptors", std::to_string(value));
-                 struct rlimit maxFDs;
-                 if (!prlimit(tid, RLIMIT_NOFILE, nullptr, &maxFDs)) {
-                     std::stringstream stream;
-                     stream << std::fixed << std::setprecision(2)
-                            << static_cast<double>(value) * 100.0 / static_cast<long double>(maxFDs.rlim_cur);
-                     setXpath(session, parent, path + "/open-file-descriptors-perc", stream.str());
-                 }
-             }}};
+    static setFunction_t getSetFunction(std::string const& token)
+    {
+        static std::unordered_map<std::string, setFunction_t> _ {
+            { "syscr:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/io/read-count", std::to_string(value));
+                } },
+            { "syscw:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/io/write-count", std::to_string(value));
+                } },
+            { "read_bytes:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/io/read-kbytes", std::to_string(value / 1024));
+                } },
+            { "write_bytes:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/io/write-kbytes", std::to_string(value / 1024));
+                } },
+            { "voluntary_ctxt_switches:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/voluntary-ctx-switches", std::to_string(value));
+                } },
+            { "nonvoluntary_ctxt_switches:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/involuntary-ctx-switches",
+                        std::to_string(value));
+                } },
+            { "FDSize:",
+                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                    std::string const& path, int32_t tid) {
+                    setXpath(session, parent, path + "/open-file-descriptors", std::to_string(value));
+                    struct rlimit maxFDs;
+                    if (!prlimit(tid, RLIMIT_NOFILE, nullptr, &maxFDs)) {
+                        std::stringstream stream;
+                        stream << std::fixed << std::setprecision(2)
+                               << static_cast<double>(value) * 100.0 / static_cast<long double>(maxFDs.rlim_cur);
+                        setXpath(session, parent, path + "/open-file-descriptors-perc", stream.str());
+                    }
+                } }
+        };
         if (_.find(token) != _.end()) {
             return _.at(token);
         }
         return nullptr;
     }
 
-    static std::optional<size_t> getCpuTimes() {
+    static std::optional<size_t> getCpuTimes()
+    {
         std::ifstream proc_stat("/proc/stat");
-        proc_stat.ignore(5, ' ');  // Skip the 'cpu' prefix.
+        proc_stat.ignore(5, ' '); // Skip the 'cpu' prefix.
         std::vector<size_t> cpu_times;
         for (size_t time; proc_stat >> time; cpu_times.push_back(time))
             ;
@@ -99,7 +103,8 @@ struct ProcessStats {
         return accumulate(cpu_times.begin(), cpu_times.end(), 0);
     }
 
-    static std::optional<std::tuple<size_t, size_t>> getProcessCpuTimes(int32_t tid) {
+    static std::optional<std::tuple<size_t, size_t>> getProcessCpuTimes(int32_t tid)
+    {
         std::ifstream proc_stat("/proc/" + std::to_string(tid) + "/stat");
         proc_stat.ignore(std::numeric_limits<std::streamsize>::max(), ')')
             .ignore(2, ' ')
@@ -116,9 +121,10 @@ struct ProcessStats {
     }
 
     static double calculateCpuUsage(std::optional<size_t> total_time_before,
-                                    std::optional<size_t> total_time_after,
-                                    std::optional<std::tuple<size_t, size_t>> proc_times_before,
-                                    std::optional<std::tuple<size_t, size_t>> proc_times_after) {
+        std::optional<size_t> total_time_after,
+        std::optional<std::tuple<size_t, size_t>> proc_times_before,
+        std::optional<std::tuple<size_t, size_t>> proc_times_after)
+    {
         if (!total_time_before || !total_time_after || !proc_times_before || !proc_times_after) {
             return 0;
         }
@@ -129,11 +135,11 @@ struct ProcessStats {
         if (proc_time_delta == 0 || total_time_after.value() - total_time_before.value() == 0)
             return 0;
 
-        return 100.0 * (static_cast<double>(proc_time_delta) /
-                        static_cast<double>(total_time_after.value() - total_time_before.value()));
+        return 100.0 * (static_cast<double>(proc_time_delta) / static_cast<double>(total_time_after.value() - total_time_before.value()));
     }
 
-    double getCpuUsage(int32_t tid) {
+    double getCpuUsage(int32_t tid)
+    {
         if (cached_cpu_values_.find(tid) != cached_cpu_values_.end()) {
             auto const time_total_after = getCpuTimes();
             auto const time_proc_after = getProcessCpuTimes(tid);
@@ -142,26 +148,25 @@ struct ProcessStats {
             auto const [time_total_before, utime_before, stime_before] = cached_cpu_values_[tid];
             auto const time_proc_before = std::make_tuple(utime_before, stime_before);
 
-            cached_cpu_values_[tid] =
-                std::make_tuple(time_total_after.value(), utime_after, stime_after);
+            cached_cpu_values_[tid] = std::make_tuple(time_total_after.value(), utime_after, stime_after);
 
             return calculateCpuUsage(time_total_before, time_total_after, time_proc_before,
-                                     time_proc_after);
+                time_proc_after);
         } else {
             auto const time_total_before = getCpuTimes();
             auto const time_proc_before = getProcessCpuTimes(tid);
-            cached_cpu_values_[tid] =
-                std::make_tuple(time_total_before.value(), std::get<0>(time_proc_before.value()),
-                                std::get<1>(time_proc_before.value()));
+            cached_cpu_values_[tid] = std::make_tuple(time_total_before.value(), std::get<0>(time_proc_before.value()),
+                std::get<1>(time_proc_before.value()));
             return 0;
         }
     }
 
     void readAndSet(sysrepo::Session session,
-                    std::optional<libyang::DataNode>& parent,
-                    int32_t tid,
-                    std::string const& procXpath,
-                    std::string const& what) {
+        std::optional<libyang::DataNode>& parent,
+        int32_t tid,
+        std::string const& procXpath,
+        std::string const& what)
+    {
         std::string token;
         std::ifstream file("/proc/" + std::to_string(tid) + "/" + what);
         while (file >> token) {
@@ -178,19 +183,19 @@ struct ProcessStats {
     }
 
     void readAndSetAll(sysrepo::Session session,
-                       std::optional<libyang::DataNode>& parent,
-                       std::string_view moduleName) {
+        std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName)
+    {
         PROCTAB* proc = openproc(PROC_FILLMEM | PROC_FILLSTAT | PROC_FILLSTATUS);
 
         proc_t procInfo;
         memset(&procInfo, 0, sizeof(procInfo));
-        std::string const baseXpath("/" + std::string(moduleName) +
-                                    ":system-metrics/processes/process[pid='");
+        std::string const baseXpath("/" + std::string(moduleName) + ":system-metrics/processes/process[pid='");
         while (readproc(proc, &procInfo) != NULL) {
             std::string const procXpath(baseXpath + std::to_string(procInfo.tid) + "']");
             // memory stats
             setXpath(session, parent, procXpath + "/memory/real",
-                     std::to_string(procInfo.vm_rss - procInfo.vm_rss_shared));
+                std::to_string(procInfo.vm_rss - procInfo.vm_rss_shared));
             setXpath(session, parent, procXpath + "/memory/rss", std::to_string(procInfo.vm_rss));
             setXpath(session, parent, procXpath + "/memory/vsz", std::to_string(procInfo.vm_size));
 
@@ -218,6 +223,6 @@ private:
     ProcessStats() = default;
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // PROCESS_STATS_H
+#endif // PROCESS_STATS_H

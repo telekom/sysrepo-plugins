@@ -35,8 +35,7 @@ std::optional<NFTTable> NFTables::getTable(const std::string& name, NFT_Types fa
 
     try {
         table = NFTCommand::getInstance().exec_cmd("list table " + utils::getString<NFT_Types>(family) + " " + name);
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         return std::nullopt;
     }
     for (auto& table_obj : table["nftables"]) {
@@ -73,21 +72,24 @@ void NFTables::deleteTable(const std::string& name, const NFT_Types family)
     NFTCommand::getInstance().exec_cmd("delete table " + utils::getString<NFT_Types>(family) + " " + name);
 }
 
-NFTTable::NFTTable(const NFT_Types fam, const std::string& name) :
-    m_fam{ fam },
-    m_name{ name } {};
+NFTTable::NFTTable(const NFT_Types fam, const std::string& name)
+    : m_fam { fam }
+    , m_name { name } { };
 
-std::string NFTTable::getTableName() {
+std::string NFTTable::getTableName()
+{
     return m_name;
 }
 
-NFT_Types NFTTable::getFamily() {
+NFT_Types NFTTable::getFamily()
+{
     return m_fam;
 }
 
 NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy)
 {
-    if (name.empty()) throw NFTablesCommandExecException("Chain name cannot be empty!");
+    if (name.empty())
+        throw NFTablesCommandExecException("Chain name cannot be empty!");
 
     std::string command = "create chain " + utils::getString<NFT_Types>(this->getFamily()) + " " + this->getTableName() + " ";
     bool has_params = false;
@@ -96,7 +98,7 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
 
     if (type || hook || priority || policy) {
 
-        //if one of them has value, they all have to have!
+        // if one of them has value, they all have to have!
         if (!(type && hook && priority && policy)) {
             throw NFTablesCommandExecException("type, hook, priority, and policy have to be present!");
         }
@@ -105,17 +107,22 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
         command.append(" {");
     }
 
-    if (type) command.append(" type " + utils::getString<NFT_Chain_Types>(*type));
-    if (hook) command.append(" hook " + utils::getString<NFT_Chain_Hooks>(*hook));
-    if (priority) command.append(" priority " + std::to_string(*priority) + "; ");
-    if (policy) command.append(" policy " + utils::getString<NFT_Chain_Policy>(*policy) + " ;");
+    if (type)
+        command.append(" type " + utils::getString<NFT_Chain_Types>(*type));
+    if (hook)
+        command.append(" hook " + utils::getString<NFT_Chain_Hooks>(*hook));
+    if (priority)
+        command.append(" priority " + std::to_string(*priority) + "; ");
+    if (policy)
+        command.append(" policy " + utils::getString<NFT_Chain_Policy>(*policy) + " ;");
 
-    if (has_params) command.append(" }");
+    if (has_params)
+        command.append(" }");
 
     std::cout << "CMD: " << command << std::endl;
     NFTCommand::getInstance().exec_cmd(command);
 
-    //if no exception is thrown, we construct NFTChain
+    // if no exception is thrown, we construct NFTChain
 
     return NFTChain(name, type, hook, priority, policy, this->getTableName(), this->getFamily());
 }
@@ -147,8 +154,7 @@ std::list<NFTChain> NFTTable::getChains()
     for (auto chain : json_chains["nftables"]) {
         if (!chain["chain"].empty()) {
             nlohmann::json chain_obj = chain["chain"];
-            if (chain_obj["family"] == utils::getString<NFT_Types>(this->getFamily()) &&
-                chain_obj["table"] == this->getTableName()) {
+            if (chain_obj["family"] == utils::getString<NFT_Types>(this->getFamily()) && chain_obj["table"] == this->getTableName()) {
 
                 NFT_Types family = utils::getNFTType<NFT_Types>(chain_obj["family"]);
                 std::string chain_name = chain_obj["name"];
@@ -163,7 +169,6 @@ std::list<NFTChain> NFTTable::getChains()
                 chain_obj["policy"].empty() ? nft_chain_policy = std::nullopt : nft_chain_policy = utils::getNFTType<NFT_Chain_Policy>(chain_obj["policy"]);
 
                 loaded_chains.push_back(NFTChain(chain_name, nft_chain_type, nft_chain_hook, nft_priority, nft_chain_policy, this->getTableName(), family));
-
             }
         }
     }
@@ -200,8 +205,7 @@ nlohmann::json NFTCommand::exec_cmd(const std::string& command)
 
     if (!buffer.empty()) {
         m_json = nlohmann::json::parse(buffer);
-    }
-    else {
+    } else {
         m_json = nlohmann::json::parse("{}");
     }
 
@@ -217,7 +221,7 @@ NFTCommand::NFTCommand()
     if (!m_ctx) {
         throw std::bad_alloc();
     }
-    //Default settings,  
+    // Default settings,
     nft_ctx_output_set_flags(m_ctx, NFT_CTX_OUTPUT_HANDLE | NFT_CTX_OUTPUT_JSON);
     err = nft_ctx_buffer_error(m_ctx);
     if (err != 0) {
@@ -228,7 +232,8 @@ NFTCommand::NFTCommand()
 NFTCommand::~NFTCommand()
 {
     std::cout << "NFTCommand destructed" << std::endl;
-    if (m_ctx != NULL) nft_ctx_free(m_ctx);
+    if (m_ctx != NULL)
+        nft_ctx_free(m_ctx);
 }
 
 std::string NFTChain::getTableName()
@@ -272,9 +277,7 @@ void NFTChain::updateChainPolicy(const NFT_Chain_Policy policy)
 
 void NFTChain::addRule(const Match& match)
 {
-    std::string command = "add rule " + utils::getString<NFT_Types>(m_table_type) + " " +
-        m_table_name + " " +
-        m_chain_name + " ";
+    std::string command = "add rule " + utils::getString<NFT_Types>(m_table_type) + " " + m_table_name + " " + m_chain_name + " ";
 
     if (match.isMeta()) {
         command.append(match.getMetaKey().value() + " ");
@@ -290,7 +293,6 @@ void NFTChain::addRule(const Match& match)
 
     command.append(match.getValue());
 
-
     NFTCommand::getInstance().exec_cmd(command);
 }
 
@@ -298,13 +300,12 @@ void NFTChain::deleteRule(const Match& rule)
 {
     for (auto& m_rule : this->getRules()) {
         if (rule == m_rule) {
-            //NOTE! handle is crutial for delete, so we are getting it from the listed object,
-            //not from the constructed one
-            std::string command = "delete rule " + utils::getString<NFT_Types>(m_table_type) + " " +
-                m_table_name + " " + m_chain_name + " handle " + std::to_string(m_rule.m_handle);
-            //it will throw an exception if failed to delete
+            // NOTE! handle is crutial for delete, so we are getting it from the listed object,
+            // not from the constructed one
+            std::string command = "delete rule " + utils::getString<NFT_Types>(m_table_type) + " " + m_table_name + " " + m_chain_name + " handle " + std::to_string(m_rule.m_handle);
+            // it will throw an exception if failed to delete
             NFTCommand::getInstance().exec_cmd(command);
-            //our job is done, return if deleted
+            // our job is done, return if deleted
             return;
         }
     }
@@ -314,8 +315,7 @@ void NFTChain::deleteRule(const Match& rule)
 
     if (rule.isMeta()) {
         rule_string.append(rule.m_meta_key.value_or("unknown meta value"));
-    }
-    else if (rule.isPayload()) {
+    } else if (rule.isPayload()) {
         rule_string.append(rule.m_protocol.value_or("unknown proto"));
         rule_string.append(" ");
         rule_string.append(rule.m_field.value_or("unknown field"));
@@ -332,10 +332,7 @@ void NFTChain::deleteRule(const Match& rule)
 
 void NFTChain::updateRule(int16_t handle, const Match& rule)
 {
-    std::string command = "replace rule " + utils::getString<NFT_Types>(m_table_type) + " " +
-        m_table_name + " " +
-        m_chain_name + " " + 
-        std::to_string(handle) + " ";
+    std::string command = "replace rule " + utils::getString<NFT_Types>(m_table_type) + " " + m_table_name + " " + m_chain_name + " " + std::to_string(handle) + " ";
 
     if (rule.isMeta()) {
         command.append(rule.getMetaKey().value() + " ");
@@ -360,46 +357,46 @@ std::list<Match> NFTChain::getRules()
     nlohmann::json ruleset = NFTCommand::getInstance().exec_cmd("list ruleset");
     std::list<Match> matches;
     for (auto& rule : ruleset["nftables"]) {
-        if (rule["rule"].empty()) continue; //we are interested in rules only
-        if (rule["rule"]["family"] == utils::getString<NFT_Types>(m_table_type) &&
-            rule["rule"]["table"] == m_table_name &&
-            rule["rule"]["chain"] == m_chain_name) {
-            //we found the rule at this chain
+        if (rule["rule"].empty())
+            continue; // we are interested in rules only
+        if (rule["rule"]["family"] == utils::getString<NFT_Types>(m_table_type) && rule["rule"]["table"] == m_table_name && rule["rule"]["chain"] == m_chain_name) {
+            // we found the rule at this chain
 
             nlohmann::json expr = rule["rule"]["expr"];
 
-            //we only target the single ones 
-            if (expr.size() > 1) continue;
+            // we only target the single ones
+            if (expr.size() > 1)
+                continue;
             nlohmann::json match = expr.at(0);
 
-            if (match["match"].empty()) continue;
+            if (match["match"].empty())
+                continue;
 
             Match s_match;
             s_match.Operator(match["match"]["op"]);
             s_match.m_handle = rule["rule"]["handle"];
 
-            if (!match["match"]["left"]["meta"].empty()) s_match.Meta(match["match"]["left"]["meta"]["key"]);
+            if (!match["match"]["left"]["meta"].empty())
+                s_match.Meta(match["match"]["left"]["meta"]["key"]);
 
             if (!match["match"]["left"]["payload"].empty()) {
                 s_match.Protocol(match["match"]["left"]["payload"]["protocol"]);
                 s_match.Field(match["match"]["left"]["payload"]["field"]);
             }
-            //its a range
+            // its a range
             if (match["match"]["right"].contains("range")) {
 
                 std::string from, to;
                 if (match["match"]["right"]["range"].at(0).is_string()) {
                     from = match["match"]["right"]["range"].at(0);
                     to = match["match"]["right"]["range"].at(1);
-                }
-                else {
+                } else {
                     from = match["match"]["right"]["range"].at(0).dump();
                     to = match["match"]["right"]["range"].at(1).dump();
                 }
                 s_match.Range(from, to);
 
-            }
-            else {
+            } else {
                 std::string val;
                 if (match["match"]["right"].is_string()) {
                     // Single IP - append /32 for IPv4 host addresses
@@ -407,13 +404,11 @@ std::list<Match> NFTChain::getRules()
                     if (val.find('/') == std::string::npos && val.find('.') != std::string::npos) {
                         val += "/32";
                     }
-                }
-                else if (match["match"]["right"].contains("prefix")) {
+                } else if (match["match"]["right"].contains("prefix")) {
                     // Network prefix - convert to CIDR notation
                     auto& prefix = match["match"]["right"]["prefix"];
                     val = std::string(prefix["addr"]) + "/" + std::to_string(prefix["len"].get<int>());
-                }
-                else {
+                } else {
                     val = match["match"]["right"].dump();
                 }
 
@@ -425,7 +420,6 @@ std::list<Match> NFTChain::getRules()
     }
 
     return matches;
-
 }
 
 std::optional<Match> NFTChain::findRule(const Match& rule)
@@ -438,18 +432,22 @@ std::optional<Match> NFTChain::findRule(const Match& rule)
     return std::nullopt;
 }
 
-NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name, const NFT_Types table_type) :
-    m_table_name(table_name),
-    m_chain_name(chain_name),
-    m_chain_type(type),
-    m_chain_hook(hook),
-    m_chain_priority(priority),
-    m_chain_policy(policy),
-    m_table_type(table_type)
-{}
+NFTChain::NFTChain(const std::string& chain_name, const std::optional<NFT_Chain_Types>& type, const std::optional<NFT_Chain_Hooks>& hook, const std::optional<int32_t>& priority, const std::optional<NFT_Chain_Policy>& policy, const std::string& table_name, const NFT_Types table_type)
+    : m_table_name(table_name)
+    , m_chain_name(chain_name)
+    , m_chain_type(type)
+    , m_chain_hook(hook)
+    , m_chain_priority(priority)
+    , m_chain_policy(policy)
+    , m_table_type(table_type)
+{
+}
 
-
-Match::Match() : m_handle(-1), m_operator("==") {}
+Match::Match()
+    : m_handle(-1)
+    , m_operator("==")
+{
+}
 
 Match& Match::Operator(const std::string& oper)
 {
@@ -534,23 +532,18 @@ bool Match::operator==(const Match& other) const
 
     if (this->isMeta()) {
         m_this_left.append(m_meta_key.value_or(""));
-    }
-    else if (this->isPayload()) {
+    } else if (this->isPayload()) {
         m_this_left.append(m_protocol.value_or("") + " " + m_field.value_or(""));
     };
 
     if (other.isMeta()) {
         m_other_left.append(other.m_meta_key.value_or(""));
-    }
-    else if (other.isPayload()) {
+    } else if (other.isPayload()) {
         m_other_left.append(other.m_protocol.value_or("") + " " + other.m_field.value_or(""));
     };
 
     return (
-        m_other_left == m_this_left &&
-        m_operator == other.m_operator &&
-        m_value == other.m_value
-        );
+        m_other_left == m_this_left && m_operator == other.m_operator && m_value == other.m_value);
 }
 
 std::optional<std::string> Match::getOperator() const

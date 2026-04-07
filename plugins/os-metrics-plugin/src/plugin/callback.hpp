@@ -26,12 +26,13 @@ struct Callback {
     using DataNode = libyang::DataNode;
 
     static ErrorCode cpuStateCallback(Session session,
-                                      uint32_t /* subscriptionId */,
-                                      std::string_view moduleName,
-                                      std::optional<std::string_view> /* subXPath */,
-                                      std::optional<std::string_view> /* requestXPath */,
-                                      uint32_t /* requestId */,
-                                      std::optional<DataNode>& parent) {
+        uint32_t /* subscriptionId */,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        std::optional<std::string_view> /* requestXPath */,
+        uint32_t /* requestId */,
+        std::optional<DataNode>& parent)
+    {
         CpuStats stats;
         stats.readCpuTimes();
         stats.setXpathValues(session, parent, moduleName);
@@ -53,12 +54,13 @@ struct Callback {
     }
 
     static ErrorCode memoryStateCallback(Session session,
-                                         uint32_t /* subscriptionId */,
-                                         std::string_view moduleName,
-                                         std::optional<std::string_view> /* subXPath */,
-                                         std::optional<std::string_view> /* requestXPath */,
-                                         uint32_t /* requestId */,
-                                         std::optional<DataNode>& parent) {
+        uint32_t /* subscriptionId */,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        std::optional<std::string_view> /* requestXPath */,
+        uint32_t /* requestId */,
+        std::optional<DataNode>& parent)
+    {
         auto module = findModule(session, moduleName);
         if (module && module.value().featureEnabled("usage-notifications")) {
             MemoryMonitoring::getInstance().setXpaths(session, parent, moduleName);
@@ -69,12 +71,13 @@ struct Callback {
     }
 
     static ErrorCode filesystemStateCallback(Session session,
-                                             uint32_t /* subscriptionId */,
-                                             std::string_view moduleName,
-                                             std::optional<std::string_view> /* subXPath */,
-                                             std::optional<std::string_view> /* requestXPath */,
-                                             uint32_t /* requestId */,
-                                             std::optional<DataNode>& parent) {
+        uint32_t /* subscriptionId */,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        std::optional<std::string_view> /* requestXPath */,
+        uint32_t /* requestId */,
+        std::optional<DataNode>& parent)
+    {
         auto module = findModule(session, moduleName);
         if (module && module.value().featureEnabled("usage-notifications")) {
             FilesystemMonitoring::getInstance().setXpaths(session, parent, moduleName);
@@ -85,22 +88,24 @@ struct Callback {
     }
 
     static ErrorCode processesStateCallback(Session session,
-                                            uint32_t /* subscriptionId */,
-                                            std::string_view moduleName,
-                                            std::optional<std::string_view> /* subXPath */,
-                                            std::optional<std::string_view> /* requestXPath */,
-                                            uint32_t /* requestId */,
-                                            std::optional<DataNode>& parent) {
+        uint32_t /* subscriptionId */,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        std::optional<std::string_view> /* requestXPath */,
+        uint32_t /* requestId */,
+        std::optional<DataNode>& parent)
+    {
         ProcessStats::getInstance().readAndSetAll(session, parent, moduleName);
         return ErrorCode::Ok;
     }
 
     static ErrorCode memoryConfigCallback(Session session,
-                                          uint32_t /* subscriptionId */,
-                                          std::string_view moduleName,
-                                          std::optional<std::string_view> /* subXPath */,
-                                          Event /* event */,
-                                          uint32_t /* request_id */) {
+        uint32_t /* subscriptionId */,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        Event /* event */,
+        uint32_t /* request_id */)
+    {
         printCurrentConfig(session, moduleName, "system-metrics/memory//*");
         auto module = findModule(session, moduleName);
         if (module && module.value().featureEnabled("usage-notifications")) {
@@ -114,11 +119,12 @@ struct Callback {
     }
 
     static ErrorCode filesystemsConfigCallback(Session session,
-                                               uint32_t /* subscriptionId */,
-                                               std::string_view moduleName,
-                                               std::optional<std::string_view> /* subXPath */,
-                                               Event /* event */,
-                                               uint32_t /* request_id */) {
+        uint32_t /* subscriptionId */,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        Event /* event */,
+        uint32_t /* request_id */)
+    {
         printCurrentConfig(session, moduleName, "system-metrics/filesystems//*");
         auto module = findModule(session, moduleName);
         if (module && module.value().featureEnabled("usage-notifications")) {
@@ -132,6 +138,6 @@ struct Callback {
     }
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // CALLBACK_H
+#endif // CALLBACK_H

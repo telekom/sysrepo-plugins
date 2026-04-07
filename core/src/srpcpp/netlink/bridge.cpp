@@ -1094,7 +1094,7 @@ std::string BridgeRef::rawNumParser(std::vector<uint16_t> nums)
 
 BridgeVlanID::BridgeVlanID(uint16_t vid, uint16_t init_flags)
     : vlan_id(vid)
-    , flags(init_flags) {};
+    , flags(init_flags) { };
 
 bool BridgeVlanID::getUntaggedFlag()
 {

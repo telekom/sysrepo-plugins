@@ -63,7 +63,6 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 
     fillInitialDatastoreFromSystem(sess);
 
-
     // get registered modules and create subscriptions
     for (auto& mod : modules) {
         SRPLG_LOG_INF(ctx->getPluginName(), "Registering operational callbacks for module %s", mod->getName());
@@ -111,7 +110,7 @@ inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
     sr::Datastore current_ds = session.activeDatastore();
     session.switchDatastore(sr::Datastore::Running);
 
-    //delete running ds for data consistancy
+    // delete running ds for data consistancy
     session.deleteItem("/ieee802-dot1q-bridge:bridges");
 
     // fill system data here

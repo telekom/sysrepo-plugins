@@ -87,7 +87,7 @@ NlContext::NlContext()
 
     // don't error if file is not existing
     error = access("/etc/iproute2/rt_tables", F_OK | R_OK);
-    if (error == 0){
+    if (error == 0) {
         error = rtnl_route_read_table_names("/etc/iproute2/rt_tables");
         if (error != 0) {
             throw std::runtime_error("Unable to read routing table names");
@@ -96,7 +96,7 @@ NlContext::NlContext()
 
     // don't error if file is not existing
     error = access("/etc/iproute2/rt_protos", F_OK | R_OK);
-    if (error == 0){
+    if (error == 0) {
         error = rtnl_route_read_table_names("/etc/iproute2/rt_protos");
         if (error != 0) {
             throw std::runtime_error("Unable to read routing protocol names");

@@ -772,10 +772,9 @@ namespace sub::change {
 
                     uint32_t delete_port_ref = std::stoi(srpc::extractListKeysFromXpath("port-map", keys)["port-ref"]);
 
-                    if (keys.empty()){
+                    if (keys.empty()) {
                         keys = change.node.path().data();
                     }
-
 
                     // now check if the port ref contains the vids
                     auto delete_cb_slave = bridge_opt->getSlaveByIfindex(delete_port_ref);
@@ -791,7 +790,7 @@ namespace sub::change {
                         deletion_vids.push_back(i.getVid());
                     }
 
-                    auto str_vids_create =srpc::extractListKeysFromXpath("filtering-entry", keys)["vids"];
+                    auto str_vids_create = srpc::extractListKeysFromXpath("filtering-entry", keys)["vids"];
                     auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);
                     // and now check if array is a subset
                     if (!BridgeSlaveRef::isSubset(deletion_vids, vec_str_vids_create)) {

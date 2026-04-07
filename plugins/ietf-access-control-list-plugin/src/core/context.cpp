@@ -22,7 +22,8 @@ namespace ietf::acl {
  * @param sess Plugin session from the plugin init callback.
  *
  */
-PluginContext::PluginContext(sysrepo::Session sess) : srpc::BasePluginContext(sess)
+PluginContext::PluginContext(sysrepo::Session sess)
+    : srpc::BasePluginContext(sess)
 {
     m_operCtx = std::make_shared<OperContext>();
     m_changeCtx = std::make_shared<ModuleChangeContext>();

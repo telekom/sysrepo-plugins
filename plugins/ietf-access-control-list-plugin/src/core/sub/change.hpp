@@ -59,7 +59,7 @@ namespace sub::change {
         std::shared_ptr<AclModuleChangesContext> m_ctx;
     };
 
-     /**
+    /**
      * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-access-control-list:acls/acl[name='%s']/aces/ace.
      */
     class AclAcesAceModuleChangeCb {

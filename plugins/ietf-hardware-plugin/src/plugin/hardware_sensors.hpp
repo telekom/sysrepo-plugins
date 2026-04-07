@@ -26,27 +26,30 @@ struct HardwareSensors {
 
     using Connection = sysrepo::Connection;
 
-    static HardwareSensors& getInstance() {
+    static HardwareSensors& getInstance()
+    {
         static HardwareSensors instance;
         return instance;
     }
 
-    void injectConnection(Connection conn) {
+    void injectConnection(Connection conn)
+    {
         mConn = std::make_shared<Connection>(conn);
     }
 
 private:
-    HardwareSensors() {
+    HardwareSensors()
+    {
         if (sensors_init(nullptr) != 0) {
             throw SensorsInitFail();
         }
     }
 
     void checkAndTriggerNotification(std::string const& componentName,
-                                     std::shared_ptr<SensorThreshold> sensThr,
-                                     int32_t sensorValue) {
-        logMessage(SR_LL_INF, "Sensor threshold triggered for: " + componentName + " value " +
-                                  std::to_string(sensorValue) + ". Sending Notification...");
+        std::shared_ptr<SensorThreshold> sensThr,
+        int32_t sensorValue)
+    {
+        logMessage(SR_LL_INF, "Sensor threshold triggered for: " + componentName + " value " + std::to_string(sensorValue) + ". Sending Notification...");
 
         std::string notifPath("/ietf-hardware:hardware/component[name='");
         notifPath += componentName + "']/sensor-notifications-augment:sensor-threshold-crossed";
@@ -70,11 +73,11 @@ private:
         sess.sendNotification(input, sysrepo::Wait::No);
     }
 
-    void runFunc(std::shared_ptr<ComponentData> component) {
+    void runFunc(std::shared_ptr<ComponentData> component)
+    {
         // TSAN falsely reports double lock on the mutex here for some compiler versions
         std::unique_lock<std::mutex> lk(mNotificationMtx);
-        while (mCV.wait_for(lk, std::chrono::seconds(component->pollInterval)) ==
-               std::cv_status::timeout) {
+        while (mCV.wait_for(lk, std::chrono::seconds(component->pollInterval)) == std::cv_status::timeout) {
             std::optional<int32_t> value = getValue(component->name);
             if (!value) {
                 continue;
@@ -94,21 +97,25 @@ public:
     HardwareSensors(HardwareSensors const&) = delete;
     void operator=(HardwareSensors const&) = delete;
 
-    ~HardwareSensors() {
+    ~HardwareSensors()
+    {
         notifyAndJoin();
         sensors_cleanup();
     }
 
-    void notify() {
+    void notify()
+    {
         mCV.notify_all();
     }
 
-    void notifyAndJoin() {
+    void notifyAndJoin()
+    {
         mCV.notify_all();
         stopThreads();
     }
 
-    void stopThreads() {
+    void stopThreads()
+    {
         int32_t numThreadsStopped(0);
         for (auto& [_, thread] : mThreads) {
             if (thread.joinable()) {
@@ -116,22 +123,22 @@ public:
                 numThreadsStopped++;
             }
         }
-        logMessage(SR_LL_DBG, std::to_string(numThreadsStopped) + " threads stopped, out of: " +
-                                  std::to_string(mThreads.size()) + " started.");
+        logMessage(SR_LL_DBG, std::to_string(numThreadsStopped) + " threads stopped, out of: " + std::to_string(mThreads.size()) + " started.");
         mThreads.clear();
     }
 
-    void startThreads() {
+    void startThreads()
+    {
         for (auto const& configData : ComponentData::hwConfigData) {
             if (configData && !configData->sensorThresholds.empty()) {
                 logMessage(SR_LL_DBG, "Starting thread for component: " + configData->name + ".");
-                mThreads[configData->name] =
-                    std::thread(&HardwareSensors::runFunc, this, configData);
+                mThreads[configData->name] = std::thread(&HardwareSensors::runFunc, this, configData);
             }
         }
     }
 
-    std::optional<int32_t> getValue(std::string const& sensorName) {
+    std::optional<int32_t> getValue(std::string const& sensorName)
+    {
         std::lock_guard lk(mSensorDataMtx);
         sensors_chip_name const* cn = nullptr;
         int c = 0;
@@ -145,28 +152,27 @@ public:
                 }
                 switch (feature->type) {
                 case SENSORS_FEATURE_IN:
-                    value =
-                        Sensor::getValueFromSubfeature(cn, feature, SENSORS_SUBFEATURE_IN_INPUT, 3);
+                    value = Sensor::getValueFromSubfeature(cn, feature, SENSORS_SUBFEATURE_IN_INPUT, 3);
                     break;
                 case SENSORS_FEATURE_CURR:
                     value = Sensor::getValueFromSubfeature(cn, feature,
-                                                           SENSORS_SUBFEATURE_CURR_INPUT, 3);
+                        SENSORS_SUBFEATURE_CURR_INPUT, 3);
                     break;
                 case SENSORS_FEATURE_TEMP:
                     value = Sensor::getValueFromSubfeature(cn, feature,
-                                                           SENSORS_SUBFEATURE_TEMP_INPUT, 0);
+                        SENSORS_SUBFEATURE_TEMP_INPUT, 0);
                     break;
                 case SENSORS_FEATURE_FAN:
                     value = Sensor::getValueFromSubfeature(cn, feature,
-                                                           SENSORS_SUBFEATURE_FAN_INPUT, 0);
+                        SENSORS_SUBFEATURE_FAN_INPUT, 0);
                     break;
                 case SENSORS_FEATURE_POWER:
                     value = Sensor::getValueFromSubfeature(cn, feature,
-                                                           SENSORS_SUBFEATURE_POWER_INPUT, 0);
+                        SENSORS_SUBFEATURE_POWER_INPUT, 0);
                     break;
                 case SENSORS_FEATURE_HUMIDITY:
                     value = Sensor::getValueFromSubfeature(cn, feature,
-                                                           SENSORS_SUBFEATURE_HUMIDITY_INPUT, 0);
+                        SENSORS_SUBFEATURE_HUMIDITY_INPUT, 0);
                     break;
                 default:
                     break;
@@ -180,7 +186,8 @@ public:
         return value;
     }
 
-    void parseSensorData(ComponentMap& hwComponents) {
+    void parseSensorData(ComponentMap& hwComponents)
+    {
         std::lock_guard lk(mSensorDataMtx);
         sensors_chip_name const* cn = nullptr;
         int c = 0;
@@ -229,7 +236,7 @@ public:
                 }
                 if (result) {
                     hwComponents.emplace(std::string(tempSensor.name),
-                                         std::make_shared<Sensor>(tempSensor));
+                        std::make_shared<Sensor>(tempSensor));
                 }
             }
         }
@@ -249,6 +256,6 @@ private:
     std::unordered_map<std::string, std::thread> mThreads;
 };
 
-}  // namespace hardware
+} // namespace hardware
 
-#endif  // HARDWARE_SENSORS_H
+#endif // HARDWARE_SENSORS_H

@@ -13,8 +13,9 @@
 
 #include "ntp.hpp"
 
-ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
-    //open the ntp.conf file for reading only
+ietf::sys::ntp::NTP::NTP(const std::string& file_path)
+{
+    // open the ntp.conf file for reading only
     this->path = file_path;
 
     error_flag = false;
@@ -22,7 +23,7 @@ ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
     file.open(file_path, std::ios::in);
     temp_filepath = file_path + "temp";
 
-    //open temporary file for writing
+    // open temporary file for writing
     temp_file.open(temp_filepath, std::ios::out | std::ios::app);
 
     if (!file.is_open()) {
@@ -38,7 +39,8 @@ ietf::sys::ntp::NTP::NTP(const std::string& file_path) {
     readServersFromFile();
 };
 
-ietf::sys::ntp::NTP::~NTP() {
+ietf::sys::ntp::NTP::~NTP()
+{
     if (!error_flag)
         applyChanges();
 
@@ -47,22 +49,23 @@ ietf::sys::ntp::NTP::~NTP() {
 
     if (!error_flag) {
         std::rename(temp_filepath.c_str(), path.c_str());
-    }
-    else {
+    } else {
         std::remove(temp_filepath.c_str());
     };
-
 };
 
-void ietf::sys::ntp::NTP::addServer(const NTPServer& server) {
+void ietf::sys::ntp::NTP::addServer(const NTPServer& server)
+{
     this->servers.push_back(server);
 }
 
-void ietf::sys::ntp::NTP::clearServers() {
+void ietf::sys::ntp::NTP::clearServers()
+{
     servers.clear();
 }
 
-bool ietf::sys::ntp::NTP::removeServer(const NTPServer& server, NTPServerRemoveOpts opt) {
+bool ietf::sys::ntp::NTP::removeServer(const NTPServer& server, NTPServerRemoveOpts opt)
+{
     bool deleted = false;
 
     for (auto it = servers.begin(); it != servers.end();) {
@@ -71,45 +74,47 @@ bool ietf::sys::ntp::NTP::removeServer(const NTPServer& server, NTPServerRemoveO
             deleted = true;
             if (opt == FIRST_MATCHING)
                 break;
-        }
-        else
+        } else
             it++;
     }
     return deleted;
 }
 
-void ietf::sys::ntp::NTP::applyChanges() {
+void ietf::sys::ntp::NTP::applyChanges()
+{
 
     for (NTPServer server : servers) {
         temp_file << parseAssocToString(server.getServerAssociationType()) << " " << server.getNTPServer();
 
-        if (server.is_iburst()) temp_file << " iburst";
-        if (server.is_prefer()) temp_file << " prefer";
+        if (server.is_iburst())
+            temp_file << " iburst";
+        if (server.is_prefer())
+            temp_file << " prefer";
 
         temp_file << std::endl;
     }
 }
 
-std::vector<ietf::sys::ntp::NTPServer> ietf::sys::ntp::NTP::getNTPServersList() {
+std::vector<ietf::sys::ntp::NTPServer> ietf::sys::ntp::NTP::getNTPServersList()
+{
     return servers;
 }
 
-ietf::sys::ntp::NTPServerAssociationType ietf::sys::ntp::NTP::parseAssocFromString(const std::string& assoc_type) {
+ietf::sys::ntp::NTPServerAssociationType ietf::sys::ntp::NTP::parseAssocFromString(const std::string& assoc_type)
+{
     if (assoc_type == "pool") {
         return ietf::sys::ntp::NTPServerAssociationType::POOL;
-    }
-    else if (assoc_type == "peer") {
+    } else if (assoc_type == "peer") {
         return ietf::sys::ntp::NTPServerAssociationType::PEER;
-    }
-    else if (assoc_type == "server") {
+    } else if (assoc_type == "server") {
         return ietf::sys::ntp::NTPServerAssociationType::SERVER;
-    }
-    else {
+    } else {
         throw NtpUnknownAssociationTypeException();
     }
 }
 
-std::string ietf::sys::ntp::NTP::parseAssocToString(NTPServerAssociationType assoc_type) {
+std::string ietf::sys::ntp::NTP::parseAssocToString(NTPServerAssociationType assoc_type)
+{
 
     switch (assoc_type) {
     case POOL:
@@ -123,11 +128,13 @@ std::string ietf::sys::ntp::NTP::parseAssocToString(NTPServerAssociationType ass
     }
 }
 
-void ietf::sys::ntp::NTP::raiseError() {
+void ietf::sys::ntp::NTP::raiseError()
+{
     error_flag = true;
 };
 
-void ietf::sys::ntp::NTP::readServersFromFile() {
+void ietf::sys::ntp::NTP::readServersFromFile()
+{
     std::string input_line;
 
     while (std::getline(file, input_line)) {
@@ -153,10 +160,12 @@ void ietf::sys::ntp::NTP::readServersFromFile() {
             while (server_stream >> param) {
                 params.push_back(param);
             }
-            //now lets construct the NTPServer object
+            // now lets construct the NTPServer object
             for (const std::string& arg : params) {
-                if (arg == "iburst") iburst = true;
-                if (arg == "prefer") prefer = true;
+                if (arg == "iburst")
+                    iburst = true;
+                if (arg == "prefer")
+                    prefer = true;
                 if (arg.rfind("#$servername$%:")) {
                     std::istringstream(param) >> bulk >> servername;
                 }
@@ -166,85 +175,93 @@ void ietf::sys::ntp::NTP::readServersFromFile() {
             std::optional<std::string> srv_opt_name;
             servername.empty() ? srv_opt_name = std::nullopt : srv_opt_name = servername;
             servers.push_back(NTPServer(assoctype, server, iburst, prefer, srv_opt_name));
-        }
-        else {
+        } else {
             temp_file << input_line << std::endl;
         }
     }
 }
 
 ietf::sys::ntp::NTPServer::NTPServer(NTPServerAssociationType assoc_type, const std::string& server, bool iburst, bool prefer, const std::optional<std::string>& name = std::nullopt)
-    : m_assoc_type(assoc_type),
-    m_server(server),
-    m_iburst(iburst),
-    m_prefer(prefer),
-    m_name(name)
-{};
+    : m_assoc_type(assoc_type)
+    , m_server(server)
+    , m_iburst(iburst)
+    , m_prefer(prefer)
+    , m_name(name) { };
 
-std::string ietf::sys::ntp::NTPServer::getNTPServer() {
+std::string ietf::sys::ntp::NTPServer::getNTPServer()
+{
     return m_server;
 }
 
-bool ietf::sys::ntp::NTPServer::operator<(const NTPServer& other)const {
+bool ietf::sys::ntp::NTPServer::operator<(const NTPServer& other) const
+{
     return (m_server.compare(other.m_server) < 0);
 }
 
-bool ietf::sys::ntp::NTPServer::operator==(const NTPServer& other)const {
+bool ietf::sys::ntp::NTPServer::operator==(const NTPServer& other) const
+{
     return (m_server.compare(other.m_server) == 0);
 }
 
-//strict comparation
-bool ietf::sys::ntp::NTPServer::operator<=>(const NTPServer& other)const {
-    return ((m_server.compare(other.m_server) == 0) &&
-        (m_assoc_type == other.m_assoc_type) &&
-        (m_iburst == other.m_iburst) &&
-        (m_prefer == other.m_prefer)
-        );
+// strict comparation
+bool ietf::sys::ntp::NTPServer::operator<=>(const NTPServer& other) const
+{
+    return ((m_server.compare(other.m_server) == 0) && (m_assoc_type == other.m_assoc_type) && (m_iburst == other.m_iburst) && (m_prefer == other.m_prefer));
 }
 
-ietf::sys::ntp::NTPServerAssociationType ietf::sys::ntp::NTPServer::getServerAssociationType() {
+ietf::sys::ntp::NTPServerAssociationType ietf::sys::ntp::NTPServer::getServerAssociationType()
+{
     return m_assoc_type;
 }
 
-bool ietf::sys::ntp::NTPServer::is_iburst() {
+bool ietf::sys::ntp::NTPServer::is_iburst()
+{
     return m_iburst;
 }
 
-bool ietf::sys::ntp::NTPServer::is_prefer() {
+bool ietf::sys::ntp::NTPServer::is_prefer()
+{
     return m_prefer;
 }
 
-std::optional<std::string> ietf::sys::ntp::NTPServer::getServerName() {
+std::optional<std::string> ietf::sys::ntp::NTPServer::getServerName()
+{
     return m_name;
 }
 
 // NTPSdbus derived class that contains dbus interface, NTP class with constructor file path /etc/ntp.conf
 //"org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Version", "RestartUnit"
-ietf::sys::ntp::NTPDbus::NTPDbus() : NTP("/etc/ntp.conf"), ietf::sys::SdBus<std::string, std::string, std::string>("org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "RestartUnit", "Version") {};
+ietf::sys::ntp::NTPDbus::NTPDbus()
+    : NTP("/etc/ntp.conf")
+    , ietf::sys::SdBus<std::string, std::string, std::string>("org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "RestartUnit", "Version") { };
 
-void ietf::sys::ntp::NTPDbus::restartNTP() {
+void ietf::sys::ntp::NTPDbus::restartNTP()
+{
     this->exportToSdBus("ntp.service", "replace");
 }
 
-//NTPState class that manipulates and gets the state on ntp.servive enabled and disabled state
-ietf::sys::ntp::NTPState::NTPState() {
+// NTPState class that manipulates and gets the state on ntp.servive enabled and disabled state
+ietf::sys::ntp::NTPState::NTPState()
+{
     m_connection = sdbus::createSystemBusConnection();
     sdbus::ServiceName m_srvc_name = sdbus::ServiceName(M_DESTINATION);
     sdbus::ObjectPath m_obj_path = sdbus::ObjectPath(M_OBJ_PATH);
     m_proxy = sdbus::createProxy(*m_connection, m_srvc_name, m_obj_path);
 };
 
-void ietf::sys::ntp::NTPState::ntpSetState(bool state) {
+void ietf::sys::ntp::NTPState::ntpSetState(bool state)
+{
     m_proxy->callMethod((state ? "Start" : "Stop")).onInterface(M_INTERFACE).withArguments(M_PARAM).dontExpectReply();
 };
 
-bool ietf::sys::ntp::NTPState::ntpGetState() {
+bool ietf::sys::ntp::NTPState::ntpGetState()
+{
     sdbus::Variant var;
-    //M_INTERFACE is the interface as a parameter
+    // M_INTERFACE is the interface as a parameter
     m_proxy->callMethod(M_GET_METHOD).onInterface(M_GET_INTERFACE).withArguments(M_INTERFACE, M_UNIT_STATE_METHOD).storeResultsTo(var);
     std::string active = var.get<std::string>();
     if (active == "active") {
         return true;
-    }
-    else return false;
+    } else
+        return false;
 };
