@@ -160,7 +160,7 @@ namespace sub::change {
                     try {
                         nft.deleteTable(table_name, type);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
 
@@ -389,7 +389,7 @@ namespace sub::change {
                         NFT_Chain_Policy policy = nft::helper::ianaToPolicyType(change.node.asTerm().valueStr().data());
                         nft_chain->updateChainPolicy(policy);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     } catch (...) {
                         SRPLG_LOG_ERR(PLUGIN_NAME, "Failed to update policy on chain %s", chain_name.c_str());
@@ -504,7 +504,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -517,7 +517,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ether").Field("daddr").Value(old_mac));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -528,7 +528,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
 
@@ -600,7 +600,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -613,7 +613,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ether").Field("saddr").Value(old_mac));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -624,7 +624,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
 
@@ -700,7 +700,7 @@ namespace sub::change {
                         // chain->addRule(rule);
 
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -716,7 +716,7 @@ namespace sub::change {
                         libyang::Value val;
                         std::cout << "get val: " << std::get<uint32_t>(change.node.asTerm().value()) << std::endl;
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -727,7 +727,7 @@ namespace sub::change {
                     try {
                         // chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
 
@@ -826,7 +826,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -839,7 +839,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("dscp").Value(old_dscp));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -850,7 +850,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -911,7 +911,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -924,7 +924,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("length").Value(old_length));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -935,7 +935,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -996,7 +996,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1009,7 +1009,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("ttl").Value(old_ttl));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1020,7 +1020,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1081,7 +1081,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1094,7 +1094,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("protocol").Value(old_protocol));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1105,7 +1105,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1166,7 +1166,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1179,7 +1179,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("hdrlength").Value(old_ihl));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1190,7 +1190,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1251,7 +1251,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1264,7 +1264,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("daddr").Value(old_daddr));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1275,7 +1275,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1336,7 +1336,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1349,7 +1349,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip").Field("saddr").Value(old_saddr));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1360,7 +1360,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1458,7 +1458,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1471,7 +1471,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip6").Field("dscp").Value(old_dscp));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1482,7 +1482,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1543,7 +1543,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1556,7 +1556,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip6").Field("length").Value(old_length));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1567,7 +1567,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1628,7 +1628,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1641,7 +1641,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip6").Field("flowlabel").Value(old_flowlabel));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1652,7 +1652,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1713,7 +1713,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1726,7 +1726,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip6").Field("daddr").Value(old_daddr));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1737,7 +1737,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1798,7 +1798,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1811,7 +1811,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("ip6").Field("saddr").Value(old_saddr));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1822,7 +1822,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1920,7 +1920,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1933,7 +1933,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("tcp").Field("sequence").Value(old_sequence));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -1944,7 +1944,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2005,7 +2005,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2018,7 +2018,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("tcp").Field("ackseq").Value(old_ackseq));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2029,7 +2029,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2090,7 +2090,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2103,7 +2103,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("tcp").Field("doff").Value(old_doff));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2114,7 +2114,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2175,7 +2175,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2188,7 +2188,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("tcp").Field("flags").Value(old_flags));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2199,7 +2199,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2260,7 +2260,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2273,7 +2273,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("tcp").Field("window").Value(old_window));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2284,7 +2284,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2345,7 +2345,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2358,7 +2358,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("tcp").Field("urgptr").Value(old_urgptr));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2369,7 +2369,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2447,7 +2447,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2474,7 +2474,7 @@ namespace sub::change {
                         chain->deleteRule(old_rule);
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2488,7 +2488,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2586,7 +2586,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2599,7 +2599,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("udp").Field("length").Value(old_length));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2610,7 +2610,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2688,7 +2688,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2715,7 +2715,7 @@ namespace sub::change {
                         chain->deleteRule(old_rule);
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2729,7 +2729,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2827,7 +2827,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2840,7 +2840,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("icmp").Field("type").Value(old_icmp_type));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2851,7 +2851,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2912,7 +2912,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2925,7 +2925,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Protocol("icmp").Field("code").Value(old_code));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -2936,7 +2936,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -3034,7 +3034,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -3047,7 +3047,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Meta("iifname").Value(old_iface));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -3058,7 +3058,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -3119,7 +3119,7 @@ namespace sub::change {
                     try {
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -3132,7 +3132,7 @@ namespace sub::change {
                         chain->deleteRule(Match().Meta("oifname").Value(old_iface));
                         chain->addRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;
@@ -3143,7 +3143,7 @@ namespace sub::change {
                     try {
                         chain->deleteRule(rule);
                     } catch (NFTablesCommandExecException& e) {
-                        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+                        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
                     }
                     break;

@@ -235,7 +235,7 @@ sr::ErrorCode NtpServerNameModuleChangeCb::operator()(sr::Session session, uint3
             ntp.restartNTP();
         } catch (std::exception& e) {
             ntp.raiseError();
-            SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+            SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
         }
         break;
     }
@@ -774,7 +774,7 @@ sr::ErrorCode NtpOperGetCb::operator()(sr::Session session, uint32_t subscriptio
         }
     } catch (std::exception& e) {
         ntp.raiseError();
-        SRPLG_LOG_ERR(PLUGIN_NAME, e.what());
+        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", e.what());
     }
 
     return error;
