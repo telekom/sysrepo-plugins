@@ -57,39 +57,39 @@ std::unordered_map<std::string, std::string> extractListKeysFromXpath(const std:
 {
     std::unordered_map<std::string, std::string> keys_map;
 
-    int starting_point = xpath.find(list + "[");
-    
-    std::string chunk(xpath.begin() + starting_point, xpath.end());
-    
-    int ending_point = chunk.find("]/");
+    auto starting_point = xpath.find(list + "[");
 
-    if(ending_point == std::string::npos){
-        //this means it can be last
+    std::string chunk(xpath.begin() + static_cast<std::ptrdiff_t>(starting_point), xpath.end());
+
+    auto ending_point = chunk.find("]/");
+
+    if (ending_point == std::string::npos) {
+        // this means it can be last
         ending_point = chunk.find_last_of(']');
     }
-    
-    chunk.erase(chunk.begin() + ending_point + 1, chunk.end());
-    
-    int begin = chunk.find('[');
-    int end = chunk.find(']');
+
+    chunk.erase(chunk.begin() + static_cast<std::ptrdiff_t>(ending_point) + 1, chunk.end());
+
+    auto begin = chunk.find('[');
+    auto end = chunk.find(']');
     // list is found, continue
 
     while (begin != std::string::npos || end != std::string::npos) {
 
-        std::string mapstr(++chunk.begin() + begin, chunk.begin() + end);
-        chunk.erase(begin, ++end - begin);
+        std::string mapstr(chunk.begin() + static_cast<std::ptrdiff_t>(begin) + 1, chunk.begin() + static_cast<std::ptrdiff_t>(end));
+        chunk.erase(begin, end + 1 - begin);
 
         // now split it by '=' in key value
 
-        int eq_pos = mapstr.find('=');
+        auto eq_pos = mapstr.find('=');
 
         if (eq_pos == std::string::npos) {
             throw std::runtime_error("Failed to parse '=' sympol");
         }
 
-        std::string key(mapstr.begin(), mapstr.begin() + eq_pos);
+        std::string key(mapstr.begin(), mapstr.begin() + static_cast<std::ptrdiff_t>(eq_pos));
         // value shrink by one place begin to end to eliminate ' '
-        std::string value(mapstr.begin() + eq_pos + 2, --mapstr.end());
+        std::string value(mapstr.begin() + static_cast<std::ptrdiff_t>(eq_pos) + 2, --mapstr.end());
 
         keys_map.insert(std::make_pair(key, value));
 

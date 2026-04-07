@@ -78,7 +78,7 @@ struct ProcessStats {
                  if (!prlimit(tid, RLIMIT_NOFILE, nullptr, &maxFDs)) {
                      std::stringstream stream;
                      stream << std::fixed << std::setprecision(2)
-                            << value * 100.0 / static_cast<long double>(maxFDs.rlim_cur);
+                            << static_cast<double>(value) * 100.0 / static_cast<long double>(maxFDs.rlim_cur);
                      setXpath(session, parent, path + "/open-file-descriptors-perc", stream.str());
                  }
              }}};

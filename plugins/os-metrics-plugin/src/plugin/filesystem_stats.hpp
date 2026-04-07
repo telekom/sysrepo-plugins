@@ -118,12 +118,12 @@ struct FilesystemStats {
             if (inodesTotal == 0) {
                 fs.inodeUsed = 0;
             } else {
-                fs.inodeUsed = inodesUsed * 100.0 / static_cast<long double>(inodesTotal);
+                fs.inodeUsed = static_cast<long double>(inodesUsed) * 100.0 / static_cast<long double>(inodesTotal);
             }
             if (fs.totalBlocks == 0) {
                 fs.spaceUsed = 0;
             } else {
-                fs.spaceUsed = fs.usedBlocks * 100.0 / static_cast<long double>(fs.totalBlocks);
+                fs.spaceUsed = static_cast<long double>(fs.usedBlocks) * 100.0 / static_cast<long double>(fs.totalBlocks);
             }
             fsMap.emplace(std::make_pair(fs.mountPoint, fs));
             // ignore rest of the line

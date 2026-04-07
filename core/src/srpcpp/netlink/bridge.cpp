@@ -537,20 +537,20 @@ std::vector<uint16_t> BridgeRef::parseStringToVlanIDS(const std::string& vlan_st
 
     while (std::getline(chunkStream, chunk, ',')) {
 
-        int pos = chunk.find('-');
+        auto pos = chunk.find('-');
         if (pos != std::string::npos) {
 
-            std::string min_range = std::string(chunk.begin(), chunk.begin() + pos);
-            std::string max_range = std::string(chunk.begin() + (++pos), chunk.end());
+            std::string min_range = std::string(chunk.begin(), chunk.begin() + static_cast<std::ptrdiff_t>(pos));
+            std::string max_range = std::string(chunk.begin() + static_cast<std::ptrdiff_t>(pos + 1), chunk.end());
 
-            for (int i = std::stoi(min_range); i <= std::stoi(max_range); i++) {
+            for (uint16_t i = static_cast<uint16_t>(std::stoi(min_range)); i <= static_cast<uint16_t>(std::stoi(max_range)); i++) {
                 vids.push_back(i);
             }
 
             continue;
         }
 
-        vids.push_back(std::stoi(chunk));
+        vids.push_back(static_cast<uint16_t>(std::stoi(chunk)));
     }
 
     return vids;
@@ -772,7 +772,7 @@ std::vector<BridgeFDBEntry> BridgeSlaveRef::getFilteringVids()
         }
 
         const char* addr = nla_get_string(ifla_info_data);
-        int vlan_num = nla_get_u16(vlan);
+        uint16_t vlan_num = nla_get_u16(vlan);
         std::array<uint8_t, 6> mac_addr_arr;
 
         // 48 bytes, 6 bytes mac addr
@@ -985,7 +985,7 @@ std::vector<BridgeVlanID> BridgeSlaveRef::getVlanList()
                 // it is range
                 uint16_t end = nla_get_u16(attributes[BRIDGE_VLANDB_ENTRY_RANGE]);
                 // now parse all of them
-                for (int i = port_vlan_list.vid + 1; i <= end; i++) {
+                for (uint16_t i = port_vlan_list.vid + 1; i <= end; i++) {
                     vids.push_back(BridgeVlanID(i, flg));
                 }
             }

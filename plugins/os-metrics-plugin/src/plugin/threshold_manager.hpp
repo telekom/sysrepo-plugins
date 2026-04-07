@@ -154,7 +154,7 @@ struct MemoryMonitoring : public UsageMonitoring {
                     threshold->first = node.asTerm().valueStr();
                 } else if (std::string(schema.name()) == "value") {
                     threshold->second.value =
-                        std::get<libyang::Decimal64>(node.asTerm().value()).number /
+                        static_cast<double>(std::get<libyang::Decimal64>(node.asTerm().value()).number) /
                         std::pow(10, std::get<libyang::Decimal64>(node.asTerm().value()).digits);
                 }
 
@@ -297,7 +297,7 @@ struct FilesystemMonitoring : public UsageMonitoring {
                     threshold->first = node.asTerm().valueStr();
                 } else if (std::string(schema.name()) == "value") {
                     threshold->second.value =
-                        std::get<libyang::Decimal64>(node.asTerm().value()).number /
+                        static_cast<double>(std::get<libyang::Decimal64>(node.asTerm().value()).number) /
                         std::pow(10, std::get<libyang::Decimal64>(node.asTerm().value()).digits);
                 }
 
