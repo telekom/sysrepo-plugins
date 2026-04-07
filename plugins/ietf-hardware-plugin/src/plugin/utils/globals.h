@@ -12,7 +12,6 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <sysrepo-cpp/Session.hpp>
 #include <sysrepo.h>
 
 #define PLUGIN_NAME "IETF-Hardware"
@@ -25,23 +24,5 @@ struct SensorsInitFail : public std::exception {
         return "sensor_init() failure";
     }
 };
-
-static bool setXpath(sysrepo::Session& session,
-    std::optional<libyang::DataNode>& parent,
-    std::string const& node_xpath,
-    std::string const& value)
-{
-    try {
-        if (parent) {
-            parent.value().newPath(node_xpath, value);
-        } else {
-            parent = session.getContext().newPath(node_xpath, value);
-        }
-    } catch (std::runtime_error const& e) {
-        SRPLG_LOG_WRN(PLUGIN_NAME, "%s", ("At path " + node_xpath + ", value " + value + " " + ", error: " + e.what()).c_str());
-        return false;
-    }
-    return true;
-}
 
 #endif // GLOBALS_H

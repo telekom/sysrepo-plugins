@@ -23,6 +23,8 @@
 
 #include "utils/globals.h"
 
+#include <sysrepo-cpp/Session.hpp>
+
 namespace hardware {
 
 struct ComponentData;
@@ -63,8 +65,7 @@ struct ComponentData {
 
     virtual ~ComponentData() = default;
 
-    virtual void setXpathForAllMembers(Session& session,
-        std::optional<libyang::DataNode>& parent,
+    virtual void setXpathForAllMembers(std::optional<libyang::DataNode>& parent,
         std::string const& mainXpath,
         bool setPhysicalID = false) const
     {
@@ -87,56 +88,56 @@ struct ComponentData {
         // +--rw asset-id?         string
         // +--rw uri*              inet:uri
         // +--ro uuid?             yang:uuid
-        setXpath(session, parent, componentPath + "/class", classType);
+        parent->newPath(componentPath + "/class", classType);
 
         if (description) {
-            setXpath(session, parent, componentPath + "/description", description.value());
+            parent->newPath(componentPath + "/description", description.value());
         }
         if (physicalID && setPhysicalID) {
-            setXpath(session, parent, componentPath + "/physical-index",
+            parent->newPath(componentPath + "/physical-index",
                 std::to_string(physicalID.value()));
         }
         if (parentName) {
-            setXpath(session, parent, componentPath + "/parent", parentName.value());
+            parent->newPath(componentPath + "/parent", parentName.value());
         }
         if (parent_rel_pos) {
-            setXpath(session, parent, componentPath + "/parent-rel-pos",
+            parent->newPath(componentPath + "/parent-rel-pos",
                 std::to_string(parent_rel_pos.value()));
         }
         // childlist to value
         for (auto const& elem : children) {
-            setXpath(session, parent, componentPath + "/contains-child", elem);
+            parent->newPath(componentPath + "/contains-child", elem);
         }
         if (hardwareRev) {
-            setXpath(session, parent, componentPath + "/hardware-rev", hardwareRev.value());
+            parent->newPath(componentPath + "/hardware-rev", hardwareRev.value());
         }
         if (firmwareRev) {
-            setXpath(session, parent, componentPath + "/firmware-rev", firmwareRev.value());
+            parent->newPath(componentPath + "/firmware-rev", firmwareRev.value());
         }
         if (softwareRev) {
-            setXpath(session, parent, componentPath + "/software-rev", softwareRev.value());
+            parent->newPath(componentPath + "/software-rev", softwareRev.value());
         }
         if (serial) {
-            setXpath(session, parent, componentPath + "/serial-num", serial.value());
+            parent->newPath(componentPath + "/serial-num", serial.value());
         }
         if (mfgName) {
-            setXpath(session, parent, componentPath + "/mfg-name", mfgName.value());
+            parent->newPath(componentPath + "/mfg-name", mfgName.value());
         }
         if (modelName) {
-            setXpath(session, parent, componentPath + "/model-name", modelName.value());
+            parent->newPath(componentPath + "/model-name", modelName.value());
         }
         if (alias) {
-            setXpath(session, parent, componentPath + "/alias", alias.value());
+            parent->newPath(componentPath + "/alias", alias.value());
         }
         if (assetID) {
-            setXpath(session, parent, componentPath + "/asset-id", assetID.value());
+            parent->newPath(componentPath + "/asset-id", assetID.value());
         }
         // uri to value
         for (auto const& elem : uri) {
-            setXpath(session, parent, componentPath + "/uri", elem);
+            parent->newPath(componentPath + "/uri", elem);
         }
         if (uuid) {
-            setXpath(session, parent, componentPath + "/uuid", uuid.value());
+            parent->newPath(componentPath + "/uuid", uuid.value());
         }
     }
 

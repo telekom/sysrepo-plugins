@@ -102,46 +102,44 @@ struct Sensor : public ComponentData {
         return returnedType;
     }
 
-    void setXpathForAllMembers(Session& session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpathForAllMembers(std::optional<libyang::DataNode>& parent,
         std::string const& mainXpath,
         bool /*setPhysicalID = false*/) const override
     {
         std::string sensorPath = mainXpath + "/component[name='" + name + "']";
         SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Setting values for component: " + name).c_str());
 
-        setXpath(session, parent, sensorPath + "/class", classType);
-        setXpath(session, parent, sensorPath + "/sensor-data/value", std::to_string(value));
-        setXpath(session, parent, sensorPath + "/sensor-data/value-type",
+        parent->newPath(sensorPath + "/class", classType);
+        parent->newPath(sensorPath + "/sensor-data/value", std::to_string(value));
+        parent->newPath(sensorPath + "/sensor-data/value-type",
             getValueTypeString(valueType));
-        setXpath(session, parent, sensorPath + "/sensor-data/value-scale",
+        parent->newPath(sensorPath + "/sensor-data/value-scale",
             getValueScaleString(valueScale));
-        setXpath(session, parent, sensorPath + "/sensor-data/value-precision",
+        parent->newPath(sensorPath + "/sensor-data/value-precision",
             std::to_string(valuePrecision));
-        setXpath(session, parent, sensorPath + "/sensor-data/oper-status", "ok");
+        parent->newPath(sensorPath + "/sensor-data/oper-status", "ok");
         if (valueScale == Sensor::ValueScale::units) {
-            setXpath(session, parent, sensorPath + "/sensor-data/units-display",
+            parent->newPath(sensorPath + "/sensor-data/units-display",
                 getValueTypeString(valueType));
         } else {
             std::string const unit = getValueScaleString(valueScale) + " " + getValueTypeString(valueType);
-            setXpath(session, parent, sensorPath + "/sensor-data/units-display", unit);
+            parent->newPath(sensorPath + "/sensor-data/units-display", unit);
         }
         char timeString[100];
         if (std::strftime(timeString, sizeof(timeString), "%FT%TZ",
                 std::localtime(&valueTimestamp))) {
-            setXpath(session, parent, sensorPath + std::string("/sensor-data/value-timestamp"),
+            parent->newPath(sensorPath + std::string("/sensor-data/value-timestamp"),
                 timeString);
         }
-        setXpath(session, parent, sensorPath + std::string("/sensor-data/value-update-rate"), "0");
+        parent->newPath(sensorPath + std::string("/sensor-data/value-update-rate"), "0");
         if (!sensorThresholds.empty()) {
-            setXpath(
-                session, parent,
+            parent->newPath(
                 sensorPath + std::string("/sensor-notifications-augment:sensor-notifications/poll-interval"),
                 std::to_string(ComponentData::pollInterval));
             std::string sensorThresholdPath(
                 sensorPath + "/sensor-notifications-augment:sensor-notifications/threshold[name='");
             for (auto const& sens : sensorThresholds) {
-                setXpath(session, parent, sensorThresholdPath + sens->name + "']/value",
+                parent->newPath(sensorThresholdPath + sens->name + "']/value",
                     std::to_string(sens->value));
             }
         }

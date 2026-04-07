@@ -25,7 +25,6 @@ namespace metrics {
 
 struct ProcessStats {
     using setFunction_t = const std::function<void(uint64_t,
-        sysrepo::Session,
         std::optional<libyang::DataNode>&,
         std::string const&,
         int32_t)>;
@@ -43,46 +42,46 @@ struct ProcessStats {
     {
         static std::unordered_map<std::string, setFunction_t> _ {
             { "syscr:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/io/read-count", std::to_string(value));
+                    parent->newPath(path + "/io/read-count", std::to_string(value));
                 } },
             { "syscw:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/io/write-count", std::to_string(value));
+                    parent->newPath(path + "/io/write-count", std::to_string(value));
                 } },
             { "read_bytes:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/io/read-kbytes", std::to_string(value / 1024));
+                    parent->newPath(path + "/io/read-kbytes", std::to_string(value / 1024));
                 } },
             { "write_bytes:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/io/write-kbytes", std::to_string(value / 1024));
+                    parent->newPath(path + "/io/write-kbytes", std::to_string(value / 1024));
                 } },
             { "voluntary_ctxt_switches:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/voluntary-ctx-switches", std::to_string(value));
+                    parent->newPath(path + "/voluntary-ctx-switches", std::to_string(value));
                 } },
             { "nonvoluntary_ctxt_switches:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/involuntary-ctx-switches",
+                    parent->newPath(path + "/involuntary-ctx-switches",
                         std::to_string(value));
                 } },
             { "FDSize:",
-                [](uint64_t value, sysrepo::Session session, std::optional<libyang::DataNode>& parent,
+                [](uint64_t value, std::optional<libyang::DataNode>& parent,
                     std::string const& path, int32_t tid) {
-                    setXpath(session, parent, path + "/open-file-descriptors", std::to_string(value));
+                    parent->newPath(path + "/open-file-descriptors", std::to_string(value));
                     struct rlimit maxFDs;
                     if (!prlimit(tid, RLIMIT_NOFILE, nullptr, &maxFDs)) {
                         std::stringstream stream;
                         stream << std::fixed << std::setprecision(2)
                                << static_cast<double>(value) * 100.0 / static_cast<long double>(maxFDs.rlim_cur);
-                        setXpath(session, parent, path + "/open-file-descriptors-perc", stream.str());
+                        parent->newPath(path + "/open-file-descriptors-perc", stream.str());
                     }
                 } }
         };
@@ -162,8 +161,7 @@ struct ProcessStats {
         }
     }
 
-    void readAndSet(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void readAndSet(std::optional<libyang::DataNode>& parent,
         int32_t tid,
         std::string const& procXpath,
         std::string const& what)
@@ -175,7 +173,7 @@ struct ProcessStats {
             if (func) {
                 uint64_t value;
                 if (file >> value) {
-                    func(value, session, parent, procXpath, tid);
+                    func(value, parent, procXpath, tid);
                 }
             }
             // ignore rest of the line
@@ -183,8 +181,7 @@ struct ProcessStats {
         }
     }
 
-    void readAndSetAll(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void readAndSetAll(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName)
     {
         PROCTAB* proc = openproc(PROC_FILLMEM | PROC_FILLSTAT | PROC_FILLSTATUS);
@@ -195,22 +192,22 @@ struct ProcessStats {
         while (readproc(proc, &procInfo) != NULL) {
             std::string const procXpath(baseXpath + std::to_string(procInfo.tid) + "']");
             // memory stats
-            setXpath(session, parent, procXpath + "/memory/real",
+            parent->newPath(procXpath + "/memory/real",
                 std::to_string(procInfo.vm_rss - procInfo.vm_rss_shared));
-            setXpath(session, parent, procXpath + "/memory/rss", std::to_string(procInfo.vm_rss));
-            setXpath(session, parent, procXpath + "/memory/vsz", std::to_string(procInfo.vm_size));
+            parent->newPath(procXpath + "/memory/rss", std::to_string(procInfo.vm_rss));
+            parent->newPath(procXpath + "/memory/vsz", std::to_string(procInfo.vm_size));
 
             // io
-            readAndSet(session, parent, procInfo.tid, procXpath, "io");
-            readAndSet(session, parent, procInfo.tid, procXpath, "status");
+            readAndSet(parent, procInfo.tid, procXpath, "io");
+            readAndSet(parent, procInfo.tid, procXpath, "status");
 
             // nlwp
-            setXpath(session, parent, procXpath + "/thread-count", std::to_string(procInfo.nlwp));
+            parent->newPath(procXpath + "/thread-count", std::to_string(procInfo.nlwp));
 
             // cpu
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << getCpuUsage(procInfo.tid);
-            setXpath(session, parent, procXpath + "/cpu", stream.str());
+            parent->newPath(procXpath + "/cpu", stream.str());
         }
 
         closeproc(proc);

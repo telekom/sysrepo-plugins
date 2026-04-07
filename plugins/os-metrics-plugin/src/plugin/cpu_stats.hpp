@@ -48,8 +48,7 @@ struct CoreStats {
                   << " " << mIrq << " " << mSoftirq << " " << mStolen << " " << mTotal << std::endl;
     }
 
-    void setXpathValues(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName,
         std::optional<size_t> index)
     {
@@ -61,35 +60,35 @@ struct CoreStats {
         std::stringstream stream;
         stream << std::fixed << std::setprecision(2)
                << mUser / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/user", stream.str());
+        parent->newPath(basePath + cpuPath + "/user", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mSystem / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/sys", stream.str());
+        parent->newPath(basePath + cpuPath + "/sys", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mNice / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/nice", stream.str());
+        parent->newPath(basePath + cpuPath + "/nice", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mIdle / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/idle", stream.str());
+        parent->newPath(basePath + cpuPath + "/idle", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mIowait / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/wait", stream.str());
+        parent->newPath(basePath + cpuPath + "/wait", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mIrq / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/irq", stream.str());
+        parent->newPath(basePath + cpuPath + "/irq", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mSoftirq / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/softirq", stream.str());
+        parent->newPath(basePath + cpuPath + "/softirq", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mStolen / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/stolen", stream.str());
+        parent->newPath(basePath + cpuPath + "/stolen", stream.str());
     }
 
     void populateValues(std::vector<size_t> const& cpu_times)
@@ -133,14 +132,13 @@ struct CpuStats : public CoreStats {
         }
     }
 
-    void setXpathValues(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName)
     {
         SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for cpu statistics");
-        CoreStats::setXpathValues(session, parent, moduleName, std::nullopt);
+        CoreStats::setXpathValues(parent, moduleName, std::nullopt);
         for (size_t i = 0; i < mCoreTimes.size(); i++) {
-            mCoreTimes[i].setXpathValues(session, parent, moduleName, i);
+            mCoreTimes[i].setXpathValues(parent, moduleName, i);
         }
     }
 

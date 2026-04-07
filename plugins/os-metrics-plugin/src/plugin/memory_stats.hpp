@@ -35,40 +35,39 @@ struct MemoryStats {
     MemoryStats(MemoryStats const&) = delete;
     void operator=(MemoryStats const&) = delete;
 
-    void setXpathValues(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName)
     {
         std::lock_guard lk(mMtx);
         SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for memory statistics");
         std::string memoryPath("/" + std::string(moduleName) + ":system-metrics/memory/statistics/");
-        setXpath(session, parent, memoryPath + "free", std::to_string(mFree / 1024ULL));
-        setXpath(session, parent, memoryPath + "swap-free-mb", std::to_string(mSwapFree / 1024ULL));
-        setXpath(session, parent, memoryPath + "swap-total", std::to_string(mSwapTotal / 1024ULL));
-        setXpath(session, parent, memoryPath + "swap-used", std::to_string(mSwapUsed / 1024ULL));
-        setXpath(session, parent, memoryPath + "total", std::to_string(mTotal / 1024ULL));
-        setXpath(session, parent, memoryPath + "usable-mb", std::to_string(mUsable / 1024ULL));
-        setXpath(session, parent, memoryPath + "used-buffers",
+        parent->newPath(memoryPath + "free", std::to_string(mFree / 1024ULL));
+        parent->newPath(memoryPath + "swap-free-mb", std::to_string(mSwapFree / 1024ULL));
+        parent->newPath(memoryPath + "swap-total", std::to_string(mSwapTotal / 1024ULL));
+        parent->newPath(memoryPath + "swap-used", std::to_string(mSwapUsed / 1024ULL));
+        parent->newPath(memoryPath + "total", std::to_string(mTotal / 1024ULL));
+        parent->newPath(memoryPath + "usable-mb", std::to_string(mUsable / 1024ULL));
+        parent->newPath(memoryPath + "used-buffers",
             std::to_string(mUsedBuffers / 1024ULL));
-        setXpath(session, parent, memoryPath + "used-cached",
+        parent->newPath(memoryPath + "used-cached",
             std::to_string(mUsedCached / 1024ULL));
-        setXpath(session, parent, memoryPath + "used-shared",
+        parent->newPath(memoryPath + "used-shared",
             std::to_string(mUsedShared / 1024ULL));
-        setXpath(session, parent, memoryPath + "hugepages-total", std::to_string(mHugePagesTotal));
-        setXpath(session, parent, memoryPath + "hugepages-free", std::to_string(mHugePagesFree));
-        setXpath(session, parent, memoryPath + "hugepage-size", std::to_string(mHugePageSize));
+        parent->newPath(memoryPath + "hugepages-total", std::to_string(mHugePagesTotal));
+        parent->newPath(memoryPath + "hugepages-free", std::to_string(mHugePagesFree));
+        parent->newPath(memoryPath + "hugepage-size", std::to_string(mHugePageSize));
 
         if (mTotal != 0) {
             long double usable = mUsable / static_cast<long double>(mTotal) * 100.0;
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << usable;
-            setXpath(session, parent, memoryPath + "usable-perc", stream.str());
+            parent->newPath(memoryPath + "usable-perc", stream.str());
         }
         if (mSwapTotal != 0) {
             long double swapFree = mSwapFree / static_cast<long double>(mSwapTotal) * 100.0;
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << swapFree;
-            setXpath(session, parent, memoryPath + "swap-free-perc", stream.str());
+            parent->newPath(memoryPath + "swap-free-perc", stream.str());
         }
     }
 

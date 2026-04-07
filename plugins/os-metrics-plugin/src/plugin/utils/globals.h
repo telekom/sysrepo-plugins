@@ -20,25 +20,6 @@
 
 #define PLUGIN_NAME "OS-Metrics"
 
-static bool setXpath(sysrepo::Session& session,
-    std::optional<libyang::DataNode>& parent,
-    std::string const& node_xpath,
-    std::string const& value)
-{
-    try {
-        if (parent) {
-            parent.value().newPath(node_xpath, value);
-        } else {
-            parent = session.getContext().newPath(node_xpath, value);
-        }
-    } catch (std::runtime_error const& e) {
-        SRPLG_LOG_WRN(PLUGIN_NAME, "%s",
-            ("At path " + node_xpath + ", value " + value + " " + ", error: " + e.what()).c_str());
-        return false;
-    }
-    return true;
-}
-
 [[maybe_unused]] static std::optional<libyang::Module> findModule(sysrepo::Session session,
     std::string_view moduleName)
 {

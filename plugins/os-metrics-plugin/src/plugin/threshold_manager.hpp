@@ -144,7 +144,7 @@ struct MemoryMonitoring : public UsageMonitoring {
         std::string const data_xpath(std::string("/") + std::string(moduleName) + ":system-metrics/memory");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for memory population at xpath: %s", data_xpath.c_str());
             return;
         }
         std::shared_ptr<std::pair<std::string, Threshold>> threshold;
@@ -181,16 +181,15 @@ struct MemoryMonitoring : public UsageMonitoring {
         }
     }
 
-    void setXpaths(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpaths(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName) const
     {
         std::string configPath("/" + std::string(moduleName) + ":system-metrics/memory/usage-monitoring/");
-        setXpath(session, parent, configPath + "poll-interval", std::to_string(mPollInterval));
+        parent->newPath(configPath + "poll-interval", std::to_string(mPollInterval));
         for (auto const& [name, thr] : mMemoryThesholds) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << thr.value;
-            setXpath(session, parent, configPath + "threshold[name='" + name + "']/value",
+            parent->newPath(configPath + "threshold[name='" + name + "']/value",
                 stream.str());
         }
     }
@@ -336,18 +335,17 @@ struct FilesystemMonitoring : public UsageMonitoring {
         }
     }
 
-    void setXpaths(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpaths(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName) const
     {
         for (auto const& [fsName, thresholdTuple] : mFsThresholds) {
             std::string const configPath("/" + std::string(moduleName) + ":system-metrics/filesystems/filesystem[mount-point='" + fsName + "']/usage-monitoring/");
-            setXpath(session, parent, configPath + "poll-interval",
+            parent->newPath(configPath + "poll-interval",
                 std::to_string(std::get<0>(thresholdTuple)));
             for (auto const& [name, thr] : std::get<1>(thresholdTuple)) {
                 std::stringstream stream;
                 stream << std::fixed << std::setprecision(2) << thr.value;
-                setXpath(session, parent, configPath + "threshold[name='" + name + "']/value",
+                parent->newPath(configPath + "threshold[name='" + name + "']/value",
                     stream.str());
             }
         }

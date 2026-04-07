@@ -38,27 +38,26 @@ struct Filesystem {
         std::cout << "spaceUsed: " << spaceUsed << std::endl;
     }
 
-    void setXpathValues(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName) const
     {
         std::string filesystemPath("/" + std::string(moduleName) + ":system-metrics/filesystems/filesystem[mount-point='" + mountPoint + "']/statistics/");
-        setXpath(session, parent, filesystemPath + "name", name);
-        setXpath(session, parent, filesystemPath + "type", type);
-        setXpath(session, parent, filesystemPath + "total-blocks", std::to_string(totalBlocks));
-        setXpath(session, parent, filesystemPath + "used-blocks", std::to_string(usedBlocks));
-        setXpath(session, parent, filesystemPath + "avail-blocks", std::to_string(availableBlocks));
-        setXpath(session, parent, filesystemPath + "blocksize", std::to_string(blocksize));
+        parent->newPath(filesystemPath + "name", name);
+        parent->newPath(filesystemPath + "type", type);
+        parent->newPath(filesystemPath + "total-blocks", std::to_string(totalBlocks));
+        parent->newPath(filesystemPath + "used-blocks", std::to_string(usedBlocks));
+        parent->newPath(filesystemPath + "avail-blocks", std::to_string(availableBlocks));
+        parent->newPath(filesystemPath + "blocksize", std::to_string(blocksize));
 
         {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << spaceUsed;
-            setXpath(session, parent, filesystemPath + "space-used", stream.str());
+            parent->newPath(filesystemPath + "space-used", stream.str());
         }
         {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << inodeUsed;
-            setXpath(session, parent, filesystemPath + "inode-used", stream.str());
+            parent->newPath(filesystemPath + "inode-used", stream.str());
         }
     }
 
@@ -154,14 +153,13 @@ struct FilesystemStats {
         }
     }
 
-    void setXpathValues(sysrepo::Session session,
-        std::optional<libyang::DataNode>& parent,
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName)
     {
         std::lock_guard lk(mMtx);
         SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for filesystems statistics");
         for (auto const& v : fsMap) {
-            v.second.setXpathValues(session, parent, moduleName);
+            v.second.setXpathValues(parent, moduleName);
         }
     }
 

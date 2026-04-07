@@ -71,7 +71,7 @@ struct Callback {
             std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
         char timeString[100];
         if (std::strftime(timeString, sizeof(timeString), "%FT%TZ", std::localtime(&lastChange))) {
-            setXpath(session, parent, set_xpath + "/last-change", timeString);
+            parent = session.getContext().newPath(set_xpath + "/last-change", timeString);
         }
 
         std::ifstream ifs(COMPONENTS_LOCATION, std::ifstream::in);
@@ -104,7 +104,7 @@ struct Callback {
         }
 
         for (auto const& c : hwComponents) {
-            c.second->setXpathForAllMembers(session, parent, set_xpath,
+            c.second->setXpathForAllMembers(parent, set_xpath,
                 (module != std::end(modules)) && module->featureEnabled("entity-mib"));
         }
 

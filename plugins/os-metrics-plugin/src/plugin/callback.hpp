@@ -36,16 +36,16 @@ struct Callback {
     {
         CpuStats stats;
         stats.readCpuTimes();
-        stats.setXpathValues(session, parent, moduleName);
+        stats.setXpathValues(parent, moduleName);
         double loadavg[3];
         if (getloadavg(loadavg, 3) != -1) {
-            setXpath(session, parent,
+            parent->newPath(
                 "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-1min-load",
                 std::format("{:.2f}", loadavg[0]));
-            setXpath(session, parent,
+            parent->newPath(
                 "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-5min-load",
                 std::format("{:.2f}", loadavg[1]));
-            setXpath(session, parent,
+            parent->newPath(
                 "/" + std::string(moduleName) + ":system-metrics/cpu-statistics/average-load/avg-15min-load",
                 std::format("{:.2f}", loadavg[2]));
         } else {
@@ -64,10 +64,10 @@ struct Callback {
     {
         auto module = findModule(session, moduleName);
         if (module && module.value().featureEnabled("usage-notifications")) {
-            MemoryMonitoring::getInstance().setXpaths(session, parent, moduleName);
+            MemoryMonitoring::getInstance().setXpaths(parent, moduleName);
         }
         MemoryStats::getInstance().readMemoryStats();
-        MemoryStats::getInstance().setXpathValues(session, parent, moduleName);
+        MemoryStats::getInstance().setXpathValues(parent, moduleName);
         return ErrorCode::Ok;
     }
 
@@ -81,10 +81,10 @@ struct Callback {
     {
         auto module = findModule(session, moduleName);
         if (module && module.value().featureEnabled("usage-notifications")) {
-            FilesystemMonitoring::getInstance().setXpaths(session, parent, moduleName);
+            FilesystemMonitoring::getInstance().setXpaths(parent, moduleName);
         }
         FilesystemStats::getInstance().readFilesystemStats();
-        FilesystemStats::getInstance().setXpathValues(session, parent, moduleName);
+        FilesystemStats::getInstance().setXpathValues(parent, moduleName);
         return ErrorCode::Ok;
     }
 
@@ -96,7 +96,7 @@ struct Callback {
         uint32_t /* requestId */,
         std::optional<DataNode>& parent)
     {
-        ProcessStats::getInstance().readAndSetAll(session, parent, moduleName);
+        ProcessStats::getInstance().readAndSetAll(parent, moduleName);
         return ErrorCode::Ok;
     }
 
