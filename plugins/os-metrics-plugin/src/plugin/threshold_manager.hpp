@@ -55,14 +55,26 @@ struct UsageMonitoring {
     }
 
     void checkAndTriggerNotification(std::string const& sensName,
-        Threshold const& thr,
+        Threshold& thr,
         long double value,
         std::string const& type,
         std::string mountPoint = std::string())
     {
+        bool nowAbove = value >= thr.value;
+
+        // Only notify on actual transitions
+        if (nowAbove && thr.rising) {
+            return; // already above, no transition
+        }
+        if (!nowAbove && thr.falling) {
+            return; // already below, no transition
+        }
+
+        thr.rising = nowAbove;
+        thr.falling = !nowAbove;
+
         std::string notifPath("/" + mModuleName + ":" + type + "-threshold-crossed");
 
-        /* start session */
         if (!mConn) {
             return;
         }
@@ -72,7 +84,7 @@ struct UsageMonitoring {
         if (type == "filesystem") {
             input.newPath((notifPath + "/mount-point"), mountPoint);
         }
-        if (value >= thr.value) {
+        if (nowAbove) {
             input.newPath((notifPath + "/rising"));
         } else {
             input.newPath((notifPath + "/falling"));
@@ -131,8 +143,8 @@ struct MemoryMonitoring : public UsageMonitoring {
         std::unique_lock<std::mutex> lk(mNotificationMtx);
         while (mCV.wait_for(lk, std::chrono::seconds(mPollInterval)) == std::cv_status::timeout) {
             long double value = MemoryStats::getInstance().getUsage();
-            for (auto const& [name, thrValue] : mMemoryThesholds) {
-                SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Trigger notification for: ") + name + ": " + std::to_string(value)).c_str());
+            for (auto& [name, thrValue] : mMemoryThesholds) {
+                SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Checking threshold: ") + name + ": " + std::to_string(value)).c_str());
                 checkAndTriggerNotification(name, thrValue, value, "memory");
             }
         }
@@ -258,8 +270,8 @@ struct FilesystemMonitoring : public UsageMonitoring {
                     SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("No filesystem found: ") + name).c_str());
                     break;
                 }
-                for (auto const& [thrName, thrValue] : std::get<1>(itr->second)) {
-                    SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Trigger notification for: ") + thrName + ": " + std::to_string(usageValue.value())).c_str());
+                for (auto& [thrName, thrValue] : std::get<1>(itr->second)) {
+                    SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Checking threshold: ") + thrName + ": " + std::to_string(usageValue.value())).c_str());
                     checkAndTriggerNotification(thrName, thrValue, usageValue.value(), "filesystem",
                         name);
                 }
@@ -321,17 +333,6 @@ struct FilesystemMonitoring : public UsageMonitoring {
         if (threshold) {
             thresholdMap[threshold->first] = threshold->second;
             mFsThresholds[mountPoint] = std::make_tuple(poll, thresholdMap);
-        }
-    }
-
-    void printFsConfig()
-    {
-        for (auto const& [name, thresholds] : mFsThresholds) {
-            std::cout << "name: " << name << "\t poll:" << std::get<0>(thresholds);
-            for (auto const& [thrName, thrValue] : std::get<1>(thresholds)) {
-                std::cout << "\t thr-name: " << thrName << " thr-value" << thrValue.value << " "
-                          << thrValue.rising << " " << thrValue.falling << std::endl;
-            }
         }
     }
 

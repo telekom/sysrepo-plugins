@@ -97,22 +97,6 @@ struct MemoryStats {
         return 100.0 - (mUsable / static_cast<long double>(mTotal) * 100.0);
     }
 
-    void printValues() const
-    {
-        std::cout << "MemTotal:" << mTotal << std::endl;
-        std::cout << "MemFree:" << mFree << std::endl;
-        std::cout << "MemAvailable:" << mUsable << std::endl;
-        std::cout << "SwapTotal:" << mSwapTotal << std::endl;
-        std::cout << "SwapFree:" << mSwapFree << std::endl;
-        std::cout << "SwapUsed:" << mSwapUsed << std::endl;
-        std::cout << "Shmem:" << mUsedShared << std::endl;
-        std::cout << "Cached:" << mUsedCached << std::endl;
-        std::cout << "Buffers:" << mUsedBuffers << std::endl;
-        std::cout << "HugePages_Total:" << mHugePagesTotal << std::endl;
-        std::cout << "HugePages_Free:" << mHugePagesFree << std::endl;
-        std::cout << "Hugepagesize:" << mHugePageSize << std::endl;
-    }
-
 private:
     MemoryStats()
         : mFree(0)

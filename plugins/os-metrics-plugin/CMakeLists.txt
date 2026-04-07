@@ -27,12 +27,8 @@ find_package(PROCPS REQUIRED)
 set(
     PLUGIN_SOURCES
 
-    src/plugin/callback.hpp
-    src/plugin/cpu_stats.hpp
-    src/plugin/filesystem_stats.hpp
-    src/plugin/memory_stats.hpp
-    src/plugin/process_stats.hpp
-    src/plugin/threshold_manager.hpp
+    src/plugin/context.cpp
+    src/plugin/modules/metrics.cpp
     src/plugin.cpp
 )
 

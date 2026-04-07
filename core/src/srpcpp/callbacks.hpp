@@ -13,7 +13,9 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
+#include <sysrepo-cpp/Enum.hpp>
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/Changes.hpp>
 
@@ -34,6 +36,7 @@ struct ModuleChangeCallback {
     std::string Module; ///< Module for the callback.
     std::string XPath; ///< XPath of the data.
     sysrepo::ModuleChangeCb Callback; ///< Callback function.
+    std::optional<sysrepo::SubscribeOptions> Options; ///< Optional subscribe options.
 };
 
 /**

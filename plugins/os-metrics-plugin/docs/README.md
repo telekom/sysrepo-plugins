@@ -11,7 +11,7 @@
   <a href="#licensing">Licensing</a>
 </p>
 
-The goal of this project is to create a metrics module and implementation to get more information out of Debian through the NETCONF pipeline.
+The goal of this project is to create a metrics module and implementation to get more information out of Linux systems through the NETCONF pipeline.
 
 ## About this component
 
@@ -21,7 +21,7 @@ The OS Metrics Module was designed to deliver a decent amount of information abo
 
 The full development progress can be found in the [documentation](./DOCUMENTATION.md).
 
-The plugin assumes it's being installed on a Debian system and uses tools like `df`, and the `/proc` structure internally.
+The plugin assumes it's being installed on a Linux system and uses tools like `df`, and the `/proc` structure internally.
 
 ## Documentation
 

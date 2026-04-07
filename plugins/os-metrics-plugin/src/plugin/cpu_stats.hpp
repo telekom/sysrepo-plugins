@@ -16,7 +16,6 @@
 
 #include <fstream>
 #include <iomanip>
-#include <iostream>
 #include <numeric>
 #include <optional>
 #include <sstream>
@@ -40,12 +39,6 @@ struct CoreStats {
     CoreStats(std::vector<size_t> const& cpu_times)
     {
         populateValues(cpu_times);
-    }
-
-    void printValues() const
-    {
-        std::cout << mUser << " " << mUser << " " << mSystem << " " << mIdle << " " << mIowait
-                  << " " << mIrq << " " << mSoftirq << " " << mStolen << " " << mTotal << std::endl;
     }
 
     void setXpathValues(std::optional<libyang::DataNode>& parent,
@@ -123,14 +116,6 @@ struct CpuStats : public CoreStats {
 
     CpuStats(std::vector<size_t> const& cpu_times)
         : CoreStats(cpu_times) { };
-
-    void printValues() const
-    {
-        CoreStats::printValues();
-        for (auto const& c : mCoreTimes) {
-            c.printValues();
-        }
-    }
 
     void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName)

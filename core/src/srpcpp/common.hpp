@@ -108,9 +108,17 @@ void registerModuleChangeSubscriptions(sysrepo::Session& sess, PluginContextType
     for (auto& cb : change_callbacks) {
         SRPLG_LOG_INF(ctx.getPluginName(), "Creating module change subscription for xpath %s", cb.XPath.c_str());
         if (sub_handle.has_value()) {
-            sub_handle->onModuleChange(cb.Module, cb.Callback, cb.XPath);
+            if (cb.Options) {
+                sub_handle->onModuleChange(cb.Module, cb.Callback, cb.XPath, 0, *cb.Options);
+            } else {
+                sub_handle->onModuleChange(cb.Module, cb.Callback, cb.XPath);
+            }
         } else {
-            sub_handle = sess.onModuleChange(cb.Module, cb.Callback, cb.XPath);
+            if (cb.Options) {
+                sub_handle = sess.onModuleChange(cb.Module, cb.Callback, cb.XPath, 0, *cb.Options);
+            } else {
+                sub_handle = sess.onModuleChange(cb.Module, cb.Callback, cb.XPath);
+            }
         }
     }
 }

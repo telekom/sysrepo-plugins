@@ -25,18 +25,6 @@ namespace metrics {
 
 struct Filesystem {
 
-    void printValues() const
-    {
-        std::cout << "name: " << name << std::endl;
-        std::cout << "mountPoint: " << mountPoint << std::endl;
-        std::cout << "type: " << type << std::endl;
-        std::cout << "totalBlocks: " << totalBlocks << std::endl;
-        std::cout << "usedBlocks: " << usedBlocks << std::endl;
-        std::cout << "availableBlocks: " << availableBlocks << std::endl;
-        std::cout << "blocksize: " << blocksize << std::endl;
-        std::cout << "inodeUsed: " << inodeUsed << std::endl;
-        std::cout << "spaceUsed: " << spaceUsed << std::endl;
-    }
 
     void setXpathValues(std::optional<libyang::DataNode>& parent,
         std::string_view moduleName) const
@@ -142,14 +130,6 @@ struct FilesystemStats {
             return itr->second.spaceUsed;
         } else {
             return std::nullopt;
-        }
-    }
-
-    void printValues() const
-    {
-        for (auto const& v : fsMap) {
-            v.second.printValues();
-            std::cout << std::endl;
         }
     }
 

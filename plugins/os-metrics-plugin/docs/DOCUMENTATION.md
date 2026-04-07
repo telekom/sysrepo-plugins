@@ -27,5 +27,5 @@ sysrepocfg -x "/os-metrics:system-metrics" -X -d operational -f json
 As described in the module itself the plugin holds configuration data provided by the user in the running data-store and uses the data to create and monitor threshold values for filesystem and memory nodes. These configuration nodes and the notifications themselves are grouped under the 'usage-notifications' feature which needs to be enabled.
 
 ```bash
-sysrepocfg -I example/os-metrics-text-config.xml -d running
+sysrepocfg -I examples/os-metrics-test-config.xml -d running
 ```

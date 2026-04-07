@@ -11,66 +11,73 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
 
-#include "plugin/callback.hpp"
+#include "plugin.hpp"
+#include "plugin/context.hpp"
 
-#include <sysrepo-cpp/Connection.hpp>
-#include <sysrepo-cpp/Subscription.hpp>
+#include <sysrepo-cpp/Session.hpp>
+#include <sysrepo-cpp/utils/utils.hpp>
 
-extern "C" {
-void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* private_data);
-int sr_plugin_init_cb(sr_session_ctx_t* session, void** private_data);
-}
+#include "plugin/modules/metrics.hpp"
+#include "plugin/threshold_manager.hpp"
 
-struct MetricsModel {
-    std::shared_ptr<sysrepo::Subscription> sub;
-    static std::string const moduleName;
-};
+#include <sysrepo.h>
 
-// Main moduleName entry-point
-std::string const MetricsModel::moduleName = "os-metrics";
+namespace sr = sysrepo;
 
-static MetricsModel theModel;
-
-int sr_plugin_init_cb(sr_session_ctx_t* session, void** /*private_data*/)
+int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 {
-    sysrepo::Connection conn;
-    sysrepo::Session ses = conn.sessionStart();
-    std::string const cpu_state_xpath("/" + MetricsModel::moduleName + ":" + "system-metrics/cpu-statistics");
-    std::string const memory_state_xpath("/" + MetricsModel::moduleName + ":" + "system-metrics/memory/statistics");
-    std::string const memory_config_xpath("/" + MetricsModel::moduleName + ":" + "system-metrics/memory");
-    std::string const filesystem_state_xpath("/" + MetricsModel::moduleName + ":" + "system-metrics/filesystems");
-    std::string const processes_state_spath("/" + MetricsModel::moduleName + ":" + "system-metrics/processes");
-    try {
-        metrics::MemoryMonitoring::getInstance().injectConnection(conn, MetricsModel::moduleName);
-        metrics::FilesystemMonitoring::getInstance().injectConnection(conn,
-            MetricsModel::moduleName);
+    sr::ErrorCode error = sr::ErrorCode::Ok;
+    auto sess = sysrepo::wrapUnmanagedSession(session);
+    auto& registry(srpc::ModuleRegistry<metrics::PluginContext>::getInstance());
+    auto ctx = new metrics::PluginContext(sess);
 
-        sysrepo::Subscription sub = ses.onModuleChange(
-            MetricsModel::moduleName, &metrics::Callback::memoryConfigCallback, memory_config_xpath,
-            0, sysrepo::SubscribeOptions::Enabled | sysrepo::SubscribeOptions::DoneOnly);
-        sub.onModuleChange(MetricsModel::moduleName, &metrics::Callback::filesystemsConfigCallback,
-            filesystem_state_xpath, 0,
-            sysrepo::SubscribeOptions::Enabled | sysrepo::SubscribeOptions::DoneOnly);
-        sub.onOperGet(MetricsModel::moduleName, &metrics::Callback::cpuStateCallback,
-            cpu_state_xpath);
-        sub.onOperGet(MetricsModel::moduleName, &metrics::Callback::memoryStateCallback,
-            memory_state_xpath);
-        sub.onOperGet(MetricsModel::moduleName, &metrics::Callback::filesystemStateCallback,
-            filesystem_state_xpath);
-        sub.onOperGet(MetricsModel::moduleName, &metrics::Callback::processesStateCallback,
-            processes_state_spath);
-        theModel.sub = std::make_shared<sysrepo::Subscription>(std::move(sub));
+    *priv = static_cast<void*>(ctx);
+
+    SRPLG_LOG_INF(ctx->getPluginName(), "Creating plugin subscriptions");
+
+    try {
+        auto conn = ctx->getConnection();
+        metrics::MemoryMonitoring::getInstance().injectConnection(conn, "os-metrics");
+        metrics::FilesystemMonitoring::getInstance().injectConnection(conn, "os-metrics");
+
+        registry.registerModule<MetricsModule>(*ctx);
+
+        auto& modules = registry.getRegisteredModules();
+
+        for (auto& mod : modules) {
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registering operational callbacks for module %s", mod->getName());
+            srpc::registerOperationalSubscriptions(sess, *ctx, mod);
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registering module change callbacks for module %s", mod->getName());
+            srpc::registerModuleChangeSubscriptions(sess, *ctx, mod);
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registering RPC callbacks for module %s", mod->getName());
+            srpc::registerRpcSubscriptions(sess, *ctx, mod);
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registered module %s", mod->getName());
+        }
     } catch (std::exception const& e) {
-        SRPLG_LOG_ERR(PLUGIN_NAME, "%s", (std::string("sr_plugin_init_cb: ") + e.what()).c_str());
-        theModel.sub.reset();
+        SRPLG_LOG_ERR(ctx->getPluginName(), "sr_plugin_init_cb: %s", e.what());
+        delete ctx;
         return SR_ERR_OPERATION_FAILED;
     }
 
-    return SR_ERR_OK;
+    SRPLG_LOG_INF(ctx->getPluginName(), "Created plugin subscriptions");
+
+    return static_cast<int>(error);
 }
 
-void sr_plugin_cleanup_cb(sr_session_ctx_t* /*session*/, void* /*private_data*/)
+void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
 {
-    theModel.sub.reset();
-    SRPLG_LOG_DBG(PLUGIN_NAME, "plugin cleanup finished.");
+    auto& registry(srpc::ModuleRegistry<metrics::PluginContext>::getInstance());
+    auto ctx = static_cast<metrics::PluginContext*>(priv);
+    const auto plugin_name = ctx->getPluginName();
+
+    SRPLG_LOG_INF(plugin_name, "Plugin cleanup called");
+
+    auto& modules = registry.getRegisteredModules();
+    for (auto& mod : modules) {
+        SRPLG_LOG_INF(plugin_name, "Cleaning up module: %s", mod->getName());
+    }
+
+    delete ctx;
+
+    SRPLG_LOG_INF(plugin_name, "Plugin cleanup finished");
 }

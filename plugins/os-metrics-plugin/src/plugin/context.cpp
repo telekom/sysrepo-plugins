@@ -11,11 +11,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
 
-#pragma once
+#include "context.hpp"
 
-#include <sysrepo.h>
+namespace metrics {
 
-extern "C" {
-int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv);
-void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv);
+PluginContext::PluginContext(sysrepo::Session sess)
+    : srpc::BasePluginContext(sess)
+{
 }
+
+PluginContext::~PluginContext() { }
+
+} // namespace metrics

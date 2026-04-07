@@ -13,9 +13,8 @@
 
 #pragma once
 
-#include <sysrepo.h>
+#include <srpcpp.hpp>
 
-extern "C" {
-int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv);
-void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv);
-}
+class MetricsOperationalContext : public srpc::IModuleContext { };
+class MetricsModuleChangesContext : public srpc::IModuleContext { };
+class MetricsRpcContext : public srpc::IModuleContext { };
