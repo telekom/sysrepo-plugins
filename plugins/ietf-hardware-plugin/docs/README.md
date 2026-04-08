@@ -11,7 +11,7 @@
   <a href="#licensing">Licensing</a>
 </p>
 
-The goal of this project is to create a Debian implementation of the IETF-Hardware YANG module disregarding any SNMP approach.
+The goal of this project is to create a Linux implementation of the IETF-Hardware YANG module disregarding any SNMP approach.
 
 ## About this component
 
