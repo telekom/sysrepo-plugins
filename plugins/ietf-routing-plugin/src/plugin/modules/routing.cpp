@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -91,6 +91,26 @@ std::list<srpc::ModuleChangeCallback> RoutingModule::getModuleChangeCallbacks()
             .Module = "ietf-routing",
             .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv4/route/next-hop/next-hop-list/next-hop/outgoing-interface",
             .Callback = ietf::rt::sub::change::V4RouteNextHopNextHopListNextHopOutgoingInterfaceModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv6-unicast-routing:ipv6/route",
+            .Callback = ietf::rt::sub::change::V6RouteModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv6/route/next-hop/next-hop-list/next-hop",
+            .Callback = ietf::rt::sub::change::V6RouteNextHopNextHopListNextHopModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv6/route/next-hop/next-hop-list/next-hop/next-hop-address",
+            .Callback = ietf::rt::sub::change::V6RouteNextHopNextHopListNextHopNextHopAddressModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            .Module = "ietf-routing",
+            .XPath = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ipv6/route/next-hop/next-hop-list/next-hop/outgoing-interface",
+            .Callback = ietf::rt::sub::change::V6RouteNextHopNextHopListNextHopOutgoingInterfaceModuleChangeCb(m_changeContext),
         },
 
     };

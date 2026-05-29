@@ -4,7 +4,8 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2022 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -29,7 +30,10 @@ using libyang::DataNode;
 using sysrepo::Connection;
 
 struct Threshold {
-    Threshold(long double val = 0.0) : value(val), rising(false), falling(false){};
+    Threshold(long double val = 0.0)
+        : value(val)
+        , rising(false)
+        , falling(false) { };
     long double value;
     bool rising;
     bool falling;
@@ -39,20 +43,23 @@ struct UsageMonitoring {
     using thresholdMap_t = std::unordered_map<std::string, Threshold>;
     using fsThresholdTuple_t = std::tuple<uint32_t, thresholdMap_t>;
 
-    void notify() {
+    void notify()
+    {
         mCV.notify_all();
     }
 
-    void injectConnection(Connection conn, std::string const& moduleName) {
+    void injectConnection(Connection conn, std::string const& moduleName)
+    {
         mConn = std::make_shared<Connection>(conn);
         mModuleName = moduleName;
     }
 
     void checkAndTriggerNotification(std::string const& sensName,
-                                     Threshold const& thr,
-                                     long double value,
-                                     std::string const& type,
-                                     std::string mountPoint = std::string()) {
+        Threshold const& thr,
+        long double value,
+        std::string const& type,
+        std::string mountPoint = std::string())
+    {
         std::string notifPath("/" + mModuleName + ":" + type + "-threshold-crossed");
 
         /* start session */
@@ -85,7 +92,8 @@ struct UsageMonitoring {
 
 struct MemoryMonitoring : public UsageMonitoring {
 
-    static MemoryMonitoring& getInstance() {
+    static MemoryMonitoring& getInstance()
+    {
         static MemoryMonitoring instance;
         return instance;
     }
@@ -93,47 +101,50 @@ struct MemoryMonitoring : public UsageMonitoring {
     MemoryMonitoring(MemoryMonitoring const&) = delete;
     void operator=(MemoryMonitoring const&) = delete;
 
-    ~MemoryMonitoring() {
+    ~MemoryMonitoring()
+    {
         notifyAndJoin();
     }
 
-    void notifyAndJoin() {
+    void notifyAndJoin()
+    {
         mCV.notify_all();
         if (mThread.joinable()) {
             mThread.join();
         }
     }
 
-    void startThread() {
+    void startThread()
+    {
         if (mMemoryThesholds.empty()) {
             return;
         }
         if (mThread.joinable()) {
             mThread.join();
         }
-        logMessage(SR_LL_DBG, "Thread for memory thresholds started.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Thread for memory thresholds started.");
         mThread = std::thread(&MemoryMonitoring::runFunc, this);
     }
 
-    void runFunc() {
+    void runFunc()
+    {
         std::unique_lock<std::mutex> lk(mNotificationMtx);
         while (mCV.wait_for(lk, std::chrono::seconds(mPollInterval)) == std::cv_status::timeout) {
             long double value = MemoryStats::getInstance().getUsage();
             for (auto const& [name, thrValue] : mMemoryThesholds) {
-                logMessage(SR_LL_DBG, std::string("Trigger notification for: ") + name + ": " +
-                                          std::to_string(value));
+                SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Trigger notification for: ") + name + ": " + std::to_string(value)).c_str());
                 checkAndTriggerNotification(name, thrValue, value, "memory");
             }
         }
-        logMessage(SR_LL_DBG, "Thread for memory thresholds ended.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Thread for memory thresholds ended.");
     }
 
-    void populateConfigData(sysrepo::Session& session, std::string_view moduleName) {
-        std::string const data_xpath(std::string("/") + std::string(moduleName) +
-                                     ":system-metrics/memory");
+    void populateConfigData(sysrepo::Session& session, std::string_view moduleName)
+    {
+        std::string const data_xpath(std::string("/") + std::string(moduleName) + ":system-metrics/memory");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            logMessage(SR_LL_ERR, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for memory population at xpath: %s", data_xpath.c_str());
             return;
         }
         std::shared_ptr<std::pair<std::string, Threshold>> threshold;
@@ -153,9 +164,7 @@ struct MemoryMonitoring : public UsageMonitoring {
                     threshold = std::make_shared<std::pair<std::string, Threshold>>();
                     threshold->first = node.asTerm().valueStr();
                 } else if (std::string(schema.name()) == "value") {
-                    threshold->second.value =
-                        std::get<libyang::Decimal64>(node.asTerm().value()).number /
-                        std::pow(10, std::get<libyang::Decimal64>(node.asTerm().value()).digits);
+                    threshold->second.value = static_cast<double>(std::get<libyang::Decimal64>(node.asTerm().value()).number) / std::pow(10, std::get<libyang::Decimal64>(node.asTerm().value()).digits);
                 }
 
                 if (std::string(schema.name()) == "poll-interval") {
@@ -172,29 +181,30 @@ struct MemoryMonitoring : public UsageMonitoring {
         }
     }
 
-    void setXpaths(sysrepo::Session session,
-                   std::optional<libyang::DataNode>& parent,
-                   std::string_view moduleName) const {
-        std::string configPath("/" + std::string(moduleName) +
-                               ":system-metrics/memory/usage-monitoring/");
-        setXpath(session, parent, configPath + "poll-interval", std::to_string(mPollInterval));
+    void setXpaths(std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName) const
+    {
+        std::string configPath("/" + std::string(moduleName) + ":system-metrics/memory/usage-monitoring/");
+        parent->newPath(configPath + "poll-interval", std::to_string(mPollInterval));
         for (auto const& [name, thr] : mMemoryThesholds) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << thr.value;
-            setXpath(session, parent, configPath + "threshold[name='" + name + "']/value",
-                     stream.str());
+            parent->newPath(configPath + "threshold[name='" + name + "']/value",
+                stream.str());
         }
     }
 
 private:
-    MemoryMonitoring() : mPollInterval(60){};
+    MemoryMonitoring()
+        : mPollInterval(60) { };
     thresholdMap_t mMemoryThesholds;
     std::thread mThread;
     uint32_t mPollInterval;
 };
 
 struct FilesystemMonitoring : public UsageMonitoring {
-    static FilesystemMonitoring& getInstance() {
+    static FilesystemMonitoring& getInstance()
+    {
         static FilesystemMonitoring instance;
         return instance;
     }
@@ -202,16 +212,19 @@ struct FilesystemMonitoring : public UsageMonitoring {
     FilesystemMonitoring(FilesystemMonitoring const&) = delete;
     void operator=(FilesystemMonitoring const&) = delete;
 
-    ~FilesystemMonitoring() {
+    ~FilesystemMonitoring()
+    {
         notifyAndJoin();
     }
 
-    void notifyAndJoin() {
+    void notifyAndJoin()
+    {
         mCV.notify_all();
         stopThreads();
     }
 
-    void stopThreads() {
+    void stopThreads()
+    {
         int32_t numThreadsStopped(0);
         for (auto& [_, thread] : mFsThreads) {
             if (thread.joinable()) {
@@ -219,51 +232,48 @@ struct FilesystemMonitoring : public UsageMonitoring {
                 numThreadsStopped++;
             }
         }
-        logMessage(SR_LL_DBG, std::to_string(numThreadsStopped) +
-                                  " filesystem threads stopped, out of: " +
-                                  std::to_string(mFsThreads.size()) + " started.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::to_string(numThreadsStopped) + " filesystem threads stopped, out of: " + std::to_string(mFsThreads.size()) + " started.").c_str());
         mFsThreads.clear();
     }
 
-    void startThreads() {
+    void startThreads()
+    {
         if (mFsThresholds.empty()) {
             return;
         }
         for (auto const& [name, _] : mFsThresholds) {
-            logMessage(SR_LL_DBG, "Starting thread for filesystem: " + name + ".");
+            SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Starting thread for filesystem: " + name + ".").c_str());
             mFsThreads[name] = std::thread(&FilesystemMonitoring::runFunc, this, name);
         }
     }
 
-    void runFunc(std::string const& name) {
+    void runFunc(std::string const& name)
+    {
         std::unique_lock<std::mutex> lk(mNotificationMtx);
         std::unordered_map<std::string, fsThresholdTuple_t>::iterator itr;
         if ((itr = mFsThresholds.find(name)) != mFsThresholds.end()) {
-            while (mCV.wait_for(lk, std::chrono::seconds(std::get<0>(itr->second))) ==
-                   std::cv_status::timeout) {
-                std::optional<long double> usageValue =
-                    FilesystemStats::getInstance().getUsage(name);
+            while (mCV.wait_for(lk, std::chrono::seconds(std::get<0>(itr->second))) == std::cv_status::timeout) {
+                std::optional<long double> usageValue = FilesystemStats::getInstance().getUsage(name);
                 if (!usageValue) {
-                    logMessage(SR_LL_WRN, std::string("No filesystem found: ") + name);
+                    SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("No filesystem found: ") + name).c_str());
                     break;
                 }
                 for (auto const& [thrName, thrValue] : std::get<1>(itr->second)) {
-                    logMessage(SR_LL_DBG, std::string("Trigger notification for: ") + thrName +
-                                              ": " + std::to_string(usageValue.value()));
+                    SRPLG_LOG_DBG(PLUGIN_NAME, "%s", (std::string("Trigger notification for: ") + thrName + ": " + std::to_string(usageValue.value())).c_str());
                     checkAndTriggerNotification(thrName, thrValue, usageValue.value(), "filesystem",
-                                                name);
+                        name);
                 }
             }
         }
-        logMessage(SR_LL_DBG, "Thread for filesystem: " + name + " ended.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Thread for filesystem: " + name + " ended.").c_str());
     }
 
-    void populateConfigData(sysrepo::Session& session, std::string_view moduleName) {
-        std::string const data_xpath(std::string("/") + std::string(moduleName) +
-                                     ":system-metrics/filesystems");
+    void populateConfigData(sysrepo::Session& session, std::string_view moduleName)
+    {
+        std::string const data_xpath(std::string("/") + std::string(moduleName) + ":system-metrics/filesystems");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            logMessage(SR_LL_ERR, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for population.");
             return;
         }
 
@@ -296,9 +306,7 @@ struct FilesystemMonitoring : public UsageMonitoring {
                     threshold = std::make_shared<std::pair<std::string, Threshold>>();
                     threshold->first = node.asTerm().valueStr();
                 } else if (std::string(schema.name()) == "value") {
-                    threshold->second.value =
-                        std::get<libyang::Decimal64>(node.asTerm().value()).number /
-                        std::pow(10, std::get<libyang::Decimal64>(node.asTerm().value()).digits);
+                    threshold->second.value = static_cast<double>(std::get<libyang::Decimal64>(node.asTerm().value()).number) / std::pow(10, std::get<libyang::Decimal64>(node.asTerm().value()).digits);
                 }
 
                 if (std::string(schema.name()) == "poll-interval") {
@@ -316,7 +324,8 @@ struct FilesystemMonitoring : public UsageMonitoring {
         }
     }
 
-    void printFsConfig() {
+    void printFsConfig()
+    {
         for (auto const& [name, thresholds] : mFsThresholds) {
             std::cout << "name: " << name << "\t poll:" << std::get<0>(thresholds);
             for (auto const& [thrName, thrValue] : std::get<1>(thresholds)) {
@@ -326,20 +335,18 @@ struct FilesystemMonitoring : public UsageMonitoring {
         }
     }
 
-    void setXpaths(sysrepo::Session session,
-                   std::optional<libyang::DataNode>& parent,
-                   std::string_view moduleName) const {
+    void setXpaths(std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName) const
+    {
         for (auto const& [fsName, thresholdTuple] : mFsThresholds) {
-            std::string const configPath("/" + std::string(moduleName) +
-                                         ":system-metrics/filesystems/filesystem[mount-point='" +
-                                         fsName + "']/usage-monitoring/");
-            setXpath(session, parent, configPath + "poll-interval",
-                     std::to_string(std::get<0>(thresholdTuple)));
+            std::string const configPath("/" + std::string(moduleName) + ":system-metrics/filesystems/filesystem[mount-point='" + fsName + "']/usage-monitoring/");
+            parent->newPath(configPath + "poll-interval",
+                std::to_string(std::get<0>(thresholdTuple)));
             for (auto const& [name, thr] : std::get<1>(thresholdTuple)) {
                 std::stringstream stream;
                 stream << std::fixed << std::setprecision(2) << thr.value;
-                setXpath(session, parent, configPath + "threshold[name='" + name + "']/value",
-                         stream.str());
+                parent->newPath(configPath + "threshold[name='" + name + "']/value",
+                    stream.str());
             }
         }
     }
@@ -350,6 +357,6 @@ private:
     std::unordered_map<std::string, std::thread> mFsThreads;
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // THRESHOLD_MANAGER_H
+#endif // THRESHOLD_MANAGER_H

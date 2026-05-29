@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -165,7 +165,7 @@ namespace sub::oper {
             return sr::ErrorCode::NotFound;
         }
 
-        int ports = bridge_opt->getSlaveInterfaces().size();
+        auto ports = bridge_opt->getSlaveInterfaces().size();
 
         if (ports > 0)
             output->newPath("ports", std::to_string(ports));
@@ -2261,7 +2261,6 @@ namespace sub::oper {
 
                     output->newPath("filtering-database/filtering-entry[vids='" + filtered_vids + "'][database-id='0'][address='" + mac_string + "']/port-map[port-ref='" + std::to_string(slave.getIfindex()) + "']/static-filtering-entries/control-element", "forward");
                     output->newPath("filtering-database/filtering-entry[vids='" + filtered_vids + "'][database-id='0'][address='" + mac_string + "']/entry-type", "static");
-                    
                 }
             }
         }

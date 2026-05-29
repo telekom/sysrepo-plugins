@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -112,8 +112,7 @@ public:
      *
      * @return Plugin name string.
      */
-    constexpr const char *getPluginName() override { return PLUGIN_NAME;}
-
+    constexpr const char* getPluginName() override { return PLUGIN_NAME; }
 
     /**
      * sysrepo-plugin-generator: Generated default destructor for plugin context.
@@ -126,6 +125,5 @@ private:
     std::shared_ptr<ModuleChangeContext> m_changeCtx; ///< Module change context.
     std::shared_ptr<RpcContext> m_rpcCtx; ///< RPC context.
     std::shared_ptr<NotifContext> m_notifCtx; ///< Notification context.
-
 };
 }

@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -24,139 +24,141 @@
 
 namespace ietf::sys::ntp {
 
-    enum NTPServerAssociationType {
-        POOL,
-        SERVER,
-        PEER
-    };
+enum NTPServerAssociationType {
+    POOL,
+    SERVER,
+    PEER
+};
 
-    enum NTPServerRemoveOpts {
-        ALL_MATCHING,
-        FIRST_MATCHING
-    };
+enum NTPServerRemoveOpts {
+    ALL_MATCHING,
+    FIRST_MATCHING
+};
 
-    class NTPServer {
+class NTPServer {
 
-    public:
-        NTPServer(NTPServerAssociationType, const std::string&, bool, bool, const std::optional<std::string>&);
+public:
+    NTPServer(NTPServerAssociationType, const std::string&, bool, bool, const std::optional<std::string>&);
 
-        // no default constructor;
-        NTPServer() = delete;
+    // no default constructor;
+    NTPServer() = delete;
 
-        NTPServerAssociationType getServerAssociationType();
-        std::optional<std::string> getServerName();
-        std::string getNTPServer();
-        bool is_iburst();
-        bool is_prefer();
+    NTPServerAssociationType getServerAssociationType();
+    std::optional<std::string> getServerName();
+    std::string getNTPServer();
+    bool is_iburst();
+    bool is_prefer();
 
-        bool operator<(const NTPServer&)const;
+    bool operator<(const NTPServer&) const;
 
-        bool operator==(const NTPServer&)const;
+    bool operator==(const NTPServer&) const;
 
-        //strict comparation
-        bool operator<=>(const NTPServer&)const;
-    private:
-        NTPServerAssociationType m_assoc_type;
-        std::string m_server;
-        bool m_iburst;
-        bool m_prefer;
-        std::optional<std::string> m_name;
-    };
+    // strict comparation
+    bool operator<=>(const NTPServer&) const;
 
-    class NtpFileException : public std::exception {
-    public:
-        virtual const char* what() const throw() {
-            return "Error opening file!";
-        }
-    };
+private:
+    NTPServerAssociationType m_assoc_type;
+    std::string m_server;
+    bool m_iburst;
+    bool m_prefer;
+    std::optional<std::string> m_name;
+};
 
-    class NtpEraseException : public std::exception {
-    public:
-        virtual const char* what() const throw() {
-            return "Failed to erase NTP server!";
-        }
-    };
+class NtpFileException : public std::exception {
+public:
+    virtual const char* what() const throw()
+    {
+        return "Error opening file!";
+    }
+};
 
-    class NtpUnknownAssociationTypeException : public std::exception {
-    public:
-        virtual const char* what() const throw() {
-            return "Unknown NTP association type!";
-        }
-    };
+class NtpEraseException : public std::exception {
+public:
+    virtual const char* what() const throw()
+    {
+        return "Failed to erase NTP server!";
+    }
+};
 
-    class NTP {
+class NtpUnknownAssociationTypeException : public std::exception {
+public:
+    virtual const char* what() const throw()
+    {
+        return "Unknown NTP association type!";
+    }
+};
 
-    public:
-        NTP(const std::string&);
+class NTP {
 
-        //copy constructor is not permited
-        NTP(const NTP&) = delete;
+public:
+    NTP(const std::string&);
 
-        //move constructor is not permited
-        NTP(const NTP&&) = delete;
+    // copy constructor is not permited
+    NTP(const NTP&) = delete;
 
-        void addServer(const NTPServer&);
-        bool removeServer(const NTPServer&, NTPServerRemoveOpts);
+    // move constructor is not permited
+    NTP(const NTP&&) = delete;
 
-        //this method will not apply changes if somewhere along the way error happens
-        void raiseError();
+    void addServer(const NTPServer&);
+    bool removeServer(const NTPServer&, NTPServerRemoveOpts);
 
-        std::vector<NTPServer> getNTPServersList();
+    // this method will not apply changes if somewhere along the way error happens
+    void raiseError();
 
-        static NTPServerAssociationType parseAssocFromString(const std::string&);
-        static std::string parseAssocToString(NTPServerAssociationType);
+    std::vector<NTPServer> getNTPServersList();
 
-        void clearServers();
+    static NTPServerAssociationType parseAssocFromString(const std::string&);
+    static std::string parseAssocToString(NTPServerAssociationType);
 
-        virtual ~NTP();
+    void clearServers();
 
-    private:
+    virtual ~NTP();
 
-        void readServersFromFile();
+private:
+    void readServersFromFile();
 
-        void applyChanges();
+    void applyChanges();
 
-        std::fstream file;
-        std::fstream temp_file;
+    std::fstream file;
+    std::fstream temp_file;
 
-        std::string path;
-        std::string temp_filepath;
+    std::string path;
+    std::string temp_filepath;
 
-        std::vector<NTPServer> servers;
+    std::vector<NTPServer> servers;
 
-        bool error_flag;
-    };
+    bool error_flag;
+};
 
-    class NTPState {
-    public:
-        NTPState();
+class NTPState {
+public:
+    NTPState();
 
-        NTPState(const NTPState&) = delete;
-        NTPState(const NTPState&&) = delete;
+    NTPState(const NTPState&) = delete;
+    NTPState(const NTPState&&) = delete;
 
-        void ntpSetState(bool);
-        bool ntpGetState();
+    void ntpSetState(bool);
+    bool ntpGetState();
 
-    private:
-        const std::string M_DESTINATION = "org.freedesktop.systemd1";
-        const std::string M_OBJ_PATH = "/org/freedesktop/systemd1/unit/ntp_2eservice";
-        const std::string M_UNIT_STATE_METHOD = "ActiveState";
-        const std::string M_INTERFACE = "org.freedesktop.systemd1.Unit";
-        const std::string M_GET_INTERFACE = "org.freedesktop.DBus.Properties";
-        const std::string M_GET_METHOD = "Get";
-        const std::string M_PARAM = "replace";
+private:
+    const std::string M_DESTINATION = "org.freedesktop.systemd1";
+    const std::string M_OBJ_PATH = "/org/freedesktop/systemd1/unit/ntp_2eservice";
+    const std::string M_UNIT_STATE_METHOD = "ActiveState";
+    const std::string M_INTERFACE = "org.freedesktop.systemd1.Unit";
+    const std::string M_GET_INTERFACE = "org.freedesktop.DBus.Properties";
+    const std::string M_GET_METHOD = "Get";
+    const std::string M_PARAM = "replace";
 
-        std::unique_ptr<sdbus::IProxy> m_proxy;
-        std::unique_ptr<sdbus::IConnection> m_connection;
-    };
-    
-    //we do not inherit NTPState, since there is no need due to diferent callbacks
-    class NTPDbus : public NTP, public ietf::sys::SdBus<std::string, std::string, std::string> {
-    public:
-        NTPDbus();
+    std::unique_ptr<sdbus::IProxy> m_proxy;
+    std::unique_ptr<sdbus::IConnection> m_connection;
+};
 
-        void restartNTP();
-    };
+// we do not inherit NTPState, since there is no need due to diferent callbacks
+class NTPDbus : public NTP, public ietf::sys::SdBus<std::string, std::string, std::string> {
+public:
+    NTPDbus();
 
+    void restartNTP();
+};
 
 }

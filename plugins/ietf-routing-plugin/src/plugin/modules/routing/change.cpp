@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -542,7 +542,7 @@ namespace sub::change {
                             });
 
                     } catch (std::exception& e) {
-                        SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
                         error = sr::ErrorCode::CallbackFailed;
                     }
 
@@ -632,7 +632,6 @@ namespace sub::change {
                     continue;
                 };
 
-                // get the route
                 auto route_opt = nl_ctx.findRoute(destination_prefix);
 
                 if (!route_opt) {
@@ -648,7 +647,6 @@ namespace sub::change {
                     }
                 }
 
-                // check if values are there
                 if (outgoing_interface.empty() || next_hop_address.empty()) {
                     SRPLG_LOG_ERR(getModuleLogPrefix(), "Next-Hop values missing!");
                     return sr::ErrorCode::CallbackFailed;
@@ -657,7 +655,7 @@ namespace sub::change {
                 try {
                     ifindex = nl_ctx.nameToIfindex(outgoing_interface);
                 } catch (std::exception& e) {
-                    SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
                     return sr::ErrorCode::CallbackFailed;
                 }
 
@@ -688,7 +686,7 @@ namespace sub::change {
                     route_opt->addAndRemoveNextHops(route.second[NextHopOperations::TO_CREATE], route.second[NextHopOperations::TO_DELETE]);
 
                 } catch (std::exception& e) {
-                    SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
                     error = sr::ErrorCode::CallbackFailed;
                 }
             };
@@ -818,11 +816,10 @@ namespace sub::change {
                                 }
                             }
 
-                            // first check if ifindex is valid
                             try {
                                 ifindex = nl_ctx.nameToIfindex(interface_name);
                             } catch (std::exception& e) {
-                                SRPLG_LOG_ERR(getModuleLogPrefix(), e.what());
+                                SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
                                 return sr::ErrorCode::CallbackFailed;
                             }
 
@@ -1133,6 +1130,40 @@ namespace sub::change {
         std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sr::Event::Change: {
+
+            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
+
+                std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+                std::string path = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv6-unicast-routing:ipv6/route[destination-prefix='" + destination_prefix + "']";
+                auto changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                std::string index = srpc::extractListKeysFromXpath("next-hop", change.node.path())["index"];
+
+                path.append("/next-hop/next-hop-list/next-hop[index='" + index + "']");
+
+                changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                // you cannot modify the interface that you are on
+                error = sr::ErrorCode::Unsupported;
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 
@@ -1167,6 +1198,78 @@ namespace sub::change {
         std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+        switch (event) {
+        case sr::Event::Change:
+
+            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
+
+                std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+                std::string path = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv6-unicast-routing:ipv6/route[destination-prefix='" + destination_prefix + "']";
+
+                auto changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                std::string index = srpc::extractListKeysFromXpath("next-hop", change.node.path())["index"];
+
+                path.append("/next-hop/next-hop-list/next-hop[index='" + index + "']");
+
+                changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                }
+
+                switch (change.operation) {
+
+                case sr::ChangeOperation::Modified: {
+                    auto& nl_ctx = NlContext::getInstance();
+
+                    std::string xpath = change.node.parent()->path();
+                    xpath.append("/outgoing-interface");
+
+                    auto if_name_node = session.getOneNode(xpath);
+
+                    std::string if_name = if_name_node.asTerm().valueStr().data();
+
+                    std::string new_value = change.node.asTerm().valueStr().data();
+                    std::string old_value = change.previousValue->data();
+
+                    try {
+                        int ifindex = nl_ctx.nameToIfindex(if_name);
+
+                        auto route = nl_ctx.findRoute(destination_prefix);
+
+                        route->addAndRemoveNextHops(
+                            {
+                                NextHopHelper(new_value, ifindex),
+                            },
+                            {
+                                NextHopHelper(old_value, ifindex),
+                            });
+
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
+                        error = sr::ErrorCode::CallbackFailed;
+                    }
+
+                    break;
+                }
+                case sr::ChangeOperation::Deleted:
+                    return sr::ErrorCode::Unsupported;
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            break;
+
+        default:
+            break;
+        }
 
         return error;
     }
@@ -1201,6 +1304,101 @@ namespace sub::change {
         std::string_view moduleName, std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        enum class NextHopOperations {
+            TO_DELETE,
+            TO_CREATE
+        };
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+
+            auto& nl_ctx = NlContext::getInstance();
+
+            std::string outgoing_interface;
+            std::string next_hop_address;
+
+            std::unordered_map<std::string, std::map<NextHopOperations, std::vector<NextHopHelper>>> route_map;
+
+            for (sysrepo::Change change : session.getChanges(subXPath->data())) {
+
+                outgoing_interface.clear();
+                next_hop_address.clear();
+                int ifindex = 0;
+
+                std::string destination_prefix = srpc::extractListKeysFromXpath("route", change.node.path())["destination-prefix"];
+                const std::string path = "/ietf-routing:routing/control-plane-protocols/control-plane-protocol/static-routes/ietf-ipv6-unicast-routing:ipv6/route[destination-prefix='" + destination_prefix + "']";
+
+                auto changes = session.getChanges(path);
+
+                if (!(changes.begin() == changes.end())) {
+                    continue;
+                };
+
+                auto route_opt = nl_ctx.findRoute(destination_prefix);
+
+                if (!route_opt) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to find route!");
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                for (libyang::DataNode&& i : change.node.childrenDfs()) {
+                    if (i.schema().name().compare("outgoing-interface") == 0) {
+                        outgoing_interface = i.asTerm().valueStr();
+                    } else if (i.schema().name().compare("next-hop-address") == 0) {
+                        next_hop_address = i.asTerm().valueStr();
+                    }
+                }
+
+                if (outgoing_interface.empty() || next_hop_address.empty()) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Next-Hop values missing!");
+                    return sr::ErrorCode::CallbackFailed;
+                };
+
+                try {
+                    ifindex = nl_ctx.nameToIfindex(outgoing_interface);
+                } catch (std::exception& e) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
+                    return sr::ErrorCode::CallbackFailed;
+                }
+
+                switch (change.operation) {
+                case sysrepo::ChangeOperation::Created:
+                    route_map[destination_prefix][NextHopOperations::TO_CREATE].push_back(NextHopHelper(next_hop_address, ifindex));
+                    break;
+
+                case sysrepo::ChangeOperation::Deleted:
+                    route_map[destination_prefix][NextHopOperations::TO_DELETE].push_back(NextHopHelper(next_hop_address, ifindex));
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            for (auto&& route : route_map) {
+
+                std::string dest_pref = route.first;
+
+                try {
+                    auto route_opt = nl_ctx.findRoute(dest_pref);
+
+                    if (!route_opt) {
+                        throw std::runtime_error("Failed to find route!");
+                    }
+
+                    route_opt->addAndRemoveNextHops(route.second[NextHopOperations::TO_CREATE], route.second[NextHopOperations::TO_DELETE]);
+
+                } catch (std::exception& e) {
+                    SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
+                    error = sr::ErrorCode::CallbackFailed;
+                }
+            };
+
+            break;
+        }
+        default:
+            break;
+        }
         return error;
     }
 
@@ -1294,6 +1492,84 @@ namespace sub::change {
         std::optional<std::string_view> subXPath, sr::Event event, uint32_t requestId)
     {
         sr::ErrorCode error = sr::ErrorCode::Ok;
+
+        switch (event) {
+        case sysrepo::Event::Change: {
+            auto& nl_ctx = NlContext::getInstance();
+            for (sysrepo::Change route_change : session.getChanges(subXPath->data())) {
+                switch (route_change.operation) {
+                case sysrepo::ChangeOperation::Created: {
+                    std::vector<NextHopHelper> create_nh;
+
+                    std::string route = srpc::extractListKeysFromXpath("route", route_change.node.path())["destination-prefix"];
+
+                    for (sysrepo::Change change : session.getChanges(route_change.node.path() + "/next-hop/next-hop-list/next-hop")) {
+                        switch (change.operation) {
+                        case sysrepo::ChangeOperation::Created: {
+
+                            std::string interface_name;
+                            std::string nh_addr;
+                            int ifindex;
+
+                            for (auto&& i : change.node.childrenDfs()) {
+                                if (i.schema().name().compare("outgoing-interface") == 0) {
+                                    interface_name = i.asTerm().valueStr();
+                                } else if (i.schema().name().compare("next-hop-address") == 0) {
+                                    nh_addr = i.asTerm().valueStr();
+                                }
+                            }
+
+                            try {
+                                ifindex = nl_ctx.nameToIfindex(interface_name);
+                            } catch (std::exception& e) {
+                                SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
+                                return sr::ErrorCode::CallbackFailed;
+                            }
+
+                            create_nh.push_back(NextHopHelper(nh_addr, ifindex));
+
+                            break;
+                        }
+                        case sysrepo::ChangeOperation::Deleted:
+                            break;
+
+                        default:
+                            break;
+                        }
+                    }
+
+                    try {
+                        nl_ctx.createRoute(route, create_nh);
+                    } catch (std::exception& e) {
+                        SRPLG_LOG_ERR(getModuleLogPrefix(), "Error creating route! reason %s", e.what());
+                        error = sr::ErrorCode::CallbackFailed;
+                    };
+
+                    break;
+                }
+
+                case sysrepo::ChangeOperation::Deleted: {
+                    std::string del_route = srpc::extractListKeysFromXpath("route", route_change.node.path())["destination-prefix"];
+                    try {
+                        nl_ctx.deleteRoute(del_route);
+                    } catch (std::exception& e) {
+                        if (!strcmp(e.what(), "deleteRoute(), Route not found!")) {
+                            SRPLG_LOG_WRN(getModuleLogPrefix(), "Non-existing route '%s' can not be deleted", del_route.c_str());
+                            break;
+                        }
+                        error = sr::ErrorCode::CallbackFailed;
+                    }
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+        }
+        default:
+            break;
+        }
+
         return error;
     }
 

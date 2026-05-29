@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -217,8 +217,7 @@ sr::ErrorCode InterfaceAdminStatusOperGetCb::operator()(sr::Session session, uin
 
             if ((flags & IFF_UP) || (flags & IFF_RUNNING)) {
                 admin_status = AdminStatus::Up;
-            }
-            else {
+            } else {
                 admin_status = AdminStatus::Down;
             }
 
@@ -227,14 +226,12 @@ sr::ErrorCode InterfaceAdminStatusOperGetCb::operator()(sr::Session session, uin
                 auto admin_status_str = admin_status_map.at(admin_status);
                 SRPLG_LOG_DBG(getModuleLogPrefix(), "admin-status(%s) = %s", interface_name.c_str(), admin_status_str.c_str());
                 output->newPath("admin-status", admin_status_str);
-            }
-            else {
+            } else {
                 SRPLG_LOG_ERR(getModuleLogPrefix(), "Unable to determine admin-status for interface %s", interface->getName().c_str());
                 error = sr::ErrorCode::OperationFailed;
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract interface name from XPath: %s", err.what());
     }
 
@@ -294,8 +291,7 @@ sr::ErrorCode InterfaceOperStatusOperGetCb::operator()(sr::Session session, uint
 
             output->newPath("oper-status", oper_status_str);
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract interface name from XPath: %s", err.what());
     }
 
@@ -376,8 +372,7 @@ sr::ErrorCode InterfaceIfIndexOperGetCb::operator()(sr::Session session, uint32_
 
             output->newPath("if-index", ifindex_buffer.str());
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract interface name from XPath: %s", err.what());
     }
 
@@ -427,8 +422,7 @@ sr::ErrorCode InterfacePhysAddressOperGetCb::operator()(sr::Session session, uin
 
             output->newPath("phys-address", address_str);
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract phys-address from interface: %s", err.what());
     }
 
@@ -478,13 +472,11 @@ sr::ErrorCode InterfaceHigherLayerIfOperGetCb::operator()(sr::Session session, u
                 auto master_name = master->getName();
                 SRPLG_LOG_DBG(getModuleLogPrefix(), "higher-layer-if(%s) = %s", interface_name.c_str(), master_name.c_str());
                 output->newPath("higher-layer-if", master_name);
-            }
-            else {
+            } else {
                 SRPLG_LOG_DBG(getModuleLogPrefix(), "higher-layer-if(%s) = none", interface_name.c_str());
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract higher-layer-if from interface: %s", err.what());
     }
 
@@ -543,8 +535,7 @@ sr::ErrorCode InterfaceLowerLayerIfOperGetCb::operator()(sr::Session session, ui
                 }
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract lower-layer-if from interface: %s", err.what());
     }
 
@@ -595,8 +586,7 @@ sr::ErrorCode InterfaceSpeedOperGetCb::operator()(sr::Session session, uint32_t 
 
             output->newPath("speed", speed_buffer.str());
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract phys-address from interface: %s", err.what());
     }
 
@@ -1126,8 +1116,7 @@ sr::ErrorCode InterfaceStatsOperGetCb::operator()(sr::Session session, uint32_t 
             buffer.clear();
             buffer.str("");
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract interface name from XPath: %s", err.what());
     }
 
@@ -1399,8 +1388,7 @@ sr::ErrorCode Ipv4AddrOperGetCb::operator()(sr::Session session, uint32_t subscr
                 }
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract phys-address from interface: %s", err.what());
     }
 
@@ -1556,8 +1544,7 @@ sr::ErrorCode Ipv4NeighOperGetCb::operator()(sr::Session session, uint32_t subsc
                 }
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract phys-address from interface: %s", err.what());
     }
 
@@ -1862,8 +1849,7 @@ sr::ErrorCode Ipv6AddrOperGetCb::operator()(sr::Session session, uint32_t subscr
                 }
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract phys-address from interface: %s", err.what());
     }
 
@@ -2087,8 +2073,7 @@ sr::ErrorCode Ipv6NeighOperGetCb::operator()(sr::Session session, uint32_t subsc
                 }
             }
         }
-    }
-    catch (const std::runtime_error& err) {
+    } catch (const std::runtime_error& err) {
         SRPLG_LOG_INF(getModuleLogPrefix(), "Unable to extract phys-address from interface: %s", err.what());
     }
 
@@ -2356,8 +2341,7 @@ sr::ErrorCode InterfaceOperGetCb::operator()(sr::Session session, uint32_t subsc
 
             if_4_enabled->newPath("enabled", (link_name.isIPVEnabled(AddressFamily::V4, addr_cache) ? "true" : "false"));
             if_6_enabled->newPath("enabled", (link_name.isIPVEnabled(AddressFamily::V6, addr_cache) ? "true" : "false"));
-        }
-        else {
+        } else {
             // error creating a new interface node
             error = sr::ErrorCode::OperationFailed;
             break;

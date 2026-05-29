@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
 // SPDX-License-Identifier: MIT
 
-
 // Tencent is pleased to support the open source community by making RapidJSON available.
 //
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -33,7 +32,8 @@
 RAPIDJSON_NAMESPACE_BEGIN
 namespace internal {
 
-inline uint32_t clzll(uint64_t x) {
+inline uint32_t clzll(uint64_t x)
+{
     // Passing 0 to __builtin_clzll is UB in GCC and results in an
     // infinite loop in the software implementation.
     RAPIDJSON_ASSERT(x != 0);

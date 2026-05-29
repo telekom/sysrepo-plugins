@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -763,19 +763,18 @@ namespace sub::change {
 
                     std::string keys;
 
-                    for (sysrepo::Change change : collection) {
-                        if (change.operation == sysrepo::ChangeOperation::Created || change.operation == sysrepo::ChangeOperation::Modified) {
-                            keys = change.node.path();
+                    for (sysrepo::Change change_collection : collection) {
+                        if (change_collection.operation == sysrepo::ChangeOperation::Created || change_collection.operation == sysrepo::ChangeOperation::Modified) {
+                            keys = change_collection.node.path();
                             break;
                         }
                     }
 
                     uint32_t delete_port_ref = std::stoi(srpc::extractListKeysFromXpath("port-map", keys)["port-ref"]);
 
-                    if (keys.empty()){
+                    if (keys.empty()) {
                         keys = change.node.path().data();
                     }
-
 
                     // now check if the port ref contains the vids
                     auto delete_cb_slave = bridge_opt->getSlaveByIfindex(delete_port_ref);
@@ -791,7 +790,7 @@ namespace sub::change {
                         deletion_vids.push_back(i.getVid());
                     }
 
-                    auto str_vids_create =srpc::extractListKeysFromXpath("filtering-entry", keys)["vids"];
+                    auto str_vids_create = srpc::extractListKeysFromXpath("filtering-entry", keys)["vids"];
                     auto vec_str_vids_create = BridgeRef::parseStringToVlanIDS(str_vids_create);
                     // and now check if array is a subset
                     if (!BridgeSlaveRef::isSubset(deletion_vids, vec_str_vids_create)) {
@@ -1510,12 +1509,12 @@ namespace sub::change {
                     // Deleted and Created vids node with previous values must be taken from the session changes.
                     std::string vids_data;
 
-                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+                    for (sysrepo::Change change_vids : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
 
-                        switch (change.operation) {
+                        switch (change_vids.operation) {
                         case sr::ChangeOperation::Created: {
                             // vids node
-                            vids_data = change.node.asTerm().valueStr().data();
+                            vids_data = change_vids.node.asTerm().valueStr().data();
                             break;
                         default:
                             break;
@@ -1564,12 +1563,12 @@ namespace sub::change {
                     // Deleted and Created vids node with previous values must be taken from the session changes.
                     std::string vids_data;
 
-                    for (sysrepo::Change change : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
+                    for (sysrepo::Change change_vids : session.getChanges("/ieee802-dot1q-bridge:bridges/bridge/component/filtering-database/vlan-registration-entry/vids")) {
 
-                        switch (change.operation) {
+                        switch (change_vids.operation) {
                         case sr::ChangeOperation::Deleted: {
                             // vids node
-                            vids_data = change.node.asTerm().valueStr().data();
+                            vids_data = change_vids.node.asTerm().valueStr().data();
                             break;
                         }
                         default:

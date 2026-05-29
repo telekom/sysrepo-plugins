@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -208,7 +208,7 @@ void RouteRef::removeNextHop(NextHopHelper& nh_obj)
         rtnl_route* route;
         int ifindex;
         bool found_nh;
-    } arguments{
+    } arguments {
         .address = NULL,
         .route = m_route.get(),
         .ifindex = nh_obj.getIfindex(),
@@ -234,7 +234,7 @@ void RouteRef::removeNextHop(NextHopHelper& nh_obj)
             rtnl_route_remove_nexthop(in_args->route, nh);
             in_args->found_nh = true;
         }
-        };
+    };
 
     rtnl_route_foreach_nexthop(m_route.get(), nexthop_callback, (void*)&arguments);
 
@@ -281,8 +281,8 @@ void RouteRef::addAndRemoveNextHops(const std::vector<NextHopHelper>& nhs_add, c
         };
 
         // first we obtain and then delete the nexthops, since otherwise it messes in-loop deletion
-        for (rtnl_nexthop* nh : next_hops_to_remove) {
-            rtnl_route_remove_nexthop(current_route, nh);
+        for (rtnl_nexthop* nh_remove : next_hops_to_remove) {
+            rtnl_route_remove_nexthop(current_route, nh_remove);
         }
     }
 
@@ -334,7 +334,9 @@ std::string RouteRef::getDestinationString()
     nl_addr* addr = rtnl_route_get_dst(m_route.get());
 
     if (nl_addr_iszero(addr)) {
-        return (std::string("0.0.0.0/" + std::to_string(nl_addr_get_prefixlen(addr))));
+        int family = nl_addr_get_family(addr);
+        std::string zero_addr = (family == AF_INET6) ? "::" : "0.0.0.0";
+        return zero_addr + "/" + std::to_string(nl_addr_get_prefixlen(addr));
     }
 
     error = nl_addr2str(addr, buffer, sizeof(buffer));
@@ -369,12 +371,15 @@ std::string RouteRef::getProtocolString()
 NextHopHelper::NextHopHelper(const std::string& address, int ifindex)
     : m_ifindex(ifindex)
     , m_address(address)
-{}
+{
+}
 
-int NextHopHelper::getIfindex() {
+int NextHopHelper::getIfindex()
+{
     return m_ifindex;
 }
 
-std::string NextHopHelper::getAddress() {
+std::string NextHopHelper::getAddress()
+{
     return m_address;
 };

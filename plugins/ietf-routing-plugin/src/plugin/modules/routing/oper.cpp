@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -149,12 +149,13 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
     for (auto&& rib : route_map) {
 
         std::string table_family_name = RouteRef::tableToString(rib.first);
-        auto rib_node = ribs_node->newPath("rib[name='" + (table_family_name + "-ipv4") + "']");
-        auto routes_node = rib_node->newPath("routes");
 
         // ipv4 routes
+        auto rib_node_v4 = ribs_node->newPath("rib[name='" + table_family_name + "-ipv4']");
+        auto routes_node_v4 = rib_node_v4->newPath("routes");
+
         for (auto&& ipv4_routes : rib.second[RouteFamily::RT_INET]) {
-            auto route_node = routes_node->newPath("route");
+            auto route_node = routes_node_v4->newPath("route");
             route_node->newPath("ietf-ipv4-unicast-routing:destination-prefix", ipv4_routes.getDestinationString());
             auto next_hop_node = route_node->newPath("next-hop");
             auto next_hop_list_node = next_hop_node->newPath("next-hop-list");
@@ -170,8 +171,11 @@ sr::ErrorCode RoutingRibOperGetCb::operator()(sr::Session session, uint32_t subs
         }
 
         // ipv6 routes
+        auto rib_node_v6 = ribs_node->newPath("rib[name='" + table_family_name + "-ipv6']");
+        auto routes_node_v6 = rib_node_v6->newPath("routes");
+
         for (auto&& ipv6_routes : rib.second[RouteFamily::RT_INET6]) {
-            auto route_node = routes_node->newPath("route");
+            auto route_node = routes_node_v6->newPath("route");
             route_node->newPath("ietf-ipv6-unicast-routing:destination-prefix", ipv6_routes.getDestinationString());
             auto next_hop_node = route_node->newPath("next-hop");
             auto next_hop_list_node = next_hop_node->newPath("next-hop-list");

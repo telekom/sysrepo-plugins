@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -20,22 +20,22 @@
  * Operational context for the interfaces module.
  */
 class BridgingOperationalContext : public srpc::IModuleContext {
-// public:
-//     NlContext& getNetlinkContext() { return m_nlContext; }
+    // public:
+    //     NlContext& getNetlinkContext() { return m_nlContext; }
 
-// private:
-//     NlContext m_nlContext;
+    // private:
+    //     NlContext m_nlContext;
 };
 
 /**
  * Module changes context for the interfaces module.
  */
 class BridgingModuleChangesContext : public srpc::IModuleContext {
-// public:
-//     NlContext& getNetlinkContext() { return m_nlContext; }
+    // public:
+    //     NlContext& getNetlinkContext() { return m_nlContext; }
 
-// private:
-//     NlContext m_nlContext;
+    // private:
+    //     NlContext m_nlContext;
 };
 
 /**

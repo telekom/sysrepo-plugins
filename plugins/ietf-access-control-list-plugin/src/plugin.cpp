@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -18,7 +18,6 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/Subscription.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
-#include <srpcpp.hpp>
 
 #include "modules/acl.hpp"
 #include "core/nftables.hpp"
@@ -35,7 +34,8 @@ namespace sr = sysrepo;
  * @param mod Module to use.
  *
  */
-void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod)
+{
     const auto oper_callbacks = mod->getOperationalCallbacks();
 
     auto& sub_handle = ctx.getSubscriptionHandle();
@@ -59,8 +59,9 @@ void registerOperationalSubscriptions(sr::Session& sess, ietf::acl::PluginContex
  * @param mod Module to use.
  *
  */
-void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
-    
+void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod)
+{
+
     const auto change_callbacks = mod->getModuleChangeCallbacks();
 
     auto& sub_handle = ctx.getSubscriptionHandle();
@@ -84,7 +85,8 @@ void registerModuleChangeSubscriptions(sr::Session& sess, ietf::acl::PluginConte
  * @param mod Module to use.
  *
  */
-void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod){
+void registerRpcSubscriptions(sr::Session& sess, ietf::acl::PluginContext& ctx, std::unique_ptr<srpc::IModule<ietf::acl::PluginContext>>& mod)
+{
     const auto rpc_callbacks = mod->getRpcCallbacks();
 
     auto& sub_handle = ctx.getSubscriptionHandle();
@@ -325,10 +327,14 @@ void loadExistingACLs(sr::Session& sess)
                                                     for (auto p = tcp_field->child(); p; p = p->nextSibling()) {
                                                         if (std::string(p->schema().name()) == "operator") {
                                                             std::string op = p->asTerm().valueStr().data();
-                                                            if (op == "lte") rule.Operator("<=");
-                                                            else if (op == "gte") rule.Operator(">=");
-                                                            else if (op == "eq") rule.Operator("==");
-                                                            else if (op == "neq") rule.Operator("!=");
+                                                            if (op == "lte")
+                                                                rule.Operator("<=");
+                                                            else if (op == "gte")
+                                                                rule.Operator(">=");
+                                                            else if (op == "eq")
+                                                                rule.Operator("==");
+                                                            else if (op == "neq")
+                                                                rule.Operator("!=");
                                                         }
                                                     }
 

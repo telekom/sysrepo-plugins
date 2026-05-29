@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -22,7 +22,8 @@ namespace ietf::acl {
  * @param sess Plugin session from the plugin init callback.
  *
  */
-PluginContext::PluginContext(sysrepo::Session sess) : srpc::BasePluginContext(sess)
+PluginContext::PluginContext(sysrepo::Session sess)
+    : srpc::BasePluginContext(sess)
 {
     m_operCtx = std::make_shared<OperContext>();
     m_changeCtx = std::make_shared<ModuleChangeContext>();

@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -17,8 +17,6 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
 
-#include <srpcpp.hpp>
-#include <array>
 #include <string>
 
 #include "plugin/modules/bridging.hpp"
@@ -62,7 +60,6 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     // first check if datastore is empty
 
     fillInitialDatastoreFromSystem(sess);
-
 
     // get registered modules and create subscriptions
     for (auto& mod : modules) {
@@ -111,7 +108,7 @@ inline void fillInitialDatastoreFromSystem(sysrepo::Session& session)
     sr::Datastore current_ds = session.activeDatastore();
     session.switchDatastore(sr::Datastore::Running);
 
-    //delete running ds for data consistancy
+    // delete running ds for data consistancy
     session.deleteItem("/ieee802-dot1q-bridge:bridges");
 
     // fill system data here

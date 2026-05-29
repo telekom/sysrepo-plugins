@@ -4,7 +4,8 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2022 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -17,49 +18,15 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo.h>
 
-static void logMessage(sr_log_level_t log, std::string const& msg) {
-    static std::string const _("OS-Metrics");
-    switch (log) {
-    case SR_LL_ERR:
-        SRPLG_LOG_ERR(_.c_str(), msg.c_str());
-        break;
-    case SR_LL_WRN:
-        SRPLG_LOG_WRN(_.c_str(), msg.c_str());
-        break;
-    case SR_LL_INF:
-        SRPLG_LOG_INF(_.c_str(), msg.c_str());
-        break;
-    case SR_LL_DBG:
-    default:
-        SRPLG_LOG_DBG(_.c_str(), msg.c_str());
-    }
-}
-
-static bool setXpath(sysrepo::Session& session,
-                     std::optional<libyang::DataNode>& parent,
-                     std::string const& node_xpath,
-                     std::string const& value) {
-    try {
-        if (parent) {
-            parent.value().newPath(node_xpath, value);
-        } else {
-            parent = session.getContext().newPath(node_xpath, value);
-        }
-    } catch (std::runtime_error const& e) {
-        logMessage(SR_LL_WRN,
-                   "At path " + node_xpath + ", value " + value + " " + ", error: " + e.what());
-        return false;
-    }
-    return true;
-}
+#define PLUGIN_NAME "OS-Metrics"
 
 [[maybe_unused]] static std::optional<libyang::Module> findModule(sysrepo::Session session,
-                                                                  std::string_view moduleName) {
+    std::string_view moduleName)
+{
     auto const& modules = session.getContext().modules();
-    auto module =
-        std::find_if(modules.begin(), modules.end(), [moduleName](libyang::Module const& module) {
-            return moduleName == module.name();
-        });
+    auto module = std::find_if(modules.begin(), modules.end(), [moduleName](libyang::Module const& m) {
+        return moduleName == m.name();
+    });
     if (module == std::end(modules)) {
         return std::nullopt;
     }
@@ -67,8 +34,9 @@ static bool setXpath(sysrepo::Session& session,
 }
 
 static void printCurrentConfig(sysrepo::Session& session,
-                               std::string_view module_name,
-                               std::string const& node) {
+    std::string_view module_name,
+    std::string const& node)
+{
     try {
         std::string xpath(std::string("/") + std::string(module_name) + std::string(":") + node);
         auto values = session.getData(xpath);
@@ -79,10 +47,10 @@ static void printCurrentConfig(sysrepo::Session& session,
             values.value()
                 .printStr(libyang::DataFormat::JSON, libyang::PrintFlags::Siblings)
                 .value());
-        logMessage(SR_LL_DBG, toPrint);
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", toPrint.c_str());
     } catch (const std::exception& e) {
-        logMessage(SR_LL_WRN, e.what());
+        SRPLG_LOG_WRN(PLUGIN_NAME, "%s", e.what());
     }
 }
 
-#endif  // GLOBALS_H
+#endif // GLOBALS_H

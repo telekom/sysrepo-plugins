@@ -4,7 +4,7 @@
 # BSD 3-Clause license which is available at
 # https://opensource.org/licenses/BSD-3-Clause
 #
-# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 # SPDX-FileContributor: Sartura d.d.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -22,10 +22,9 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-newline-eof")
 endif()
-# remove some warnings that occur too often and are not straight forward or code is not finished, like unused functions
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wuninitialized")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wuninitialized")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-delete-non-virtual-dtor")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")

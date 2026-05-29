@@ -1,9 +1,8 @@
 // SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
 // SPDX-License-Identifier: MIT
 
-
 // Tencent is pleased to support the open source community by making RapidJSON available.
-// 
+//
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
 //
 // Licensed under the MIT License (the "License"); you may not use this file except
@@ -11,9 +10,9 @@
 //
 // http://opensource.org/licenses/MIT
 //
-// Unless required by applicable law or agreed to in writing, software distributed 
-// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
-// CONDITIONS OF ANY KIND, either express or implied. See the License for the 
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
 #ifndef RAPIDJSON_IEEE754_
@@ -26,14 +25,21 @@ namespace internal {
 
 class Double {
 public:
-    Double() {}
-    Double(double d) : d_(d) {}
-    Double(uint64_t u) : u_(u) {}
+    Double() { }
+    Double(double d)
+        : d_(d)
+    {
+    }
+    Double(uint64_t u)
+        : u_(u)
+    {
+    }
 
     double Value() const { return d_; }
     uint64_t Uint64Value() const { return u_; }
 
-    double NextPositiveDouble() const {
+    double NextPositiveDouble() const
+    {
         RAPIDJSON_ASSERT(!Sign());
         return Double(u_ + 1).Value();
     }
@@ -52,7 +58,8 @@ public:
     int IntegerExponent() const { return (IsNormal() ? Exponent() : kDenormalExponent) - kSignificandSize; }
     uint64_t ToBias() const { return (u_ & kSignMask) ? ~u_ + 1 : u_ | kSignMask; }
 
-    static int EffectiveSignificandSize(int order) {
+    static int EffectiveSignificandSize(int order)
+    {
         if (order >= -1021)
             return 53;
         else if (order <= -1074)

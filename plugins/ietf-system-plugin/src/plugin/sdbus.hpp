@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -42,7 +42,7 @@ protected:
     {
 
         try {
-            auto proxy = sdbus::createProxy(*m_connection ,m_srvc_name, m_obj_path);
+            auto proxy = sdbus::createProxy(*m_connection, m_srvc_name, m_obj_path);
             proxy->callMethod(m_setMethod).onInterface(m_interface).withArguments(data...);
         } catch (sdbus::Error& e) {
             SRPLG_LOG_ERR("sd-bus", "Error exporting data to sd-bus: %s", e.what());

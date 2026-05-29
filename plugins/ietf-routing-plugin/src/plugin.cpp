@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -16,8 +16,6 @@
 
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
-
-#include <srpcpp.hpp>
 
 #include "plugin/modules/routing.hpp"
 
@@ -135,17 +133,34 @@ inline void fillInitialRunninDS(sysrepo::Session& m_sess)
     for (auto&& main_table_ipv4_route : route_map[254][RouteFamily::RT_INET]) {
         int idx_count = 0;
 
-        // only add static route entries to running datastore
         if (main_table_ipv4_route.getProtocol() != RTPROT_STATIC)
             continue;
 
         for (auto&& nhs : main_table_ipv4_route.getNextHops()) {
 
-            // handle zero case of ipv4 address
             std::string nh_addr = nhs.getGateway().toString() == "none" ? "0.0.0.0" : nhs.getGateway().toString();
 
             m_sess.setItem("/ietf-routing:routing/control-plane-protocols/control-plane-protocol[type='ietf-routing:static'][name='unspec']/static-routes/ietf-ipv4-unicast-routing:ipv4/route[destination-prefix='" + main_table_ipv4_route.getDestinationString() + "']/next-hop/next-hop-list/next-hop[index='index-" + std::to_string(idx_count) + "']/next-hop-address", nh_addr);
             m_sess.setItem("/ietf-routing:routing/control-plane-protocols/control-plane-protocol[type='ietf-routing:static'][name='unspec']/static-routes/ietf-ipv4-unicast-routing:ipv4/route[destination-prefix='" + main_table_ipv4_route.getDestinationString() + "']/next-hop/next-hop-list/next-hop[index='index-" + std::to_string(idx_count) + "']/outgoing-interface", nl_ctx.ifindexToName(nhs.getInterfaceIndex()));
+
+            idx_count++;
+        }
+
+        idx_count = 0;
+    }
+
+    for (auto&& main_table_ipv6_route : route_map[254][RouteFamily::RT_INET6]) {
+        int idx_count = 0;
+
+        if (main_table_ipv6_route.getProtocol() != RTPROT_STATIC)
+            continue;
+
+        for (auto&& nhs : main_table_ipv6_route.getNextHops()) {
+
+            std::string nh_addr = nhs.getGateway().toString() == "none" ? "::" : nhs.getGateway().toString();
+
+            m_sess.setItem("/ietf-routing:routing/control-plane-protocols/control-plane-protocol[type='ietf-routing:static'][name='unspec']/static-routes/ietf-ipv6-unicast-routing:ipv6/route[destination-prefix='" + main_table_ipv6_route.getDestinationString() + "']/next-hop/next-hop-list/next-hop[index='index-" + std::to_string(idx_count) + "']/next-hop-address", nh_addr);
+            m_sess.setItem("/ietf-routing:routing/control-plane-protocols/control-plane-protocol[type='ietf-routing:static'][name='unspec']/static-routes/ietf-ipv6-unicast-routing:ipv6/route[destination-prefix='" + main_table_ipv6_route.getDestinationString() + "']/next-hop/next-hop-list/next-hop[index='index-" + std::to_string(idx_count) + "']/outgoing-interface", nl_ctx.ifindexToName(nhs.getInterfaceIndex()));
 
             idx_count++;
         }

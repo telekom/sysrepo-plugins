@@ -4,7 +4,8 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -22,6 +23,8 @@
 
 #include "utils/globals.h"
 
+#include <sysrepo-cpp/Session.hpp>
+
 namespace hardware {
 
 struct ComponentData;
@@ -34,9 +37,13 @@ using SensorThresholdList = std::list<std::shared_ptr<SensorThreshold>>;
 struct SensorThreshold {
 
     SensorThreshold(std::string_view newName)
-        : name(newName), value(0), rising(false), falling(false){};
+        : name(newName)
+        , value(0)
+        , rising(false)
+        , falling(false) { };
 
-    void printSensorThreshold() {
+    void printSensorThreshold()
+    {
         std::cout << "(" << name << ", " << value << ", " << rising << ", " << falling << ")"
                   << std::endl;
     }
@@ -52,16 +59,18 @@ struct ComponentData {
     using Session = sysrepo::Session;
 
     ComponentData(std::string_view compName, std::string const& compClass = "iana-hardware:unknown")
-        : name(compName), classType(compClass), pollInterval(DEFAULT_POLL_INTERVAL){};
+        : name(compName)
+        , classType(compClass)
+        , pollInterval(DEFAULT_POLL_INTERVAL) { };
 
     virtual ~ComponentData() = default;
 
-    virtual void setXpathForAllMembers(Session& session,
-                                       std::optional<libyang::DataNode>& parent,
-                                       std::string const& mainXpath,
-                                       bool setPhysicalID = false) const {
+    virtual void setXpathForAllMembers(std::optional<libyang::DataNode>& parent,
+        std::string const& mainXpath,
+        bool setPhysicalID = false) const
+    {
         std::string componentPath(mainXpath + "/component[name='" + name + "']");
-        logMessage(SR_LL_DBG, "Setting values for component: " + name);
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("Setting values for component: " + name).c_str());
         // +--rw name              string
         // +--rw class             identityref
         // +--ro physical-index?   int32 {entity-mib}?
@@ -79,60 +88,61 @@ struct ComponentData {
         // +--rw asset-id?         string
         // +--rw uri*              inet:uri
         // +--ro uuid?             yang:uuid
-        setXpath(session, parent, componentPath + "/class", classType);
+        parent->newPath(componentPath + "/class", classType);
 
         if (description) {
-            setXpath(session, parent, componentPath + "/description", description.value());
+            parent->newPath(componentPath + "/description", description.value());
         }
         if (physicalID && setPhysicalID) {
-            setXpath(session, parent, componentPath + "/physical-index",
-                     std::to_string(physicalID.value()));
+            parent->newPath(componentPath + "/physical-index",
+                std::to_string(physicalID.value()));
         }
         if (parentName) {
-            setXpath(session, parent, componentPath + "/parent", parentName.value());
+            parent->newPath(componentPath + "/parent", parentName.value());
         }
         if (parent_rel_pos) {
-            setXpath(session, parent, componentPath + "/parent-rel-pos",
-                     std::to_string(parent_rel_pos.value()));
+            parent->newPath(componentPath + "/parent-rel-pos",
+                std::to_string(parent_rel_pos.value()));
         }
         // childlist to value
         for (auto const& elem : children) {
-            setXpath(session, parent, componentPath + "/contains-child", elem);
+            parent->newPath(componentPath + "/contains-child", elem);
         }
         if (hardwareRev) {
-            setXpath(session, parent, componentPath + "/hardware-rev", hardwareRev.value());
+            parent->newPath(componentPath + "/hardware-rev", hardwareRev.value());
         }
         if (firmwareRev) {
-            setXpath(session, parent, componentPath + "/firmware-rev", firmwareRev.value());
+            parent->newPath(componentPath + "/firmware-rev", firmwareRev.value());
         }
         if (softwareRev) {
-            setXpath(session, parent, componentPath + "/software-rev", softwareRev.value());
+            parent->newPath(componentPath + "/software-rev", softwareRev.value());
         }
         if (serial) {
-            setXpath(session, parent, componentPath + "/serial-num", serial.value());
+            parent->newPath(componentPath + "/serial-num", serial.value());
         }
         if (mfgName) {
-            setXpath(session, parent, componentPath + "/mfg-name", mfgName.value());
+            parent->newPath(componentPath + "/mfg-name", mfgName.value());
         }
         if (modelName) {
-            setXpath(session, parent, componentPath + "/model-name", modelName.value());
+            parent->newPath(componentPath + "/model-name", modelName.value());
         }
         if (alias) {
-            setXpath(session, parent, componentPath + "/alias", alias.value());
+            parent->newPath(componentPath + "/alias", alias.value());
         }
         if (assetID) {
-            setXpath(session, parent, componentPath + "/asset-id", assetID.value());
+            parent->newPath(componentPath + "/asset-id", assetID.value());
         }
         // uri to value
         for (auto const& elem : uri) {
-            setXpath(session, parent, componentPath + "/uri", elem);
+            parent->newPath(componentPath + "/uri", elem);
         }
         if (uuid) {
-            setXpath(session, parent, componentPath + "/uuid", uuid.value());
+            parent->newPath(componentPath + "/uuid", uuid.value());
         }
     }
 
-    void setValueFromLSHWmap(std::string node, std::string value) {
+    void setValueFromLSHWmap(std::string node, std::string value)
+    {
         if (node == "description") {
             description = value;
         } else if (node == "serial") {
@@ -148,7 +158,8 @@ struct ComponentData {
         }
     }
 
-    void printExistingData() const {
+    void printExistingData() const
+    {
         std::cout << "Name: " << name << std::endl;
         std::cout << "Class: " << classType << std::endl;
         if (physicalID) {
@@ -207,7 +218,8 @@ struct ComponentData {
             std::cout << std::endl;
         }
         if (!children.empty()) {
-            std::cout << std::endl << "children: ";
+            std::cout << std::endl
+                      << "children: ";
         }
         for (auto const& c : children) {
             std::cout << c << ", ";
@@ -219,25 +231,27 @@ struct ComponentData {
         std::cout << std::endl;
     }
 
-    bool checkForConfigMatch(std::shared_ptr<ComponentData> component) {
+    bool checkForConfigMatch(std::shared_ptr<ComponentData> component)
+    {
         // We can't compare optionals w/o checking if values are present because of the following
         // supposition: lhs is considered equal to rhs if, and only if, both lhs and rhs do not
         // contain a value. Given this we can't have nodes with no 'parents' be considered equal.
         if (component->parentName && component->parent_rel_pos && parentName && parent_rel_pos) {
-            return (component->classType == classType) && (component->parentName == parentName) &&
-                   (component->parent_rel_pos == parent_rel_pos);
+            return (component->classType == classType) && (component->parentName == parentName) && (component->parent_rel_pos == parent_rel_pos);
         }
         return false;
     }
 
-    void replaceWritableValues(std::shared_ptr<ComponentData> component) {
+    void replaceWritableValues(std::shared_ptr<ComponentData> component)
+    {
         name = component->name;
         alias = component->alias;
         assetID = component->assetID;
         uri = component->uri;
     }
 
-    void parseAndSetPhysicalID(std::string physid) {
+    void parseAndSetPhysicalID(std::string physid)
+    {
         size_t foundPos = physid.find('.');
         if (foundPos != std::string::npos) {
             physid = physid.substr(foundPos + 1, physid.length());
@@ -248,15 +262,16 @@ struct ComponentData {
                 physicalID = std::nullopt;
             }
         } catch (std::exception const& e) {
-            logMessage(SR_LL_WRN, std::string("Couldn't convert physical-id: ") + e.what());
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", (std::string("Couldn't convert physical-id: ") + e.what()).c_str());
         }
     }
 
-    static void populateConfigData(Session& session, std::string_view module_name) {
+    static void populateConfigData(Session& session, std::string_view module_name)
+    {
         std::string const data_xpath(std::string("/") + std::string(module_name) + ":hardware");
         auto const& data(session.getData(data_xpath));
         if (!data) {
-            logMessage(SR_LL_ERR, "No data found for population.");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No data found for population.");
             return;
         }
         std::shared_ptr<ComponentData> component;
@@ -346,6 +361,6 @@ struct ComponentData {
 
 ComponentList ComponentData::hwConfigData;
 
-}  // namespace hardware
+} // namespace hardware
 
-#endif  // COMPONENT_DATA_H
+#endif // COMPONENT_DATA_H

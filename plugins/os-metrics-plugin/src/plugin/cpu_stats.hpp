@@ -4,7 +4,8 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2022 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -26,22 +27,31 @@ namespace metrics {
 struct CoreStats {
 
     CoreStats()
-        : mUser(0), mNice(0), mSystem(0), mIdle(0), mIowait(0), mIrq(0), mSoftirq(0), mStolen(0),
-          mTotal(1){};
+        : mUser(0)
+        , mNice(0)
+        , mSystem(0)
+        , mIdle(0)
+        , mIowait(0)
+        , mIrq(0)
+        , mSoftirq(0)
+        , mStolen(0)
+        , mTotal(1) { };
 
-    CoreStats(std::vector<size_t> const& cpu_times) {
+    CoreStats(std::vector<size_t> const& cpu_times)
+    {
         populateValues(cpu_times);
     }
 
-    void printValues() const {
+    void printValues() const
+    {
         std::cout << mUser << " " << mUser << " " << mSystem << " " << mIdle << " " << mIowait
                   << " " << mIrq << " " << mSoftirq << " " << mStolen << " " << mTotal << std::endl;
     }
 
-    void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName,
-                        std::optional<size_t> index) {
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName,
+        std::optional<size_t> index)
+    {
         std::string basePath("/" + std::string(moduleName) + ":system-metrics/cpu-statistics");
         std::string cpuPath;
         if (index) {
@@ -50,38 +60,39 @@ struct CoreStats {
         std::stringstream stream;
         stream << std::fixed << std::setprecision(2)
                << mUser / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/user", stream.str());
+        parent->newPath(basePath + cpuPath + "/user", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mSystem / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/sys", stream.str());
+        parent->newPath(basePath + cpuPath + "/sys", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mNice / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/nice", stream.str());
+        parent->newPath(basePath + cpuPath + "/nice", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mIdle / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/idle", stream.str());
+        parent->newPath(basePath + cpuPath + "/idle", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mIowait / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/wait", stream.str());
+        parent->newPath(basePath + cpuPath + "/wait", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mIrq / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/irq", stream.str());
+        parent->newPath(basePath + cpuPath + "/irq", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mSoftirq / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/softirq", stream.str());
+        parent->newPath(basePath + cpuPath + "/softirq", stream.str());
         stream = std::stringstream();
         stream << std::fixed << std::setprecision(2)
                << mStolen / static_cast<long double>(mTotal) * 100.0;
-        setXpath(session, parent, basePath + cpuPath + "/stolen", stream.str());
+        parent->newPath(basePath + cpuPath + "/stolen", stream.str());
     }
 
-    void populateValues(std::vector<size_t> const& cpu_times) {
+    void populateValues(std::vector<size_t> const& cpu_times)
+    {
         mUser = cpu_times[0];
         mNice = cpu_times[1];
         mSystem = cpu_times[2];
@@ -110,32 +121,35 @@ struct CpuStats : public CoreStats {
 
     CpuStats() = default;
 
-    CpuStats(std::vector<size_t> const& cpu_times) : CoreStats(cpu_times){};
+    CpuStats(std::vector<size_t> const& cpu_times)
+        : CoreStats(cpu_times) { };
 
-    void printValues() const {
+    void printValues() const
+    {
         CoreStats::printValues();
         for (auto const& c : mCoreTimes) {
             c.printValues();
         }
     }
 
-    void setXpathValues(sysrepo::Session session,
-                        std::optional<libyang::DataNode>& parent,
-                        std::string_view moduleName) {
-        logMessage(SR_LL_DBG, "Setting xpath values for cpu statistics");
-        CoreStats::setXpathValues(session, parent, moduleName, std::nullopt);
+    void setXpathValues(std::optional<libyang::DataNode>& parent,
+        std::string_view moduleName)
+    {
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Setting xpath values for cpu statistics");
+        CoreStats::setXpathValues(parent, moduleName, std::nullopt);
         for (size_t i = 0; i < mCoreTimes.size(); i++) {
-            mCoreTimes[i].setXpathValues(session, parent, moduleName, i);
+            mCoreTimes[i].setXpathValues(parent, moduleName, i);
         }
     }
 
-    void readCpuTimes() {
+    void readCpuTimes()
+    {
         std::ifstream proc_stat("/proc/stat");
         std::string line;
         std::vector<size_t> cpu_times;
         std::getline(proc_stat, line);
         std::istringstream stream(line);
-        stream.ignore(5, ' ');  // ignore cpu keyword
+        stream.ignore(5, ' '); // ignore cpu keyword
         for (size_t time; stream >> time; cpu_times.push_back(time))
             ;
         CoreStats::populateValues(cpu_times);
@@ -143,11 +157,11 @@ struct CpuStats : public CoreStats {
         std::getline(proc_stat, line);
         while (std::string(line).find("cpu") != std::string::npos) {
             stream = std::istringstream(line);
-            stream.ignore(5, ' ');  // ignore cpu keyword
-            std::vector<size_t> cpu_times;
-            for (size_t time; stream >> time; cpu_times.push_back(time))
+            stream.ignore(5, ' '); // ignore cpu keyword
+            std::vector<size_t> core_times;
+            for (size_t time; stream >> time; core_times.push_back(time))
                 ;
-            CpuStats coreStats(cpu_times);
+            CpuStats coreStats(core_times);
             mCoreTimes.emplace_back(coreStats);
             std::getline(proc_stat, line);
         }
@@ -156,6 +170,6 @@ struct CpuStats : public CoreStats {
     std::vector<CoreStats> mCoreTimes;
 };
 
-}  // namespace metrics
+} // namespace metrics
 
-#endif  // CPU_STATS_H
+#endif // CPU_STATS_H

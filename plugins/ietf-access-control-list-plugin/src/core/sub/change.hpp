@@ -5,15 +5,13 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //
 
 #pragma once
-
-#include "core/context.hpp"
 
 #include <optional>
 #include <string_view>
@@ -59,7 +57,7 @@ namespace sub::change {
         std::shared_ptr<AclModuleChangesContext> m_ctx;
     };
 
-     /**
+    /**
      * @brief sysrepo-plugin-generator: Generated module change functor for path /ietf-access-control-list:acls/acl[name='%s']/aces/ace.
      */
     class AclAcesAceModuleChangeCb {

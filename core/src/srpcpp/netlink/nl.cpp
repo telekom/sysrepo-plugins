@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -87,7 +87,7 @@ NlContext::NlContext()
 
     // don't error if file is not existing
     error = access("/etc/iproute2/rt_tables", F_OK | R_OK);
-    if (error == 0){
+    if (error == 0) {
         error = rtnl_route_read_table_names("/etc/iproute2/rt_tables");
         if (error != 0) {
             throw std::runtime_error("Unable to read routing table names");
@@ -96,7 +96,7 @@ NlContext::NlContext()
 
     // don't error if file is not existing
     error = access("/etc/iproute2/rt_protos", F_OK | R_OK);
-    if (error == 0){
+    if (error == 0) {
         error = rtnl_route_read_table_names("/etc/iproute2/rt_protos");
         if (error != 0) {
             throw std::runtime_error("Unable to read routing protocol names");
@@ -628,7 +628,9 @@ void NlContext::createRoute(std::string destination_prefix, const std::vector<Ne
             rtnl_route_put(route);
     };
 
-    error = nl_addr_parse(destination_prefix.c_str(), AF_INET, &destination_addr_ptr);
+    int family = (destination_prefix.find(':') != std::string::npos) ? AF_INET6 : AF_INET;
+
+    error = nl_addr_parse(destination_prefix.c_str(), family, &destination_addr_ptr);
     if (error < 0) {
         throw std::runtime_error("Unable to parse destination prefix");
     }
@@ -650,7 +652,7 @@ void NlContext::createRoute(std::string destination_prefix, const std::vector<Ne
         clean();
         throw std::runtime_error("rtnl_route_set_dst() Failed! ");
     };
-    rtnl_route_set_family(route, AF_INET);
+    rtnl_route_set_family(route, family);
 
     for (auto nh : next_hops) {
         // set interface and next hop
@@ -661,10 +663,10 @@ void NlContext::createRoute(std::string destination_prefix, const std::vector<Ne
             clean();
             throw std::bad_alloc();
         }
-        error = nl_addr_parse(addr.c_str(), AF_INET, &next_hop_addr_ptr);
+        error = nl_addr_parse(addr.c_str(), family, &next_hop_addr_ptr);
         if (error < 0) {
             clean();
-            throw std::runtime_error("Unable to parse destination prefix");
+            throw std::runtime_error("Unable to parse next-hop address");
         }
 
         rtnl_route_nh_set_ifindex(next_hop, nh.getIfindex());
@@ -739,11 +741,16 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
     rtnl_route* route = NULL;
     int err = 0;
     bool is_zero = false;
+    int zero_family = AF_UNSPEC;
 
     // handle the zero address case
     if (destination_addres.rfind("0.0.0.0", 0) == 0) {
         is_zero = true;
-    };
+        zero_family = AF_INET;
+    } else if (destination_addres.rfind("::/", 0) == 0 || destination_addres == "::") {
+        is_zero = true;
+        zero_family = AF_INET6;
+    }
 
     err = rtnl_route_alloc_cache(m_sock.get(), AF_ROUTE, 0, &route_cache);
 
@@ -771,7 +778,7 @@ std::optional<RouteRef> NlContext::findRoute(const std::string& destination_addr
                 break;
             }
         } else {
-            if (nl_addr_iszero(route_addr)) {
+            if (nl_addr_iszero(route_addr) && nl_addr_get_family(route_addr) == zero_family) {
                 route = (rtnl_route*)nl_object_clone((nl_object*)iter);
                 break;
             }

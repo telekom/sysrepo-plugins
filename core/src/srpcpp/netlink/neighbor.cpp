@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -128,7 +128,7 @@ NeighborState NeighborRef::getState() const { return (NeighborState)rtnl_neigh_g
  */
 std::string NeighborRef::getDestinationIP() const
 {
-    auto dst = AddressRef(rtnl_neigh_get_dst(m_neigh.get()),m_socket.get());
+    auto dst = AddressRef(rtnl_neigh_get_dst(m_neigh.get()), m_socket.get());
     auto str = dst.toString();
     auto slash_pos = str.find('/');
     auto ip_address = str;
@@ -145,7 +145,7 @@ std::string NeighborRef::getDestinationIP() const
  */
 std::string NeighborRef::getLinkLayerAddress() const
 {
-    auto ll_addr = AddressRef(rtnl_neigh_get_lladdr(m_neigh.get()),m_socket.get());
+    auto ll_addr = AddressRef(rtnl_neigh_get_lladdr(m_neigh.get()), m_socket.get());
     return ll_addr.toString();
 }
 

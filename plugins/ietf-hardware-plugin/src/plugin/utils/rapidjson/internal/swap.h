@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2015 THL A29 Limited, a Tencent company, and Milo Yip
 // SPDX-License-Identifier: MIT
 
-
 // Tencent is pleased to support the open source community by making RapidJSON available.
 //
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
@@ -23,7 +22,7 @@
 
 #if defined(__clang__)
 RAPIDJSON_DIAG_PUSH
-RAPIDJSON_DIAG_OFF(c++98-compat)
+RAPIDJSON_DIAG_OFF(c++ 98 - compat)
 #endif
 
 RAPIDJSON_NAMESPACE_BEGIN
@@ -34,10 +33,11 @@ namespace internal {
     \note This has the same semantics as std::swap().
 */
 template <typename T>
-inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT {
+inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT
+{
     T tmp = a;
-        a = b;
-        b = tmp;
+    a = b;
+    b = tmp;
 }
 
 } // namespace internal

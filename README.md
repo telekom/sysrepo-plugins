@@ -68,7 +68,7 @@ More information about the `os-metrics` YANG module can be found in
 
 ## Development
 
-Besides the usual C++ development environment, the following additional dependencies are required to build all the plugins:
+A C++20 compatible compiler is required. Besides the usual C++ development environment, the following additional dependencies are required to build all the plugins:
 
 * [libyang](https://github.com/CESNET/libyang)
 * [libyang-cpp](https://github.com/CESNET/libyang-cpp)
@@ -136,7 +136,15 @@ Plugins will be built as standalone applications and also as `sysrepo-plugind` m
 
 ### Sysrepo/YANG requirements
 
-Each plugin requires the YANG modules from its `yang/` folder to be loaded into the Sysrepo datastore. This can be achieved, for example for the system plugin, by invoking the following commands:
+Each plugin requires the YANG modules from its `yang/` folder to be loaded into the Sysrepo datastore.
+
+To install **all** YANG modules and enable the required features for every plugin at once, run the provided helper script:
+```bash
+$ cd plugins
+$ ./install_yang_modules.sh
+```
+
+Alternatively, you can install them manually per plugin. For example for the system plugin, by invoking the following commands:
 ```bash
 $ sysrepoctl -i ./yang/iana-crypt-hash@2014-08-06.yang
 $ sysrepoctl -i ./yang/ietf-system@2014-08-06.yang

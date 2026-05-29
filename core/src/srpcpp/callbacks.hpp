@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -17,34 +17,30 @@
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/Changes.hpp>
 
-namespace srpc
-{
+namespace srpc {
 /**
  * @brief Operational callback struct.
  */
-struct OperationalCallback
-{
-    std::string Module;          ///< Module for the callback.
-    std::string XPath;           ///< XPath of the data.
+struct OperationalCallback {
+    std::string Module; ///< Module for the callback.
+    std::string XPath; ///< XPath of the data.
     sysrepo::OperGetCb Callback; ///< Callback function.
 };
 
 /**
  * @brief Module change callback struct.
  */
-struct ModuleChangeCallback
-{
-    std::string Module;               ///< Module for the callback.
-    std::string XPath;                ///< XPath of the data.
+struct ModuleChangeCallback {
+    std::string Module; ///< Module for the callback.
+    std::string XPath; ///< XPath of the data.
     sysrepo::ModuleChangeCb Callback; ///< Callback function.
 };
 
 /**
  * @brief RPC callback struct.
  */
-struct RpcCallback
-{
-    std::string XPath;             ///< XPath of the data.
+struct RpcCallback {
+    std::string XPath; ///< XPath of the data.
     sysrepo::RpcActionCb Callback; ///< Callback function.
 };
 } // namespace srpc

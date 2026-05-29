@@ -5,7 +5,7 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
@@ -30,7 +30,7 @@ public:
     /**
      * Aclentication module constructor. Allocates each context.
      */
-    AclModule(ietf::acl::PluginContext &ctx);
+    AclModule(ietf::acl::PluginContext& ctx);
 
     /**
      * Return the operational context from the module.

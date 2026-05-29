@@ -4,7 +4,8 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -34,13 +35,14 @@ struct Callback {
     using IStreamWrapper = rapidjson::IStreamWrapper;
 
     static ErrorCode configurationCallback(Session session,
-                                           uint32_t subscriptionId,
-                                           std::string_view moduleName,
-                                           std::optional<std::string_view> /* subXPath */,
-                                           Event /* event */,
-                                           uint32_t /* request_id */) {
+        uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        Event /* event */,
+        uint32_t /* request_id */)
+    {
         printCurrentConfig(session, moduleName);
-        logMessage(SR_LL_DBG, "Processing received configuration.");
+        SRPLG_LOG_DBG(PLUGIN_NAME, "Processing received configuration.");
         HardwareSensors::getInstance().notifyAndJoin();
         ComponentData::populateConfigData(session, moduleName);
         HardwareSensors::getInstance().startThreads();
@@ -48,19 +50,20 @@ struct Callback {
     }
 
     static ErrorCode operationalCallback(Session session,
-                                         uint32_t subscriptionId,
-                                         std::string_view moduleName,
-                                         std::optional<std::string_view> /* subXPath */,
-                                         std::optional<std::string_view> /* requestXPath */,
-                                         uint32_t /* requestId */,
-                                         std::optional<libyang::DataNode>& parent) {
+        uint32_t subscriptionId,
+        std::string_view moduleName,
+        std::optional<std::string_view> /* subXPath */,
+        std::optional<std::string_view> /* requestXPath */,
+        uint32_t /* requestId */,
+        std::optional<libyang::DataNode>& parent)
+    {
 
         int rc = system("/usr/bin/lshw -json > " COMPONENTS_LOCATION);
         if (rc == -1) {
-            logMessage(SR_LL_ERR, "lshw command failed");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "lshw command failed");
             return ErrorCode::CallbackFailed;
         }
-        logMessage(SR_LL_DBG, "lshw command returned:" + std::to_string(rc));
+        SRPLG_LOG_DBG(PLUGIN_NAME, "%s", ("lshw command returned:" + std::to_string(rc)).c_str());
         std::string const set_xpath("/ietf-hardware:hardware");
 
         // +--ro last-change?   yang:date-and-time
@@ -68,19 +71,19 @@ struct Callback {
             std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
         char timeString[100];
         if (std::strftime(timeString, sizeof(timeString), "%FT%TZ", std::localtime(&lastChange))) {
-            setXpath(session, parent, set_xpath + "/last-change", timeString);
+            parent = session.getContext().newPath(set_xpath + "/last-change", timeString);
         }
 
         std::ifstream ifs(COMPONENTS_LOCATION, std::ifstream::in);
         if (ifs.fail()) {
-            logMessage(SR_LL_ERR, "Can't open: " COMPONENTS_LOCATION);
+            SRPLG_LOG_ERR(PLUGIN_NAME, "Can't open: " COMPONENTS_LOCATION);
             return ErrorCode::CallbackFailed;
         }
         IStreamWrapper isw(ifs);
         Document doc;
         doc.ParseStream(isw);
         if (!doc.IsObject() && !doc.IsArray()) {
-            logMessage(SR_LL_ERR, "lshw json root-node is not an object or array");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "lshw json root-node is not an object or array");
             return ErrorCode::CallbackFailed;
         }
 
@@ -90,36 +93,37 @@ struct Callback {
         auto const& modules = session.getContext().modules();
         auto module = std::find_if(
             modules.begin(), modules.end(),
-            [moduleName](libyang::Module const& module) { return moduleName == module.name(); });
+            [moduleName](libyang::Module const& m) { return moduleName == m.name(); });
 
         try {
             if (module != std::end(modules) && module->featureEnabled("hardware-sensor")) {
                 HardwareSensors::getInstance().parseSensorData(hwComponents);
             }
         } catch (std::exception const& e) {
-            logMessage(SR_LL_WRN, "hardware-sensors nodes failure: " + std::string(e.what()));
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", ("hardware-sensors nodes failure: " + std::string(e.what())).c_str());
         }
 
         for (auto const& c : hwComponents) {
-            c.second->setXpathForAllMembers(session, parent, set_xpath,
-                                            (module != std::end(modules)) &&
-                                                module->featureEnabled("entity-mib"));
+            c.second->setXpathForAllMembers(parent, set_xpath,
+                (module != std::end(modules)) && module->featureEnabled("entity-mib"));
         }
 
         if (!parent) {
-            logMessage(SR_LL_ERR, "No nodes were set");
+            SRPLG_LOG_ERR(PLUGIN_NAME, "No nodes were set");
             return ErrorCode::CallbackFailed;
         }
         return ErrorCode::Ok;
     }
 
-    static std::string toIANAclass(std::string const& inputClass) {
+    static std::string toIANAclass(std::string const& inputClass)
+    {
         std::string returnedClass("iana-hardware:unknown");
-        static std::unordered_map<std::string, std::string> _{
-            {"storage", "iana-hardware:storage-drive"},
-            {"power", "iana-hardware:battery"},
-            {"processor", "iana-hardware:cpu"},
-            {"network", "iana-hardware:port"}};
+        static std::unordered_map<std::string, std::string> _ {
+            { "storage", "iana-hardware:storage-drive" },
+            { "power", "iana-hardware:battery" },
+            { "processor", "iana-hardware:cpu" },
+            { "network", "iana-hardware:port" }
+        };
 
         if (_.find(inputClass) != _.end()) {
             returnedClass = _.at(inputClass);
@@ -128,10 +132,11 @@ struct Callback {
     }
 
     static std::string parseAndSetComponent(Value const& parsee,
-                                            std::string const& parentName,
-                                            Value::ConstMemberIterator itr,
-                                            ComponentMap& hwComponents,
-                                            int32_t& parent_rel_pos) {
+        std::string const& parentName,
+        Value::ConstMemberIterator itr,
+        ComponentMap& hwComponents,
+        int32_t& parent_rel_pos)
+    {
         std::shared_ptr<ComponentData> component;
         if (itr != parsee.MemberEnd()) {
             component = std::make_shared<ComponentData>(itr->value.GetString());
@@ -142,8 +147,7 @@ struct Callback {
 
         // firmware node, skip this one and set the parent's firmware-rev
         // +--ro firmware-rev?     string
-        if (component->name == "firmware" && !parentName.empty() &&
-            (itr = parsee.FindMember("version")) != parsee.MemberEnd()) {
+        if (component->name == "firmware" && !parentName.empty() && (itr = parsee.FindMember("version")) != parsee.MemberEnd()) {
             if (hwComponents.find(parentName) != hwComponents.end() && hwComponents[parentName]) {
                 hwComponents[parentName]->firmwareRev = itr->value.GetString();
             }
@@ -213,22 +217,22 @@ struct Callback {
 
         // +--ro contains-child*   -> ../../component/name
         if ((itr = parsee.FindMember("children")) != parsee.MemberEnd()) {
-            hwComponents[component->name]->children =
-                parseAndSetComponents(itr->value.GetArray(), hwComponents, component->name);
+            hwComponents[component->name]->children = parseAndSetComponents(itr->value.GetArray(), hwComponents, component->name);
         }
 
         return component->name;
     }
 
     static std::list<std::string> parseAndSetComponents(Value const& parsee,
-                                                        ComponentMap& hwComponents,
-                                                        std::string const& parentName) {
+        ComponentMap& hwComponents,
+        std::string const& parentName)
+    {
         std::list<std::string> siblings;
         int32_t parent_rel_pos(0);
 
         if (!parsee.IsArray()) {
             std::string const name(parseAndSetComponent(parsee, parentName, parsee.MemberBegin(),
-                                                        hwComponents, parent_rel_pos));
+                hwComponents, parent_rel_pos));
             if (!name.empty()) {
                 siblings.emplace_back(name);
             }
@@ -246,7 +250,8 @@ struct Callback {
         return siblings;
     }
 
-    static void printCurrentConfig(Session& session, std::string_view module_name) {
+    static void printCurrentConfig(Session& session, std::string_view module_name)
+    {
         try {
             std::string xpath(std::string("/") + std::string(module_name) + std::string(":*//*"));
             auto values = session.getData(xpath);
@@ -257,21 +262,23 @@ struct Callback {
                 values.value()
                     .printStr(libyang::DataFormat::JSON, libyang::PrintFlags::Siblings)
                     .value());
-            logMessage(SR_LL_DBG, toPrint);
+            SRPLG_LOG_DBG(PLUGIN_NAME, "%s", toPrint.c_str());
         } catch (const std::exception& e) {
-            logMessage(SR_LL_WRN, e.what());
+            SRPLG_LOG_WRN(PLUGIN_NAME, "%s", e.what());
         }
     }
 
-    static std::unordered_map<std::string, std::string> const& getLSHWtoIETFmap() {
-        static std::unordered_map<std::string, std::string> const _{
-            {"description", "/description"}, {"vendor", "/mfg-name"},
-            {"serial", "/serial-num"},       {"product", "/model-name"},
-            {"version", "/hardware-rev"},    {"handle", "/alias"}};
+    static std::unordered_map<std::string, std::string> const& getLSHWtoIETFmap()
+    {
+        static std::unordered_map<std::string, std::string> const _ {
+            { "description", "/description" }, { "vendor", "/mfg-name" },
+            { "serial", "/serial-num" }, { "product", "/model-name" },
+            { "version", "/hardware-rev" }, { "handle", "/alias" }
+        };
         return _;
     }
 };
 
-}  // namespace hardware
+} // namespace hardware
 
-#endif  // CALLBACK_H
+#endif // CALLBACK_H

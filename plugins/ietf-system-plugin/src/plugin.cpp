@@ -5,20 +5,17 @@
 // BSD 3-Clause license which is available at
 // https://opensource.org/licenses/BSD-3-Clause
 //
-// SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 // SPDX-FileContributor: Sartura d.d.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //
 
 #include "plugin.hpp"
-#include "plugin/common.hpp"
 #include "plugin/context.hpp"
 
 #include <sysrepo-cpp/Session.hpp>
 #include <sysrepo-cpp/utils/utils.hpp>
-
-#include <srpcpp.hpp>
 
 #ifdef SYSTEM_MODULE
 #include "plugin/modules/system.hpp"
@@ -47,15 +44,15 @@
 #include <sysrepo.h>
 
 namespace sr = sysrepo;
- 
- /**
-  * @brief Plugin init callback.
-  *
-  * @param session Plugin session.
-  * @param priv Private data.
-  *
-  * @return Error code (SR_ERR_OK on success).
-  */
+
+/**
+ * @brief Plugin init callback.
+ *
+ * @param session Plugin session.
+ * @param priv Private data.
+ *
+ * @return Error code (SR_ERR_OK on success).
+ */
 int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
 {
     sr::ErrorCode error = sysrepo::ErrorCode::Ok;
@@ -100,8 +97,7 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
         for (auto& applier : mod->getValueAppliers()) {
             try {
                 applier->applyDatastoreValues(sess);
-            }
-            catch (const std::runtime_error& err) {
+            } catch (const std::runtime_error& err) {
                 SRPLG_LOG_ERR(
                     ctx->getPluginName(),
                     "Failed to apply datastore values for the following paths:");
