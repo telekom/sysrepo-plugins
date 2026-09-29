@@ -628,7 +628,7 @@ void NlContext::createRoute(std::string destination_prefix, const std::vector<Ne
             rtnl_route_put(route);
     };
 
-    int family = (destination_prefix.find(':') != std::string::npos) ? AF_INET6 : AF_INET;
+    uint8_t family = (destination_prefix.find(':') != std::string::npos) ? AF_INET6 : AF_INET;
 
     error = nl_addr_parse(destination_prefix.c_str(), family, &destination_addr_ptr);
     if (error < 0) {
