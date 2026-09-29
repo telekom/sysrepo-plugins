@@ -11,8 +11,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
 
-#include <iostream>
 #include "nftables.hpp"
+#include "../common.hpp"
+
+#include <sysrepo.h>
 
 std::list<NFTTable> NFTables::getTables()
 {
@@ -118,7 +120,7 @@ NFTChain NFTTable::addChain(const std::string& name, const std::optional<NFT_Cha
     if (has_params)
         command.append(" }");
 
-    std::cout << "CMD: " << command << std::endl;
+    SRPLG_LOG_DBG(getModuleLogPrefix(), "nft command: %s", command.c_str());
     NFTCommand::getInstance().exec_cmd(command);
 
     // if no exception is thrown, we construct NFTChain
@@ -213,7 +215,6 @@ nlohmann::json NFTCommand::exec_cmd(const std::string& command)
 
 NFTCommand::NFTCommand()
 {
-    std::cout << "NFTCommand Constructed" << std::endl;
     int err = 0;
     m_ctx = NULL;
     m_ctx = nft_ctx_new(NFT_CTX_DEFAULT);
@@ -230,7 +231,6 @@ NFTCommand::NFTCommand()
 
 NFTCommand::~NFTCommand()
 {
-    std::cout << "NFTCommand destructed" << std::endl;
     if (m_ctx != NULL)
         nft_ctx_free(m_ctx);
 }

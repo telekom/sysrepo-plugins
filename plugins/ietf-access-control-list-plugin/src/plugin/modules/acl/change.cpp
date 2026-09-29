@@ -19,8 +19,6 @@
 #include <sysrepo.h>
 #include <sysrepo-cpp/Changes.hpp>
 
-#include <iostream>
-
 namespace ietf::acl {
 namespace sub::change {
 
@@ -235,8 +233,6 @@ namespace sub::change {
                 switch (change.operation) {
                 case sr::ChangeOperation::Created: {
                     std::string type_str;
-
-                    std::cout << "Created chain" << std::endl;
 
                     try {
                         auto type_node = session.getOneNode("/ietf-access-control-list:acls/acl[name='" + name_key + "']/type");
@@ -715,9 +711,6 @@ namespace sub::change {
                     try {
                         // chain->deleteRule(Match().Protocol("ether").Field("type").Value(old_vlan));
                         // chain->addRule(rule);
-
-                        libyang::Value val;
-                        std::cout << "get val: " << std::get<uint32_t>(change.node.asTerm().value()) << std::endl;
                     } catch (NFTablesCommandExecException& e) {
                         SRPLG_LOG_ERR(getModuleLogPrefix(), "%s", e.what());
                         return sr::ErrorCode::CallbackFailed;
