@@ -78,6 +78,7 @@ A C++20 compatible compiler is required. Besides the usual C++ development envir
 * [sdbus-cpp](https://github.com/Kistler-Group/sdbus-cpp) >= 2.0.0
 * [libnl](https://github.com/thom311/libnl)
 * [nlohmann-json](https://github.com/nlohmann/json)
+* [libnftables](https://www.netfilter.org/projects/nftables/)
 * [umgmt](https://github.com/sartura/umgmt)
 * [libsensors](https://github.com/lm-sensors/lm-sensors)
 * [lshw](https://ezix.org/project/wiki/HardwareLiSter)
