@@ -2420,9 +2420,9 @@ namespace sub::change {
                 Match rule;
 
                 // Determine if this is source-port or destination-port
-                const char* xpath = change.node.path().data();
-                bool is_source = (strstr(xpath, "source-port") != nullptr);
-                bool is_dest = (strstr(xpath, "destination-port") != nullptr);
+                const std::string xpath = change.node.path();
+                bool is_source = (xpath.find("source-port") != std::string::npos);
+                bool is_dest = (xpath.find("destination-port") != std::string::npos);
 
                 if (!is_source && !is_dest) {
                     continue;
@@ -2661,9 +2661,9 @@ namespace sub::change {
                 Match rule;
 
                 // Determine if this is source-port or destination-port
-                const char* xpath = change.node.path().data();
-                bool is_source = (strstr(xpath, "source-port") != nullptr);
-                bool is_dest = (strstr(xpath, "destination-port") != nullptr);
+                const std::string xpath = change.node.path();
+                bool is_source = (xpath.find("source-port") != std::string::npos);
+                bool is_dest = (xpath.find("destination-port") != std::string::npos);
 
                 if (!is_source && !is_dest) {
                     continue;
