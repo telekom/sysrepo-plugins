@@ -43,35 +43,46 @@ int sr_plugin_init_cb(sr_session_ctx_t* session, void** priv)
     // create session subscriptions
     SRPLG_LOG_INF(ctx->getPluginName(), "Creating plugin subscriptions");
 
-    registry.registerModule<AclModule>(*ctx);
+    try {
+        registry.registerModule<AclModule>(*ctx);
 
-    auto& modules = registry.getRegisteredModules();
+        auto& modules = registry.getRegisteredModules();
 
-    // for all registered modules - apply running datastore values to the system
-    for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Applying running datastore values for module %s", mod->getName());
-        for (auto& applier : mod->getValueAppliers()) {
-            try {
-                applier->applyDatastoreValues(sess);
-            } catch (const std::exception& err) {
-                SRPLG_LOG_ERR(ctx->getPluginName(), "Failed to apply datastore values for the following paths:");
-                for (const auto& path : applier->getPaths()) {
-                    SRPLG_LOG_ERR(ctx->getPluginName(), "\t%s", path.c_str());
+        // for all registered modules - apply running datastore values to the system
+        for (auto& mod : modules) {
+            SRPLG_LOG_INF(ctx->getPluginName(), "Applying running datastore values for module %s", mod->getName());
+            for (auto& applier : mod->getValueAppliers()) {
+                try {
+                    applier->applyDatastoreValues(sess);
+                } catch (const std::exception& err) {
+                    SRPLG_LOG_ERR(ctx->getPluginName(), "Failed to apply datastore values for the following paths:");
+                    for (const auto& path : applier->getPaths()) {
+                        SRPLG_LOG_ERR(ctx->getPluginName(), "\t%s", path.c_str());
+                    }
+                    SRPLG_LOG_ERR(ctx->getPluginName(), "Reason: %s", err.what());
                 }
-                SRPLG_LOG_ERR(ctx->getPluginName(), "Reason: %s", err.what());
             }
         }
-    }
 
-    // get registered modules and create subscriptions
-    for (auto& mod : modules) {
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registering operational callbacks for module %s", mod->getName());
-        srpc::registerOperationalSubscriptions(sess, *ctx, mod);
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registering module change callbacks for module %s", mod->getName());
-        srpc::registerModuleChangeSubscriptions(sess, *ctx, mod);
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registering RPC callbacks for module %s", mod->getName());
-        srpc::registerRpcSubscriptions(sess, *ctx, mod);
-        SRPLG_LOG_INF(ctx->getPluginName(), "Registered module %s", mod->getName());
+        // get registered modules and create subscriptions
+        for (auto& mod : modules) {
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registering operational callbacks for module %s", mod->getName());
+            srpc::registerOperationalSubscriptions(sess, *ctx, mod);
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registering module change callbacks for module %s", mod->getName());
+            srpc::registerModuleChangeSubscriptions(sess, *ctx, mod);
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registering RPC callbacks for module %s", mod->getName());
+            srpc::registerRpcSubscriptions(sess, *ctx, mod);
+            SRPLG_LOG_INF(ctx->getPluginName(), "Registered module %s", mod->getName());
+        }
+    } catch (const std::exception& err) {
+        SRPLG_LOG_ERR(ctx->getPluginName(), "Plugin initialization failed: %s", err.what());
+
+        // sysrepo-plugind does not call the cleanup callback for a plugin whose init failed - drop the context (and
+        // with it any subscriptions created so far) here and leave nothing behind for sr_plugin_cleanup_cb()
+        delete ctx;
+        *priv = nullptr;
+
+        return static_cast<int>(sr::ErrorCode::OperationFailed);
     }
 
     SRPLG_LOG_INF(ctx->getPluginName(), "Created plugin subscriptions");
@@ -90,6 +101,12 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
 {
     auto& registry(srpc::ModuleRegistry<ietf::acl::PluginContext>::getInstance());
     auto ctx = static_cast<ietf::acl::PluginContext*>(priv);
+
+    // init failed and already cleaned up after itself
+    if (!ctx) {
+        return;
+    }
+
     const auto plugin_name = ctx->getPluginName();
 
     SRPLG_LOG_INF(plugin_name, "Plugin cleanup called");
