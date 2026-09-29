@@ -22,39 +22,55 @@ find_package(LIBYANG REQUIRED)
 find_package(SYSREPO REQUIRED)
 find_package(LIBYANGCPP REQUIRED)
 find_package(SYSREPOCPP REQUIRED)
-
 find_library(libsensors sensors)
+
+set(
+    PLUGIN_CORE_SOURCES
+
+    src/plugin/context.cpp
+)
+
+set(
+    MODULE_SOURCES
+
+    src/plugin/modules/hardware.cpp
+    src/plugin/modules/hardware/oper.cpp
+    src/plugin/modules/hardware/change.cpp
+    src/plugin/modules/hardware/api/component_data.cpp
+    src/plugin/modules/hardware/api/sensor_data.cpp
+    src/plugin/modules/hardware/api/hardware_sensors.cpp
+)
 
 set(
     PLUGIN_SOURCES
 
-    src/plugin/component_data.hpp
-    src/plugin/hardware_sensors.hpp
-    src/plugin/sensor_data.hpp
     src/plugin.cpp
-    src/plugin.hpp
 )
 
 set(
     EXECUTABLE_SOURCES
 
     src/main.c
+    src/plugin.cpp
 )
 
 # core library
 add_library(
     ${PLUGIN_CORE_LIBRARY_NAME}
     STATIC
-    ${PLUGIN_SOURCES}
+    ${PLUGIN_CORE_SOURCES}
+    ${MODULE_SOURCES}
 )
 
 target_include_directories(
     ${PLUGIN_CORE_LIBRARY_NAME}
 
+    PRIVATE ${LIBYANG_INCLUDE_DIRS}
+    PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 target_compile_options(
@@ -76,8 +92,8 @@ target_include_directories(
     PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 target_link_libraries(
@@ -107,8 +123,8 @@ target_include_directories(
     PRIVATE ${SYSREPO_INCLUDE_DIRS}
     PRIVATE ${LIBYANGCPP_INCLUDE_DIRS}
     PRIVATE ${SYSREPOCPP_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
     PRIVATE ${CORE_LIBRARY_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 target_link_libraries(
