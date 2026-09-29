@@ -17,9 +17,6 @@
 #include "api/hardware_sensors.hpp"
 #include "api/sensor_data.hpp"
 
-#include "plugin/utils/rapidjson/document.h"
-#include "plugin/utils/rapidjson/istreamwrapper.h"
-
 #include <algorithm>
 #include <chrono>
 #include <ctime>
@@ -28,16 +25,16 @@
 #include <string>
 #include <unordered_map>
 
+#include <nlohmann/json.hpp>
+
 #include <sysrepo.h>
 
 namespace ietf::hw::sub::oper {
 
 using ErrorCode = sr::ErrorCode;
-using Value = rapidjson::Value;
-using Document = rapidjson::Document;
-using IStreamWrapper = rapidjson::IStreamWrapper;
+using json = nlohmann::json;
 
-static std::list<std::string> parseAndSetComponents(Value const& parsee, ComponentMap& hwComponents, std::string const& parentName);
+static std::list<std::string> parseAndSetComponents(json const& parsee, ComponentMap& hwComponents, std::string const& parentName);
 
 /**
  * @brief Map of lshw node names to the ietf-hardware component nodes.
@@ -76,11 +73,11 @@ static std::string toIANAclass(std::string const& inputClass)
  *
  * @return Name of the parsed component or an empty string if it was skipped.
  */
-static std::string parseAndSetComponent(Value const& parsee, std::string const& parentName, Value::ConstMemberIterator itr, ComponentMap& hwComponents, int32_t& parent_rel_pos)
+static std::string parseAndSetComponent(json const& parsee, std::string const& parentName, json::const_iterator itr, ComponentMap& hwComponents, int32_t& parent_rel_pos)
 {
     std::shared_ptr<ComponentData> component;
-    if (itr != parsee.MemberEnd()) {
-        component = std::make_shared<ComponentData>(itr->value.GetString());
+    if (itr != parsee.end()) {
+        component = std::make_shared<ComponentData>(itr->get<std::string>());
     } else {
         // invalid entry, go to the next one
         return std::string();
@@ -88,9 +85,9 @@ static std::string parseAndSetComponent(Value const& parsee, std::string const& 
 
     // firmware node, skip this one and set the parent's firmware-rev
     // +--ro firmware-rev?     string
-    if (component->name == "firmware" && !parentName.empty() && (itr = parsee.FindMember("version")) != parsee.MemberEnd()) {
+    if (component->name == "firmware" && !parentName.empty() && (itr = parsee.find("version")) != parsee.end()) {
         if (hwComponents.find(parentName) != hwComponents.end() && hwComponents[parentName]) {
-            hwComponents[parentName]->firmwareRev = itr->value.GetString();
+            hwComponents[parentName]->firmwareRev = itr->get<std::string>();
         }
         return std::string();
     }
@@ -101,8 +98,8 @@ static std::string parseAndSetComponent(Value const& parsee, std::string const& 
     }
 
     // +--rw class             identityref
-    if ((itr = parsee.FindMember("class")) != parsee.MemberEnd()) {
-        component->classType = toIANAclass(itr->value.GetString());
+    if ((itr = parsee.find("class")) != parsee.end()) {
+        component->classType = toIANAclass(itr->get<std::string>());
     }
 
     // +--rw name              string
@@ -114,29 +111,29 @@ static std::string parseAndSetComponent(Value const& parsee, std::string const& 
     // +--rw alias?            string
     for (auto const& mapValue : getLSHWtoIETFmap()) {
         std::string const stringValue = mapValue.first;
-        if ((itr = parsee.FindMember(stringValue.c_str())) != parsee.MemberEnd()) {
-            component->setValueFromLSHWmap(stringValue, itr->value.GetString());
+        if ((itr = parsee.find(stringValue)) != parsee.end()) {
+            component->setValueFromLSHWmap(stringValue, itr->get<std::string>());
         }
     }
 
     // +--ro software-rev?     string
     // +--ro uuid?             yang:uuid
-    if ((itr = parsee.FindMember("configuration")) != parsee.MemberEnd()) {
-        Value::ConstMemberIterator config_elem = itr->value.FindMember("uuid");
-        if (config_elem != itr->value.MemberEnd()) {
-            component->uuid = config_elem->value.GetString();
+    if ((itr = parsee.find("configuration")) != parsee.end()) {
+        json::const_iterator config_elem = itr->find("uuid");
+        if (config_elem != itr->end()) {
+            component->uuid = config_elem->get<std::string>();
         }
-        if ((config_elem = itr->value.FindMember("driverversion")) != itr->value.MemberEnd()) {
-            component->softwareRev = config_elem->value.GetString();
+        if ((config_elem = itr->find("driverversion")) != itr->end()) {
+            component->softwareRev = config_elem->get<std::string>();
         }
-        if ((config_elem = itr->value.FindMember("firmware")) != itr->value.MemberEnd()) {
-            component->firmwareRev = config_elem->value.GetString();
+        if ((config_elem = itr->find("firmware")) != itr->end()) {
+            component->firmwareRev = config_elem->get<std::string>();
         }
     }
 
     // +--ro physical-index?   int32 {entity-mib}?
-    if ((itr = parsee.FindMember("physid")) != parsee.MemberEnd()) {
-        component->parseAndSetPhysicalID(itr->value.GetString());
+    if ((itr = parsee.find("physid")) != parsee.end()) {
+        component->parseAndSetPhysicalID(itr->get<std::string>());
     }
 
     // +--rw parent?           -> ../../component/name
@@ -157,8 +154,8 @@ static std::string parseAndSetComponent(Value const& parsee, std::string const& 
     hwComponents.insert(std::make_pair(component->name, component));
 
     // +--ro contains-child*   -> ../../component/name
-    if ((itr = parsee.FindMember("children")) != parsee.MemberEnd()) {
-        hwComponents[component->name]->children = parseAndSetComponents(itr->value.GetArray(), hwComponents, component->name);
+    if ((itr = parsee.find("children")) != parsee.end()) {
+        hwComponents[component->name]->children = parseAndSetComponents(*itr, hwComponents, component->name);
     }
 
     return component->name;
@@ -169,13 +166,13 @@ static std::string parseAndSetComponent(Value const& parsee, std::string const& 
  *
  * @return Names of the parsed sibling components.
  */
-static std::list<std::string> parseAndSetComponents(Value const& parsee, ComponentMap& hwComponents, std::string const& parentName)
+static std::list<std::string> parseAndSetComponents(json const& parsee, ComponentMap& hwComponents, std::string const& parentName)
 {
     std::list<std::string> siblings;
     int32_t parent_rel_pos(0);
 
-    if (!parsee.IsArray()) {
-        std::string const name(parseAndSetComponent(parsee, parentName, parsee.MemberBegin(),
+    if (!parsee.is_array()) {
+        std::string const name(parseAndSetComponent(parsee, parentName, parsee.find("id"),
             hwComponents, parent_rel_pos));
         if (!name.empty()) {
             siblings.emplace_back(name);
@@ -183,8 +180,8 @@ static std::list<std::string> parseAndSetComponents(Value const& parsee, Compone
         return siblings;
     }
 
-    for (auto& m : parsee.GetArray()) {
-        Value::ConstMemberIterator itr = m.FindMember("id");
+    for (auto const& m : parsee) {
+        json::const_iterator itr = m.find("id");
         std::string const name(
             parseAndSetComponent(m, parentName, itr, hwComponents, parent_rel_pos));
         if (!name.empty()) {
@@ -241,16 +238,20 @@ sr::ErrorCode HardwareOperGetCb::operator()(sr::Session session, uint32_t subscr
         SRPLG_LOG_ERR(getModuleLogPrefix(), "Can't open: %s", COMPONENTS_LOCATION);
         return ErrorCode::CallbackFailed;
     }
-    IStreamWrapper isw(ifs);
-    Document doc;
-    doc.ParseStream(isw);
-    if (!doc.IsObject() && !doc.IsArray()) {
+    // parse without exceptions - invalid input results in a discarded value which is neither an object nor an array
+    json const doc = json::parse(ifs, nullptr, false);
+    if (!doc.is_object() && !doc.is_array()) {
         SRPLG_LOG_ERR(getModuleLogPrefix(), "lshw json root-node is not an object or array");
         return ErrorCode::CallbackFailed;
     }
 
     ComponentMap hwComponents;
-    parseAndSetComponents(doc, hwComponents, std::string());
+    try {
+        parseAndSetComponents(doc, hwComponents, std::string());
+    } catch (json::exception const& e) {
+        SRPLG_LOG_ERR(getModuleLogPrefix(), "Unexpected lshw json content: %s", e.what());
+        return ErrorCode::CallbackFailed;
+    }
 
     auto const& modules = session.getContext().modules();
     auto module = std::find_if(
