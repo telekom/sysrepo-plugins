@@ -1,0 +1,124 @@
+//
+// telekom / sysrepo-plugins
+//
+// This program is made available under the terms of the
+// BSD 3-Clause license which is available at
+// https://opensource.org/licenses/BSD-3-Clause
+//
+// SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+// SPDX-FileContributor: Sartura d.d.
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//
+
+#include "acl.hpp"
+#include "acl/change.hpp"
+#include "acl/applier.hpp"
+
+#include <memory>
+
+/**
+ * ACL module constructor. Allocates each context.
+ */
+AclModule::AclModule(ietf::acl::PluginContext& plugin_ctx)
+    : srpc::IModule<ietf::acl::PluginContext>(plugin_ctx)
+{
+    m_operContext = std::make_shared<AclOperationalContext>();
+    m_changeContext = std::make_shared<AclModuleChangesContext>();
+    m_rpcContext = std::make_shared<AclRpcContext>();
+    this->addValueApplier<AclValuesApplier>();
+}
+
+/**
+ * Return the operational context from the module.
+ */
+std::shared_ptr<srpc::IModuleContext> AclModule::getOperationalContext() { return m_operContext; }
+
+/**
+ * Return the module changes context from the module.
+ */
+std::shared_ptr<srpc::IModuleContext> AclModule::getModuleChangesContext() { return m_changeContext; }
+
+/**
+ * Return the RPC context from the module.
+ */
+std::shared_ptr<srpc::IModuleContext> AclModule::getRpcContext() { return m_rpcContext; }
+
+/**
+ * Get all operational callbacks which the module should use.
+ */
+std::list<srpc::OperationalCallback> AclModule::getOperationalCallbacks() { return {}; }
+
+/**
+ * Get all module change callbacks which the module should use.
+ */
+std::list<srpc::ModuleChangeCallback> AclModule::getModuleChangeCallbacks()
+{
+    return {
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl",
+            ietf::acl::sub::change::AclModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace",
+            ietf::acl::sub::change::AclAcesAceModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/actions/forwarding",
+            ietf::acl::sub::change::AclAceActFwModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/actions/logging",
+            ietf::acl::sub::change::AclAceActLogModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/eth",
+            ietf::acl::sub::change::AclAceAcesMatchEthModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/ipv4",
+            ietf::acl::sub::change::AclAceAcesMatchIpv4ModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/ipv6",
+            ietf::acl::sub::change::AclAceAcesMatchIpv6ModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/tcp",
+            ietf::acl::sub::change::AclAceAcesMatchTcpModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/udp",
+            ietf::acl::sub::change::AclAceAcesMatchUdpModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches/icmp",
+            ietf::acl::sub::change::AclAceAcesMatchIcmpModuleChangeCb(m_changeContext),
+        },
+        srpc::ModuleChangeCallback {
+            "ietf-access-control-list",
+            "/ietf-access-control-list:acls/acl/aces/ace/matches",
+            ietf::acl::sub::change::AclAceMatchInterfaceModuleChangeCb(m_changeContext),
+        },
+    };
+}
+
+/**
+ * Get all RPC callbacks which the module should use.
+ */
+std::list<srpc::RpcCallback> AclModule::getRpcCallbacks() { return {}; }
+
+/**
+ * Get module name.
+ */
+constexpr const char* AclModule::getName() { return "ACL"; }

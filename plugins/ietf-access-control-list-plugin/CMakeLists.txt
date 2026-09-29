@@ -29,19 +29,16 @@ find_package(NLOHMANN_JSON REQUIRED)
 set(
     PLUGIN_CORE_SOURCES
 
-    src/core/context.cpp
-    src/core/sub/change.cpp
-    src/core/sub/oper.cpp
-    src/core/sub/rpc.cpp
-    src/core/sub/context.hpp
-    src/core/nftables.cpp
-    src/core/nft_helper.hpp
+    src/plugin/context.cpp
 )
 
 set(
     MODULE_SOURCES
 
-    src/modules/acl.cpp
+    src/plugin/modules/acl.cpp
+    src/plugin/modules/acl/change.cpp
+    src/plugin/modules/acl/applier.cpp
+    src/plugin/modules/acl/api/nftables.cpp
 )
 
 set(
