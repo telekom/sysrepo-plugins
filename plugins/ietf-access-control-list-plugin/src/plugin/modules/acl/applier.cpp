@@ -18,6 +18,139 @@
 
 #include <sysrepo.h>
 
+#include <list>
+#include <map>
+#include <optional>
+
+namespace {
+
+/**
+ * @brief nftables protocol and YANG leaf -> nftables field mapping of a match container.
+ */
+struct MatchFields {
+    std::string Protocol; ///< nftables protocol (payload expression) used for the match container.
+    std::map<std::string, std::string> Fields; ///< YANG leaf name -> nftables field name.
+};
+
+/**
+ * @brief Match containers and fields applied on startup.
+ *
+ * Has to be kept in sync with the rules created by the module change callbacks (change.cpp), so that restarting the
+ * plugin recreates the same ruleset that was built from datastore changes. Ports are handled separately (see
+ * getPortRule()), ethertype is not applied by the change callbacks and is therefore skipped here as well.
+ */
+const std::map<std::string, MatchFields> MATCH_FIELDS = {
+    { "eth", { "ether", { { "destination-mac-address", "daddr" }, { "source-mac-address", "saddr" } } } },
+    { "ipv4", { "ip", { { "dscp", "dscp" }, { "length", "length" }, { "ttl", "ttl" }, { "protocol", "protocol" }, { "ihl", "hdrlength" }, { "destination-ipv4-network", "daddr" }, { "source-ipv4-network", "saddr" } } } },
+    { "ipv6", { "ip6", { { "dscp", "dscp" }, { "length", "length" }, { "flow-label", "flowlabel" }, { "destination-ipv6-network", "daddr" }, { "source-ipv6-network", "saddr" } } } },
+    { "tcp", { "tcp", { { "sequence-number", "sequence" }, { "acknowledgement-number", "ackseq" }, { "data-offset", "doff" }, { "flags", "flags" }, { "window-size", "window" }, { "urgent-pointer", "urgptr" } } } },
+    { "udp", { "udp", { { "length", "length" } } } },
+    { "icmp", { "icmp", { { "type", "type" }, { "code", "code" } } } },
+};
+
+/**
+ * @brief Build the rule for a source-port/destination-port container.
+ *
+ * Only the port/operator form is supported, same as in the change callbacks.
+ *
+ * @param port_node source-port or destination-port container node.
+ * @param protocol nftables protocol (tcp or udp).
+ * @param field nftables field (sport or dport).
+ *
+ * @return Rule for the port or std::nullopt if no port is set.
+ */
+std::optional<Match> getPortRule(const libyang::DataNode& port_node, const std::string& protocol, const std::string& field)
+{
+    std::optional<std::string> port;
+    std::string nft_operator;
+
+    for (auto child = port_node.child(); child; child = child->nextSibling()) {
+        const std::string name(child->schema().name());
+        const std::string value(child->asTerm().valueStr());
+
+        if (name == "port") {
+            port = value;
+        } else if (name == "operator") {
+            if (value == "eq") {
+                nft_operator = "==";
+            } else if (value == "neq") {
+                nft_operator = "!=";
+            } else if (value == "lte") {
+                nft_operator = "<=";
+            } else if (value == "gte") {
+                nft_operator = ">=";
+            }
+        } else if (name == "lower-port" || name == "upper-port") {
+            SRPLG_LOG_WRN(getModuleLogPrefix(), "Port ranges are not supported, skipping %s", std::string(port_node.path()).c_str());
+            return std::nullopt;
+        }
+    }
+
+    if (!port) {
+        return std::nullopt;
+    }
+
+    Match rule;
+    rule.Protocol(protocol).Field(field).Value(*port);
+    if (!nft_operator.empty()) {
+        rule.Operator(nft_operator);
+    }
+
+    return rule;
+}
+
+/**
+ * @brief Build the nftables rules for a single child node of an ACE matches container.
+ *
+ * @param match Child node of the matches container (match container or ingress/egress interface leaf).
+ *
+ * @return Rules to add to the ACE chain.
+ */
+std::list<Match> getMatchRules(const libyang::DataNode& match)
+{
+    std::list<Match> rules;
+    const std::string match_type(match.schema().name());
+
+    if (match_type == "ingress-interface" || match_type == "egress-interface") {
+        Match rule;
+        rule.Meta(match_type == "ingress-interface" ? "iifname" : "oifname").Value(std::string(match.asTerm().valueStr()));
+        rules.push_back(rule);
+        return rules;
+    }
+
+    const auto match_fields = MATCH_FIELDS.find(match_type);
+    if (match_fields == MATCH_FIELDS.end()) {
+        return rules;
+    }
+
+    const auto& protocol = match_fields->second.Protocol;
+    const auto& fields = match_fields->second.Fields;
+
+    for (auto field = match.child(); field; field = field->nextSibling()) {
+        const std::string field_name(field->schema().name());
+
+        if (field_name == "source-port" || field_name == "destination-port") {
+            if (auto rule = getPortRule(*field, protocol, field_name == "source-port" ? "sport" : "dport")) {
+                rules.push_back(*rule);
+            }
+            continue;
+        }
+
+        const auto nft_field = fields.find(field_name);
+        if (nft_field == fields.end()) {
+            continue;
+        }
+
+        Match rule;
+        rule.Protocol(protocol).Field(nft_field->second).Value(std::string(field->asTerm().valueStr()));
+        rules.push_back(rule);
+    }
+
+    return rules;
+}
+
+} // namespace
+
 /**
  * @brief Apply datastore content from the provided session to the system.
  *
@@ -164,124 +297,15 @@ void AclValuesApplier::applyDatastoreValues(sysrepo::Session& session)
                         continue;
                     }
 
-                    // Process different match types
                     for (auto match = ace_child->child(); match; match = match->nextSibling()) {
-                        std::string match_type = match->schema().name();
+                        std::string match_type(match->schema().name());
                         SRPLG_LOG_DBG(getModuleLogPrefix(), "Processing match type: %s", match_type.c_str());
 
-                        // Process IPv4 matches
-                        if (match_type == "ipv4") {
-                            for (auto ipv4_field = match->child(); ipv4_field; ipv4_field = ipv4_field->nextSibling()) {
-                                std::string field_name = ipv4_field->schema().name();
-                                std::string value = ipv4_field->asTerm().valueStr().data();
-
-                                try {
-                                    Match rule;
-                                    if (field_name == "dscp") {
-                                        rule.Protocol("ip").Field("dscp").Value(value);
-                                    } else if (field_name == "length") {
-                                        rule.Protocol("ip").Field("length").Value(value);
-                                    } else if (field_name == "ttl") {
-                                        rule.Protocol("ip").Field("ttl").Value(value);
-                                    } else if (field_name == "protocol") {
-                                        rule.Protocol("ip").Field("protocol").Value(value);
-                                    } else if (field_name == "ihl") {
-                                        rule.Protocol("ip").Field("hdrlength").Value(value);
-                                    } else if (field_name == "destination-ipv4-network") {
-                                        rule.Protocol("ip").Field("daddr").Value(value);
-                                    } else if (field_name == "source-ipv4-network") {
-                                        rule.Protocol("ip").Field("saddr").Value(value);
-                                    } else {
-                                        continue;
-                                    }
-
-                                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Adding IPv4 rule: %s = %s", field_name.c_str(), value.c_str());
-                                    nft_chain->addRule(rule);
-                                } catch (const NFTablesCommandExecException& e) {
-                                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to add IPv4 rule: %s", e.what());
-                                }
-                            }
-                        }
-                        // Process TCP matches
-                        else if (match_type == "tcp") {
-                            for (auto tcp_field = match->child(); tcp_field; tcp_field = tcp_field->nextSibling()) {
-                                std::string field_name = tcp_field->schema().name();
-
-                                try {
-                                    Match rule;
-                                    if (field_name == "source-port" || field_name == "destination-port") {
-                                        // Handle port ranges/operators
-                                        for (auto port_child = tcp_field->child(); port_child; port_child = port_child->nextSibling()) {
-                                            std::string port_field = port_child->schema().name();
-
-                                            if (port_field == "lower-port" || port_field == "upper-port") {
-                                                // Range case - we'll need both values
-                                                std::string lower, upper;
-                                                for (auto p = tcp_field->child(); p; p = p->nextSibling()) {
-                                                    if (std::string(p->schema().name()) == "lower-port") {
-                                                        lower = p->asTerm().valueStr().data();
-                                                    } else if (std::string(p->schema().name()) == "upper-port") {
-                                                        upper = p->asTerm().valueStr().data();
-                                                    }
-                                                }
-                                                if (!lower.empty() && !upper.empty()) {
-                                                    std::string nft_field = (field_name == "source-port") ? "sport" : "dport";
-                                                    rule.Protocol("tcp").Field(nft_field).Range(lower, upper);
-                                                    SRPLG_LOG_DBG(getModuleLogPrefix(), "Adding TCP %s range rule: %s-%s", nft_field.c_str(), lower.c_str(), upper.c_str());
-                                                    nft_chain->addRule(rule);
-                                                }
-                                                break;
-                                            } else if (port_field == "port") {
-                                                // Single port with operator
-                                                std::string port = port_child->asTerm().valueStr().data();
-                                                std::string nft_field = (field_name == "source-port") ? "sport" : "dport";
-                                                rule.Protocol("tcp").Field(nft_field).Value(port);
-
-                                                // Check for operator
-                                                for (auto p = tcp_field->child(); p; p = p->nextSibling()) {
-                                                    if (std::string(p->schema().name()) == "operator") {
-                                                        std::string op = p->asTerm().valueStr().data();
-                                                        if (op == "lte")
-                                                            rule.Operator("<=");
-                                                        else if (op == "gte")
-                                                            rule.Operator(">=");
-                                                        else if (op == "eq")
-                                                            rule.Operator("==");
-                                                        else if (op == "neq")
-                                                            rule.Operator("!=");
-                                                    }
-                                                }
-
-                                                SRPLG_LOG_DBG(getModuleLogPrefix(), "Adding TCP %s rule: %s", nft_field.c_str(), port.c_str());
-                                                nft_chain->addRule(rule);
-                                                break;
-                                            }
-                                        }
-                                    } else {
-                                        // Other TCP fields
-                                        std::string value = tcp_field->asTerm().valueStr().data();
-                                        if (field_name == "sequence-number") {
-                                            rule.Protocol("tcp").Field("sequence").Value(value);
-                                        } else if (field_name == "acknowledgement-number") {
-                                            rule.Protocol("tcp").Field("ackseq").Value(value);
-                                        } else if (field_name == "data-offset") {
-                                            rule.Protocol("tcp").Field("doff").Value(value);
-                                        } else if (field_name == "flags") {
-                                            rule.Protocol("tcp").Field("flags").Value(value);
-                                        } else if (field_name == "window-size") {
-                                            rule.Protocol("tcp").Field("window").Value(value);
-                                        } else if (field_name == "urgent-pointer") {
-                                            rule.Protocol("tcp").Field("urgptr").Value(value);
-                                        } else {
-                                            continue;
-                                        }
-
-                                        SRPLG_LOG_DBG(getModuleLogPrefix(), "Adding TCP rule: %s = %s", field_name.c_str(), value.c_str());
-                                        nft_chain->addRule(rule);
-                                    }
-                                } catch (const NFTablesCommandExecException& e) {
-                                    SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to add TCP rule: %s", e.what());
-                                }
+                        for (const auto& rule : getMatchRules(*match)) {
+                            try {
+                                nft_chain->addRule(rule);
+                            } catch (const NFTablesCommandExecException& e) {
+                                SRPLG_LOG_ERR(getModuleLogPrefix(), "Failed to add %s rule: %s", match_type.c_str(), e.what());
                             }
                         }
                     }
