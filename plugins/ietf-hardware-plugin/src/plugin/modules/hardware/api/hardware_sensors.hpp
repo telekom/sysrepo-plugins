@@ -105,6 +105,7 @@ private:
     std::shared_ptr<Connection> mConn;
     std::mutex mNotificationMtx;
     std::condition_variable mCV;
+    bool mStopThreads = false; ///< Set (under mNotificationMtx) to stop the polling threads.
     std::mutex mSensorDataMtx;
     std::unordered_map<std::string, std::thread> mThreads;
 };

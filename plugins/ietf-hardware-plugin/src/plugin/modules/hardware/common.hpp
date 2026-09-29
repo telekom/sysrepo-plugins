@@ -22,7 +22,7 @@ constexpr const char* getModuleLogPrefix(void) { return "module(Hardware)"; }
 
 namespace ietf::hw {
 
-constexpr auto COMPONENTS_LOCATION = "/tmp/hardware_components.json"; ///< File to which lshw output is written.
+constexpr auto LSHW_COMMAND = "/usr/bin/lshw -json"; ///< Command used to gather the hardware components.
 constexpr uint32_t DEFAULT_POLL_INTERVAL = 60; ///< Default sensor poll interval in seconds.
 
 } // namespace ietf::hw

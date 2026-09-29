@@ -45,6 +45,15 @@ HardwareSensors::HardwareSensors()
 
 void HardwareSensors::checkAndTriggerNotification(std::string const& componentName, std::shared_ptr<SensorThreshold> sensThr, int32_t sensorValue)
 {
+    bool const nowAbove = sensorValue > sensThr->value;
+
+    // notify only when the value crosses the threshold - the first poll reports the side the value is on
+    if ((nowAbove && sensThr->rising) || (!nowAbove && sensThr->falling)) {
+        return;
+    }
+    sensThr->rising = nowAbove;
+    sensThr->falling = !nowAbove;
+
     SRPLG_LOG_INF(getModuleLogPrefix(), "%s", ("Sensor threshold triggered for: " + componentName + " value " + std::to_string(sensorValue) + ". Sending Notification...").c_str());
 
     std::string notifPath("/ietf-hardware:hardware/component[name='");
@@ -58,7 +67,7 @@ void HardwareSensors::checkAndTriggerNotification(std::string const& componentNa
 
     auto input = sess.getContext().newPath((notifPath + "/threshold-name"), sensThr->name);
     input.newPath((notifPath + "/threshold-value"), std::to_string(sensThr->value));
-    if (sensorValue > sensThr->value) {
+    if (nowAbove) {
         input.newPath((notifPath + "/rising"), std::nullopt);
     } else {
         input.newPath((notifPath + "/falling"), std::nullopt);
@@ -73,7 +82,8 @@ void HardwareSensors::runFunc(std::shared_ptr<ComponentData> component)
 {
     // TSAN falsely reports double lock on the mutex here for some compiler versions
     std::unique_lock<std::mutex> lk(mNotificationMtx);
-    while (mCV.wait_for(lk, std::chrono::seconds(component->pollInterval)) == std::cv_status::timeout) {
+    // wait with a predicate so a stop request is never missed (and a spurious wakeup does not end the thread)
+    while (!mCV.wait_for(lk, std::chrono::seconds(component->pollInterval), [this] { return mStopThreads; })) {
         std::optional<int32_t> value = getValue(component->name);
         if (!value) {
             continue;
@@ -108,8 +118,15 @@ void HardwareSensors::notify()
  */
 void HardwareSensors::notifyAndJoin()
 {
+    {
+        std::lock_guard lk(mNotificationMtx);
+        mStopThreads = true;
+    }
     mCV.notify_all();
     stopThreads();
+
+    std::lock_guard lk(mNotificationMtx);
+    mStopThreads = false;
 }
 
 /**
@@ -157,7 +174,7 @@ std::optional<int32_t> HardwareSensors::getValue(std::string const& sensorName)
         int f = 0;
         while ((feature = sensors_get_features(cn, &f))) {
             if (sensorName != (std::string(cn->prefix) + "/" + feature->name)) {
-                break;
+                continue;
             }
             switch (feature->type) {
             case SENSORS_FEATURE_IN:
@@ -257,6 +274,10 @@ void HardwareSensors::parseSensorData(ComponentMap& hwComponents)
     for (auto const& configData : ComponentData::hwConfigData) {
         if (configData) {
             auto const& component = hwComponents.find(configData->name);
+            if (component == hwComponents.end()) {
+                // configured component is not present on the system
+                continue;
+            }
             component->second->sensorThresholds = configData->sensorThresholds;
         }
     }

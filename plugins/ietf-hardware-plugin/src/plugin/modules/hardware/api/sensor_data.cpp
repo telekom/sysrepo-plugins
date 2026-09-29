@@ -44,7 +44,7 @@ std::string Sensor::getValueScaleString(ValueScale inputScale)
 {
     static std::array<std::string, 18> _ { "units", // unused
         "yocto", "zepto", "atto", "femto", "pico", "nano",
-        "micro", "millis", "units", "kilo", "mega", "giga",
+        "micro", "milli", "units", "kilo", "mega", "giga",
         "tera", "peta", "exa", "zetta", "yotta" };
     return _[static_cast<size_t>(inputScale)];
 }
@@ -102,9 +102,10 @@ void Sensor::setXpathForAllMembers(std::optional<libyang::DataNode>& parent, std
         std::string const unit = getValueScaleString(valueScale) + " " + getValueTypeString(valueType);
         parent->newPath(sensorPath + "/sensor-data/units-display", unit);
     }
+    // date-and-time with a "Z" suffix has to be UTC
+    std::tm utcTime {};
     char timeString[100];
-    if (std::strftime(timeString, sizeof(timeString), "%FT%TZ",
-            std::localtime(&valueTimestamp))) {
+    if (gmtime_r(&valueTimestamp, &utcTime) && std::strftime(timeString, sizeof(timeString), "%FT%TZ", &utcTime)) {
         parent->newPath(sensorPath + std::string("/sensor-data/value-timestamp"),
             timeString);
     }

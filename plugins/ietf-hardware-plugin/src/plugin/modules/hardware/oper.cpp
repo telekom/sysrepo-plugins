@@ -18,14 +18,17 @@
 #include "api/sensor_data.hpp"
 
 #include <algorithm>
+#include <cstdio>
 #include <chrono>
 #include <ctime>
-#include <fstream>
 #include <list>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
 #include <nlohmann/json.hpp>
+
+#include <sys/wait.h>
 
 #include <sysrepo.h>
 
@@ -35,6 +38,39 @@ using ErrorCode = sr::ErrorCode;
 using json = nlohmann::json;
 
 static std::list<std::string> parseAndSetComponents(json const& parsee, ComponentMap& hwComponents, std::string const& parentName);
+
+/**
+ * @brief Run lshw and return its JSON output.
+ *
+ * @return lshw output or std::nullopt if lshw could not be run or did not exit successfully.
+ */
+static std::optional<std::string> readLshwOutput()
+{
+    FILE* pipe = popen(LSHW_COMMAND, "r");
+    if (!pipe) {
+        SRPLG_LOG_ERR(getModuleLogPrefix(), "Unable to run %s", LSHW_COMMAND);
+        return std::nullopt;
+    }
+
+    std::string output;
+    char buffer[4096];
+    size_t read = 0;
+    while ((read = fread(buffer, 1, sizeof(buffer), pipe)) > 0) {
+        output.append(buffer, read);
+    }
+
+    int const status = pclose(pipe);
+    if (status == -1 || !WIFEXITED(status)) {
+        SRPLG_LOG_ERR(getModuleLogPrefix(), "%s did not exit normally", LSHW_COMMAND);
+        return std::nullopt;
+    }
+    if (WEXITSTATUS(status) != 0) {
+        SRPLG_LOG_ERR(getModuleLogPrefix(), "%s exited with code %d", LSHW_COMMAND, WEXITSTATUS(status));
+        return std::nullopt;
+    }
+
+    return output;
+}
 
 /**
  * @brief Map of lshw node names to the ietf-hardware component nodes.
@@ -217,29 +253,24 @@ sr::ErrorCode HardwareOperGetCb::operator()(sr::Session session, uint32_t subscr
     std::optional<std::string_view> requestXPath, uint32_t requestId, std::optional<ly::DataNode>& output)
 {
 
-    int rc = system((std::string("/usr/bin/lshw -json > ") + COMPONENTS_LOCATION).c_str());
-    if (rc == -1) {
-        SRPLG_LOG_ERR(getModuleLogPrefix(), "lshw command failed");
+    auto const lshw_output = readLshwOutput();
+    if (!lshw_output) {
         return ErrorCode::CallbackFailed;
     }
-    SRPLG_LOG_DBG(getModuleLogPrefix(), "%s", ("lshw command returned:" + std::to_string(rc)).c_str());
     std::string const set_xpath("/ietf-hardware:hardware");
 
     // +--ro last-change?   yang:date-and-time
     std::time_t lastChange(
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+    // date-and-time with a "Z" suffix has to be UTC
+    std::tm utcTime {};
     char timeString[100];
-    if (std::strftime(timeString, sizeof(timeString), "%FT%TZ", std::localtime(&lastChange))) {
+    if (gmtime_r(&lastChange, &utcTime) && std::strftime(timeString, sizeof(timeString), "%FT%TZ", &utcTime)) {
         output = session.getContext().newPath(set_xpath + "/last-change", timeString);
     }
 
-    std::ifstream ifs(COMPONENTS_LOCATION, std::ifstream::in);
-    if (ifs.fail()) {
-        SRPLG_LOG_ERR(getModuleLogPrefix(), "Can't open: %s", COMPONENTS_LOCATION);
-        return ErrorCode::CallbackFailed;
-    }
     // parse without exceptions - invalid input results in a discarded value which is neither an object nor an array
-    json const doc = json::parse(ifs, nullptr, false);
+    json const doc = json::parse(*lshw_output, nullptr, false);
     if (!doc.is_object() && !doc.is_array()) {
         SRPLG_LOG_ERR(getModuleLogPrefix(), "lshw json root-node is not an object or array");
         return ErrorCode::CallbackFailed;

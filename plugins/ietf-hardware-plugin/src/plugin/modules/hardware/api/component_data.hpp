@@ -48,8 +48,8 @@ struct SensorThreshold {
 
     std::string name;
     int32_t value;
-    bool rising;
-    bool falling;
+    bool rising; ///< Last reported value was above the threshold.
+    bool falling; ///< Last reported value was below or equal to the threshold.
 };
 
 /**

@@ -18,6 +18,7 @@
 #include <sysrepo-cpp/utils/utils.hpp>
 
 #include "plugin/modules/hardware.hpp"
+#include "plugin/modules/hardware/api/hardware_sensors.hpp"
 
 #include <sysrepo.h>
 
@@ -118,6 +119,10 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t* session, void* priv)
 
     // cleanup context manually
     delete ctx;
+
+    // stop the sensor polling threads - done after the subscriptions are gone so a module change callback cannot start
+    // them again
+    ietf::hw::HardwareSensors::getInstance().notifyAndJoin();
 
     SRPLG_LOG_INF(plugin_name, "Plugin cleanup finished");
 }
